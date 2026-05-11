@@ -105,6 +105,7 @@
 .kiosk-header h1 {
   margin: 5 0 clamp(3px,0.5vh,7px); color: #0e0e0e;
   font-size: clamp(16px,3.8vw,40px); font-weight: 900; text-transform: uppercase;
+  margin-bottom: 30px;
 }
 
 .kiosk-header p {
