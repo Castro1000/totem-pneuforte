@@ -99,12 +99,12 @@ async function consultarExato(placaLimpa) {
   const response = await axios.post(
     url,
     {
+      token: token,
       license_plate: placaLimpa,
       restrictions: false
     },
     {
       headers: {
-        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       timeout: 20000
