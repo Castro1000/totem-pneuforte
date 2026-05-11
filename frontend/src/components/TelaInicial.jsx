@@ -24,7 +24,10 @@ export default function TelaInicial({
         <div className="kiosk-screen">
           <div className="kiosk-header">
             <h1>SELECIONE O TIPO DE CONSULTA</h1>
+            <p></p>
             <p>Escolha uma das opções abaixo para iniciar seu atendimento</p>
+            <p></p>
+
             <div className="kiosk-instrucao-linha">
               <span className="kiosk-instrucao-traco"></span>
               <span className="kiosk-instrucao-texto">PRESSIONE O BOTÃO DO SERVIÇO DESEJADO</span>
