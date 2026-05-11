@@ -60,7 +60,7 @@ export default function TelaConsulta({
           <div className="consulta-card consulta-card-animada consulta-card-limpo">
             <div className="consulta-coluna-unica">
 
-              <h2 className="titulo-principal-placa">CONSULTE PELA PLACA</h2>
+              <h2 className="titulo-principal-placa">Digite a placa do seu carro</h2>
 
               <div className="placa-visual-wrapper">
                 <img src="/placavazia.png" alt="Placa" className="placa-visual-img" />
@@ -82,7 +82,7 @@ export default function TelaConsulta({
                   </span>
                 </div>
                 {placa.length === 0 && (
-                  <div className="placa-placeholder-hint">USE O TECLADO ABAIXO</div>
+                  <div className="placa-placeholder-hint"></div>
                 )}
               </div>
 
