@@ -1,0 +1,318 @@
+* { box-sizing: border-box; }
+
+.entrada-full {
+  width: 100vw; height: 100vh;
+  position: fixed; inset: 0; overflow: hidden;
+  display: flex; justify-content: center; align-items: center;
+  background: url('/fundo.jpeg') center center / cover no-repeat;
+  background-color: #000;
+}
+
+.kiosk-home { cursor: default; }
+.entrada-full-saindo { animation: telaInicialDissolver 2.2s cubic-bezier(0.2,0.82,0.2,1) forwards; }
+
+.overlay-escuro, .vinheta-cinema, .onda-luz, .clarão-tela, .faixa-luz { pointer-events: none; }
+
+.overlay-escuro {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.58); backdrop-filter: blur(5px); z-index: 1;
+}
+.overlay-escuro-ativo { background: rgba(0,0,0,0.24); }
+
+.vinheta-cinema {
+  position: absolute; inset: 0; z-index: 2; opacity: 0;
+  background: radial-gradient(circle at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.72) 100%);
+}
+.vinheta-cinema-ativa { animation: vinhetaSuave 1.4s ease forwards; }
+
+.onda-luz {
+  position: absolute; inset: -12%; z-index: 3; opacity: 0;
+  background: radial-gradient(circle at center, rgba(255,212,0,0.12) 0%, transparent 64%);
+  transform: scale(0.72); filter: blur(20px);
+}
+.onda-luz-ativa { animation: abrirLuzCentral 1s ease 0.15s forwards; }
+
+.clarão-tela {
+  position: absolute; inset: 0; z-index: 4; opacity: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.16) 0%, transparent 68%);
+  filter: blur(10px);
+}
+.clarão-tela-ativo { animation: clarãoPremium 0.9s ease 0.55s forwards; }
+
+.faixa-luz {
+  position: absolute; inset: 0; z-index: 5; opacity: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 45%, transparent 100%);
+  transform: translateX(-120%) skewX(-14deg); filter: blur(10px);
+}
+.faixa-luz-ativa { animation: varrerTelaPremium 0.85s ease 0.95s forwards; }
+
+.kiosk-shell {
+  width: min(1360px, 96vw); height: 92vh; max-height: 92vh;
+  border-radius: clamp(16px,2.5vw,42px);
+  background: linear-gradient(180deg, rgba(242,242,242,0.98), rgba(225,225,225,0.98));
+  box-shadow: 0 32px 90px rgba(0,0,0,0.36), inset 0 0 0 3px rgba(255,255,255,0.55);
+  padding: clamp(8px,1vw,16px); position: relative; overflow: hidden; z-index: 20;
+  display: flex; flex-direction: column;
+}
+.kiosk-shell-saindo { animation: heroDissolveOut 1.2s ease forwards; }
+
+.kiosk-topbar { flex-shrink: 0; }
+
+.kiosk-topo-faixa {
+  position: relative; width: 100%; height: clamp(80px,16vh,160px);
+  border-radius: clamp(16px,2vw,28px) clamp(16px,2vw,28px) clamp(40px,6vw,80px) clamp(40px,6vw,80px);
+  padding: clamp(6px,1vh,12px) clamp(12px,2vw,20px) clamp(12px,2vh,24px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 24%),
+              linear-gradient(180deg, #ffd400 0%, #f2c400 100%);
+  overflow: hidden;
+}
+
+.kiosk-topo-faixa::after {
+  content: ''; position: absolute; left: -2%; right: -2%; bottom: -100px;
+  height: clamp(50px,7vh,84px); background: #f3f3f3;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+.kiosk-topo-mini {
+  position: relative; z-index: 2;
+  padding: clamp(3px,0.5vh,6px) clamp(14px,4vw,80px);
+  border-radius: clamp(8px,1vw,14px);
+  background: linear-gradient(180deg, #3a3a3a 0%, #151515 100%);
+  color: #fff; font-size: clamp(9px,1vw,17px); font-weight: 900;
+  letter-spacing: clamp(1px,0.2vw,3px); text-transform: uppercase; white-space: nowrap;
+}
+
+.kiosk-topo-big {
+  position: relative; z-index: 2; margin-top: clamp(2px,0.6vh,6px); color: #111;
+  font-size: clamp(22px,5vw,70px); font-weight: 900; line-height: 0.95;
+  text-transform: uppercase; white-space: nowrap;
+  text-shadow: 0 3px 0 rgba(255,255,255,0.24);
+}
+
+.kiosk-screen {
+  flex: 1; margin-top: clamp(-8px,-1vh,-10px);
+  border-radius: clamp(12px,2vw,30px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(245,245,245,0.98));
+  border: 2px solid #d5d5d5;
+  padding: clamp(8px,1.2vh,18px) clamp(12px,3vw,42px) clamp(6px,1vh,14px);
+  display: flex; flex-direction: column; justify-content: space-between;
+  overflow: hidden; min-height: 0;
+}
+
+.kiosk-header { text-align: center; flex-shrink: 0; }
+
+.kiosk-header h1 {
+  margin: 5 0 clamp(3px,0.5vh,7px); color: #0e0e0e;
+  font-size: clamp(16px,3.8vw,40px); font-weight: 900; text-transform: uppercase;
+}
+
+.kiosk-header p {
+  margin: 0; color: #5c5c5c;
+  font-size: clamp(11px,1.3vw,24px); font-weight: 700;
+}
+
+.kiosk-instrucao-linha {
+  margin-top: clamp(4px,0.8vh,12px);
+  display: flex; align-items: center; justify-content: center; gap: clamp(8px,1.2vw,16px);
+}
+
+.kiosk-instrucao-traco {
+  flex: 1; max-width: clamp(30px,8vw,100px);
+  height: clamp(3px,0.4vh,5px); border-radius: 999px;
+  background: linear-gradient(90deg, #ffd400, #efc114);
+}
+
+.kiosk-instrucao-texto {
+  color: #0f5ca8; font-size: clamp(10px,1.3vw,24px);
+  font-weight: 900; text-transform: uppercase; white-space: nowrap;
+}
+
+.kiosk-acoes-area {
+  flex: 0.7;
+  display: grid;
+  grid-template-columns: clamp(36px,5vw,80px) 1fr clamp(36px,5vw,80px);
+  align-items: center;
+  gap: clamp(4px,0.8vw,12px);
+  margin: clamp(4px,0.8vh,10px) 0;
+  min-height: 0;
+}
+
+.kiosk-mao {
+  font-size: clamp(28px,5vw,88px);
+  line-height: 1; color: #1562b0;
+  text-align: center; user-select: none;
+}
+
+.mao-esquerda { animation: apontaDireita 0.8s ease-in-out infinite; }
+.mao-direita  { animation: apontaEsquerda 0.8s ease-in-out infinite; }
+
+@keyframes apontaDireita {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(12px); }
+}
+@keyframes apontaEsquerda {
+  0%, 100% { transform: translateX(0); }
+  50%       { transform: translateX(-12px); }
+}
+
+.kiosk-buttons {
+  width: 100%; height: 130%;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: clamp(10px,1.8vw,24px); align-items: stretch; min-height: 0;
+}
+
+/* PONTO 2 — botão menor */
+.kiosk-btn {
+  width: 100%; height: 100%;
+  border: none; border-radius: clamp(12px,2vw,28px);
+  padding: clamp(10px,1.8vh,28px) clamp(12px,2vw,28px);
+  display: flex; align-items: center; gap: clamp(8px,1.5vw,16px);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  position: relative; overflow: hidden;
+}
+
+.kiosk-btn:hover { transform: translateY(-4px) scale(1.02); filter: brightness(1.06); }
+
+.kiosk-btn-primary {
+  background: linear-gradient(160deg, #ffe94d 0%, #ffd400 40%, #f0c000 100%);
+  color: #111;
+  flex-direction: column; justify-content: center; align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 0 #c49a00, 0 14px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.5);
+  padding-top: clamp(6px, 0.8vh, 12px);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+
+.kiosk-btn-primary:active {
+  transform: translateY(6px) scale(0.98);
+  box-shadow: 0 2px 0 #c49a00, 0 4px 12px rgba(0,0,0,0.18);
+  
+}
+
+.kiosk-btn-secondary {
+  background: linear-gradient(160deg, #1a6fd4 0%, #0f4fc4 50%, #082b73 100%);
+  color: #fff; flex-direction: row; justify-content: flex-start;
+  gap: clamp(10px,2vw,22px);
+  box-shadow: 0 8px 0 #061e52, 0 14px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.1);
+  gap: 20px;
+}
+
+.kiosk-btn-secondary:active {
+  transform: translateY(6px) scale(0.98);
+  box-shadow: 0 2px 0 #061e52, 0 4px 12px rgba(0,0,0,0.24);
+}
+
+.kiosk-btn-primary .kiosk-btn-icon {
+  width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  margin-bottom: -90px;
+}
+
+.kiosk-btn-secondary .kiosk-btn-icon {
+  width: clamp(55px,9vw,140px); min-width: clamp(55px,9vw,140px);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* PONTO 1 — placa maior */
+.kiosk-btn-placa-img {
+  width: clamp(200px, 13vw, 380px);
+  height: auto;
+  margin-top: clamp(-90px, -10vh, -40px);
+  max-height: none;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.22));
+
+}
+
+.kiosk-btn-pneu {
+  width: clamp(55px,9vw,140px); height: clamp(55px,9vw,140px);
+  object-fit: contain; filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));
+}
+
+.kiosk-btn-primary .kiosk-btn-text {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: clamp(4px,0.7vh,8px); width: 100%;
+}
+
+.kiosk-btn-secondary .kiosk-btn-text {
+  display: flex; flex-direction: column; justify-content: center;
+  gap: clamp(4px,0.8vh,10px); text-align: left; flex: 1; min-width: 0;
+}
+
+.kiosk-btn-text strong {
+  font-size: clamp(14px,2.5vw,50px); font-weight: 900;
+  line-height: 1.05; text-transform: uppercase;
+  word-break: break-word; white-space: normal; display: block;
+}
+
+.kiosk-btn-text small {
+  font-size: clamp(11px,1.3vw,24px); line-height: 1.35;
+  opacity: 0.90; font-weight: 600;
+  white-space: normal; word-break: break-word; display: block;
+}
+
+.kiosk-footer {
+  display: flex; justify-content: center; align-items: center;
+  flex-shrink: 0; padding-top: clamp(4px,0.8vh,10px); gap: 0;
+}
+
+.kiosk-mascote-footer {
+  width: clamp(55px,7.5vw,140px); height: auto; object-fit: contain;
+  margin-right: clamp(-20px,-3.5vw,-56px);
+  position: relative; z-index: 2;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+}
+
+.kiosk-footer-logo {
+  width: clamp(150px,21vw,400px); max-height: clamp(60px,10vh,120px);
+  object-fit: contain; border-radius: 14px; position: relative; z-index: 1;
+}
+
+@media (orientation: portrait) {
+  .kiosk-shell { width: min(680px,96vw); height: 96vh; }
+  .kiosk-topo-big { font-size: clamp(20px,7vw,60px); }
+  .kiosk-instrucao-texto { white-space: normal; font-size: clamp(10px,2.8vw,20px); }
+  .kiosk-acoes-area { grid-template-columns: 1fr; }
+  .kiosk-mao { display: none; }
+  .kiosk-buttons { grid-template-columns: 1fr; gap: clamp(8px,2vh,18px); }
+  .kiosk-btn {
+    min-height: clamp(80px,14vh,160px);
+    flex-direction: row !important; justify-content: flex-start !important;
+    align-items: center !important; text-align: left !important;
+  }
+  .kiosk-btn-primary .kiosk-btn-icon { width: clamp(80px,16vw,130px); min-width: clamp(80px,16vw,130px); }
+  .kiosk-btn-primary .kiosk-btn-text { align-items: flex-start; text-align: left; }
+  .kiosk-btn-placa-img { width: clamp(80px,16vw,140px); max-height: clamp(40px,8vh,80px); }
+  .kiosk-btn-pneu { width: clamp(50px,12vw,100px); height: clamp(50px,12vw,100px); }
+}
+
+@keyframes telaInicialDissolver {
+  0%   { opacity:1; transform:scale(1);    filter:blur(0px) brightness(1); }
+  35%  { opacity:1; transform:scale(1.01); filter:blur(0px) brightness(1.03); }
+  70%  { opacity:0.9; transform:scale(1.03); filter:blur(4px) brightness(1.08); }
+  100% { opacity:0; transform:scale(1.08); filter:blur(18px) brightness(1.16); }
+}
+@keyframes heroDissolveOut {
+  0%   { opacity:1;    transform:scale(1);    filter:blur(0px); }
+  50%  { opacity:0.95; transform:scale(1.03); filter:blur(1px); }
+  100% { opacity:0;    transform:scale(1.12); filter:blur(10px); }
+}
+@keyframes abrirLuzCentral {
+  0%   { opacity:0; transform:scale(0.7); }
+  45%  { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(1.4); }
+}
+@keyframes clarãoPremium {
+  0% { opacity:0; } 28% { opacity:0.34; } 60% { opacity:0.12; } 100% { opacity:0; }
+}
+@keyframes varrerTelaPremium {
+  0%   { opacity:0; transform:translateX(-110%) skewX(-14deg); }
+  25%  { opacity:1; }
+  100% { opacity:0; transform:translateX(112%) skewX(-14deg); }
+}
+@keyframes vinhetaSuave {
+  0% { opacity:0; } 30% { opacity:0.38; } 100% { opacity:0.7; }
+}

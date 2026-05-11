@@ -1,0 +1,407 @@
+.resultado {
+  position: relative;
+  z-index: 5;
+}
+
+.resultado-animado {
+  animation: resultadoEntrando 0.7s ease;
+}
+
+.resultado-novo-layout {
+  width: min(1400px, 96vw);
+  min-height: calc(100vh - 30px);
+  margin: 0 auto;
+  padding: 34px 0 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* CARD DO VEÍCULO */
+
+.vehicle-card {
+  width: min(1100px, 100%);
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(15, 15, 15, 0.98), rgba(5, 5, 5, 0.98));
+  border: 2px solid rgba(255, 212, 0, 0.34);
+  border-radius: 34px;
+  padding: 24px;
+  box-shadow:
+    0 0 30px rgba(255, 212, 0, 0.08),
+    inset 0 0 18px rgba(255, 255, 255, 0.02);
+  animation: cardVeiculoPremium 0.5s ease;
+}
+
+.vehicle-card-image-wrap {
+  width: 100%;
+  min-height: 190px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #262626 0%, #111111 100%);
+  border: 2px solid rgba(255, 212, 0, 0.22);
+  box-shadow:
+    0 0 22px rgba(255, 212, 0, 0.08),
+    inset 0 0 18px rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.vehicle-card-image {
+  width: 88%;
+  max-height: 150px;
+  object-fit: contain;
+  display: block;
+}
+
+.vehicle-card-icon-fallback {
+  position: absolute;
+  font-size: 78px;
+  opacity: 0.9;
+}
+
+.vehicle-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vehicle-card-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(255, 212, 0, 0.12);
+  border: 1px solid rgba(255, 212, 0, 0.34);
+  color: #ffd400;
+  font-size: clamp(13px, 1vw, 17px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.vehicle-card-title {
+  margin: 0;
+  color: #ffd400;
+  font-size: clamp(34px, 4vw, 68px);
+  line-height: 0.95;
+  font-weight: 900;
+}
+
+.vehicle-card-title span {
+  color: #ffffff;
+}
+
+.vehicle-card-miniinfo {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.vehicle-mini-box {
+  min-width: 180px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #1d1d1d 0%, #101010 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vehicle-mini-box small {
+  display: block;
+  color: #bbbbbb;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.vehicle-mini-box strong {
+  color: #fff;
+  font-size: clamp(22px, 2vw, 34px);
+  font-weight: 900;
+}
+
+/* MEDIDA PRINCIPAL */
+
+.measure-focus-card {
+  width: min(1100px, 100%);
+  background: linear-gradient(180deg, rgba(16, 16, 16, 0.98), rgba(6, 6, 6, 0.98));
+  border: 2px solid rgba(255, 212, 0, 0.32);
+  border-radius: 34px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow:
+    0 0 32px rgba(255, 212, 0, 0.08),
+    inset 0 0 18px rgba(255, 255, 255, 0.02);
+}
+
+.measure-focus-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe14a 0%, #ffd400 100%);
+  color: #111;
+  font-size: clamp(14px, 1vw, 18px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 18px rgba(255, 212, 0, 0.2);
+}
+
+.measure-focus-number {
+  color: #ffd400;
+  font-size: clamp(58px, 7vw, 120px);
+  line-height: 1;
+  font-weight: 900;
+  text-shadow: 0 0 18px rgba(255, 212, 0, 0.12);
+}
+
+.glow-measure {
+  animation: brilhoMedida 1.8s ease-in-out infinite;
+}
+
+.measure-focus-brands {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.measure-brand-pill {
+  min-width: 180px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #232323 0%, #161616 100%);
+  border: 1px solid rgba(255, 212, 0, 0.16);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  color: #fff;
+  font-size: clamp(18px, 1.6vw, 26px);
+  font-weight: 900;
+}
+
+.mais-medidas-area {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.btn-mais-medidas {
+  min-width: 320px;
+  min-height: 66px;
+  padding: 16px 26px;
+  background: #fff;
+  color: #111;
+  font-size: clamp(18px, 1.5vw, 25px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+/* OUTRAS MEDIDAS */
+
+.hidden-measures-box {
+  width: min(1100px, 100%);
+  background: linear-gradient(180deg, rgba(14, 14, 14, 0.96), rgba(7, 7, 7, 0.96));
+  border: 2px solid rgba(255, 212, 0, 0.22);
+  border-radius: 30px;
+  padding: 24px;
+  animation: abrirMaisMedidas 0.35s ease;
+}
+
+.hidden-measures-title {
+  margin: 0 0 18px;
+  text-align: center;
+  color: #ffd400;
+  font-size: clamp(24px, 2.5vw, 38px);
+  font-weight: 900;
+}
+
+.hidden-measures-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.hidden-measure-card {
+  border-radius: 22px;
+  padding: 24px;
+  text-align: center;
+  background: linear-gradient(180deg, #202020 0%, #121212 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hidden-measure-label {
+  display: block;
+  color: #bbbbbb;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.hidden-measure-number {
+  margin: 0;
+  color: #ffd400;
+  font-size: clamp(28px, 3vw, 46px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+@keyframes resultadoEntrando {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes abrirMaisMedidas {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brilhoMedida {
+  0%, 100% {
+    text-shadow:
+      0 0 10px rgba(255, 212, 0, 0.10),
+      0 0 18px rgba(255, 212, 0, 0.12);
+  }
+  50% {
+    text-shadow:
+      0 0 18px rgba(255, 212, 0, 0.25),
+      0 0 34px rgba(255, 212, 0, 0.18);
+  }
+}
+
+@keyframes cardVeiculoPremium {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 1100px) {
+  .vehicle-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .vehicle-card-content {
+    align-items: center;
+  }
+
+  .vehicle-card-miniinfo {
+    justify-content: center;
+  }
+
+  .hidden-measures-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .resultado-novo-layout {
+    width: 100%;
+    min-height: calc(100vh - 20px);
+    padding: 74px 0 20px;
+    gap: 16px;
+  }
+
+  .vehicle-card,
+  .measure-focus-card,
+  .hidden-measures-box {
+    width: 100%;
+    border-radius: 22px;
+  }
+
+  .vehicle-card {
+    grid-template-columns: 1fr;
+    padding: 18px 14px;
+    gap: 16px;
+  }
+
+  .vehicle-card-image-wrap {
+    min-height: 140px;
+    border-radius: 20px;
+  }
+
+  .vehicle-card-image {
+    max-height: 100px;
+  }
+
+  .vehicle-card-icon-fallback {
+    font-size: 52px;
+  }
+
+  .vehicle-card-title {
+    font-size: 30px;
+    text-align: center;
+  }
+
+  .vehicle-mini-box {
+    width: 100%;
+    min-width: 100%;
+    text-align: center;
+  }
+
+  .measure-focus-card {
+    padding: 22px 14px;
+  }
+
+  .measure-focus-number {
+    font-size: 44px;
+  }
+
+  .measure-focus-brands {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .measure-brand-pill {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .btn-mais-medidas {
+    width: 100%;
+    min-width: 100%;
+    min-height: 58px;
+    font-size: 18px;
+    border-radius: 16px;
+  }
+
+  .hidden-measures-box {
+    padding: 18px 14px;
+  }
+
+  .hidden-measure-card {
+    border-radius: 18px;
+    padding: 18px 14px;
+  }
+
+  .hidden-measure-number {
+    font-size: 28px;
+  }
+}

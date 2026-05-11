@@ -1,0 +1,152 @@
+const axios = require('axios');
+
+/*
+  BASE LOCAL DE TESTE (FALLBACK)
+*/
+const mockLocal = {
+  ABC1D23: { placa: 'ABC1D23', marca: 'FIAT', modelo: 'STRADA', versao: 'FREEDOM 1.3 FLEX', ano: 2022, combustivel: 'FLEX' },
+  BRA2E19: { placa: 'BRA2E19', marca: 'VOLKSWAGEN', modelo: 'GOL', versao: 'TRENDLINE 1.0', ano: 2020, combustivel: 'FLEX' },
+  CAR3F45: { placa: 'CAR3F45', marca: 'CHEVROLET', modelo: 'ONIX', versao: 'LT 1.0 TURBO', ano: 2021, combustivel: 'FLEX' },
+  TOT4G67: { placa: 'TOT4G67', marca: 'TOYOTA', modelo: 'HILUX', versao: 'SRX 2.8 DIESEL 4X4', ano: 2023, combustivel: 'DIESEL' },
+  PNE5H89: { placa: 'PNE5H89', marca: 'HONDA', modelo: 'CIVIC', versao: 'EXL 1.5 TURBO CVT', ano: 2019, combustivel: 'FLEX' },
+  FOR6J12: { placa: 'FOR6J12', marca: 'FORD', modelo: 'RANGER', versao: 'STORM 3.2 DIESEL 4X4', ano: 2022, combustivel: 'DIESEL' },
+  HYU7K34: { placa: 'HYU7K34', marca: 'HYUNDAI', modelo: 'HB20', versao: 'VISION 1.0 FLEX', ano: 2021, combustivel: 'FLEX' },
+  REN8L56: { placa: 'REN8L56', marca: 'RENAULT', modelo: 'KWID', versao: 'ZEN 1.0 FLEX', ano: 2020, combustivel: 'FLEX' },
+  JEE9M78: { placa: 'JEE9M78', marca: 'JEEP', modelo: 'COMPASS', versao: 'LIMITED 2.0 DIESEL 4X4', ano: 2023, combustivel: 'DIESEL' },
+  BMW0N90: { placa: 'BMW0N90', marca: 'BMW', modelo: '320I', versao: 'SPORT GP 2.0 TURBO', ano: 2022, combustivel: 'GASOLINA' }
+};
+
+function limparPlaca(placa = '') {
+  return String(placa).replace(/[^A-Z0-9]/gi, '').toUpperCase();
+}
+
+function pick(obj, keys) {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null && obj[key] !== '') {
+      return obj[key];
+    }
+  }
+  return null;
+}
+
+function extrairAno(...valores) {
+  for (const valor of valores) {
+    const numero = Number(valor);
+    if (!Number.isNaN(numero) && numero > 1900) {
+      return numero;
+    }
+
+    const match = String(valor || '').match(/\d{4}/);
+    if (match) return Number(match[0]);
+  }
+  return null;
+}
+
+function separarMarcaModelo(brandModel = '') {
+  const texto = String(brandModel || '').toUpperCase().trim();
+
+  if (!texto) {
+    return { marca: null, modelo: null };
+  }
+
+  if (texto.includes('/')) {
+    const [marca, ...resto] = texto.split('/');
+    return {
+      marca: marca?.trim() || null,
+      modelo: resto.join('/').trim() || null
+    };
+  }
+
+  if (texto.includes('-')) {
+    const [marca, ...resto] = texto.split('-');
+    return {
+      marca: marca?.trim() || null,
+      modelo: resto.join('-').trim() || null
+    };
+  }
+
+  return {
+    marca: texto,
+    modelo: null
+  };
+}
+
+function montarRespostaPadrao(result, placaLimpa) {
+  const brandModel = pick(result, ['BrandModel', 'brandModel', 'MarcaModelo']);
+  const { marca, modelo } = separarMarcaModelo(brandModel);
+
+  const ano = extrairAno(
+    pick(result, ['ModelYear', 'modelYear', 'AnoModelo']),
+    pick(result, ['ManufactureYear', 'manufactureYear', 'AnoFabricacao'])
+  );
+
+  return {
+    placa: pick(result, ['LicensePlate', 'licensePlate']) || placaLimpa,
+    marca: marca || null,
+    modelo: modelo || null,
+    ano
+  };
+}
+
+async function consultarExato(placaLimpa) {
+  const url = process.env.EXATO_VEHICLES_URL;
+  const token = process.env.EXATO_TOKEN;
+
+  if (!url || !token) {
+    throw new Error('Credenciais da Exato não configuradas');
+  }
+
+  const response = await axios.post(
+    url,
+    {
+      license_plate: placaLimpa,
+      restrictions: false
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 20000
+    }
+  );
+
+  return response.data;
+}
+
+async function buscarVeiculoPorPlaca(placa) {
+  const placaLimpa = limparPlaca(placa);
+
+  if (placaLimpa.length !== 7) {
+    throw new Error('Placa inválida');
+  }
+
+  try {
+    const data = await consultarExato(placaLimpa);
+    const result = data?.Result;
+
+    if (!result || typeof result !== 'object') {
+      return mockLocal[placaLimpa] || null;
+    }
+
+    const veiculo = montarRespostaPadrao(result, placaLimpa);
+
+    if (!veiculo.marca && !veiculo.modelo) {
+      return mockLocal[placaLimpa] || null;
+    }
+
+    return veiculo;
+  } catch (error) {
+    console.error('ERRO EXATO:', error.response?.data || error.message || error);
+
+    if (error.message === 'Credenciais da Exato não configuradas') {
+      return mockLocal[placaLimpa] || null;
+    }
+
+    return mockLocal[placaLimpa] || null;
+  }
+}
+
+module.exports = {
+  buscarVeiculoPorPlaca
+};

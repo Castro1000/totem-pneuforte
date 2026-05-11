@@ -1,0 +1,270 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #000;
+  color: #fff;
+  overflow: hidden;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(255, 208, 0, 0.08), transparent 30%),
+    linear-gradient(180deg, #050505 0%, #0a0a0a 45%, #000 100%);
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  inset: 0;
+  padding: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top center, rgba(255, 212, 0, 0.07), transparent 24%),
+    linear-gradient(180deg, #070707 0%, #000 100%);
+}
+
+.tela-placa-entrada {
+  animation: telaPlacaEmpurradaEntrando 0.8s cubic-bezier(0.16, 0.82, 0.2, 1);
+}
+
+.bg-consulta {
+  position: absolute;
+  inset: 0;
+  background:
+    url('/fundo-consulta.jpeg') center center / cover no-repeat,
+    linear-gradient(180deg, #111 0%, #000 100%);
+  z-index: 0;
+}
+
+.bg-consulta-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.76) 0%, rgba(0, 0, 0, 0.62) 48%, rgba(0, 0, 0, 0.42) 100%);
+  z-index: 0;
+}
+
+.bg-decor-1,
+.bg-decor-2 {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(90px);
+}
+
+.bg-decor-1 {
+  width: 240px;
+  height: 240px;
+  background: rgba(255, 212, 0, 0.12);
+  top: 20px;
+  left: 20px;
+}
+
+.bg-decor-2 {
+  width: 240px;
+  height: 240px;
+  background: rgba(255, 212, 0, 0.06);
+  right: 20px;
+  bottom: 20px;
+}
+
+.pneu-transicao-placa {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180px;
+  max-width: 22vw;
+  transform: translate(-140%, -50%);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 0 20px rgba(255, 212, 0, 0.18))
+    drop-shadow(0 0 44px rgba(255, 212, 0, 0.10));
+  animation: pneuEntrandoTelaPlaca 1s linear 0.08s forwards;
+}
+
+.topo,
+.consulta-wrapper,
+.resultado,
+.erro,
+.btn-voltar.flutuante {
+  position: relative;
+  z-index: 3;
+}
+
+.btn-voltar {
+  min-width: 140px;
+  height: clamp(52px, 7vh, 70px);
+  border: none;
+  border-radius: 18px;
+  background: #fff;
+  color: #111;
+  font-size: clamp(18px, 1.8vw, 28px);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.btn-voltar.flutuante {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 6;
+}
+
+.btn-buscar,
+.btn-principal,
+.btn-secundario,
+.tecla,
+.btn-mais-medidas {
+  border: none;
+  cursor: pointer;
+  font-weight: 900;
+  border-radius: 20px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+}
+
+.btn-buscar:hover,
+.btn-principal:hover,
+.btn-secundario:hover,
+.btn-voltar:hover,
+.tecla:hover,
+.btn-mais-medidas:hover {
+  transform: scale(1.02);
+}
+
+.btn-buscar:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-principal {
+  min-width: 260px;
+  min-height: 68px;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, #ffe14a 0%, #ffd400 100%);
+  color: #111;
+  font-size: clamp(18px, 1.8vw, 28px);
+  box-shadow: 0 0 22px rgba(255, 212, 0, 0.18);
+}
+
+.btn-secundario {
+  min-width: 260px;
+  min-height: 68px;
+  padding: 16px 24px;
+  background: #fff;
+  color: #111;
+  font-size: clamp(18px, 1.8vw, 28px);
+}
+
+.erro {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 8;
+  width: min(1000px, 90vw);
+  margin: 0;
+  background: linear-gradient(180deg, #8b1e1e 0%, #681313 100%);
+  color: #fff;
+  padding: 16px 18px;
+  border-radius: 18px;
+  text-align: center;
+  font-size: clamp(16px, 1.5vw, 24px);
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.12);
+}
+
+.acoes {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.acoes-resultado-novo {
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+@keyframes pneuEntrandoTelaPlaca {
+  0% {
+    opacity: 0;
+    transform: translate(-140%, -50%) scale(0.9) rotate(-220deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-90%, -50%) scale(1) rotate(-40deg);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-20%, -50%) scale(1.08) rotate(260deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(50%, -50%) scale(1.12) rotate(560deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(150%, -50%) scale(1.15) rotate(860deg);
+  }
+}
+
+@keyframes telaPlacaEmpurradaEntrando {
+  0% {
+    opacity: 0;
+    transform: translateX(12%) scale(1.01);
+  }
+  55% {
+    opacity: 1;
+    transform: translateX(-1.2%) scale(0.998);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  html,
+  body,
+  #root {
+    overflow: hidden;
+  }
+
+  .app {
+    padding: 10px;
+  }
+
+  .btn-voltar.flutuante {
+    top: 10px;
+    right: 10px;
+    min-width: 100px;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .acoes {
+    flex-direction: column;
+  }
+
+  .btn-principal,
+  .btn-secundario {
+    width: 100%;
+    min-width: 100%;
+    min-height: 54px;
+  }
+}
