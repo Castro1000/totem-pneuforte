@@ -53,6 +53,12 @@ function separarMarcaModelo(brandModel = '') {
     return { marca: marca?.trim() || null, modelo: resto.join('-').trim() || null };
   }
 
+  // Sem / nem - : primeiro token é a marca, o resto é o modelo
+  if (texto.includes(' ')) {
+    const [marca, ...resto] = texto.split(' ');
+    return { marca: marca?.trim() || null, modelo: resto.join(' ').trim() || null };
+  }
+
   return { marca: texto, modelo: null };
 }
 
