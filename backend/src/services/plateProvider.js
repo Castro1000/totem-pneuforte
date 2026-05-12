@@ -1,8 +1,5 @@
 const axios = require('axios');
 
-/*
-  BASE LOCAL DE TESTE (FALLBACK)
-*/
 const mockLocal = {
   ABC1D23: { placa: 'ABC1D23', marca: 'FIAT', modelo: 'STRADA', versao: 'FREEDOM 1.3 FLEX', ano: 2022, combustivel: 'FLEX' },
   BRA2E19: { placa: 'BRA2E19', marca: 'VOLKSWAGEN', modelo: 'GOL', versao: 'TRENDLINE 1.0', ano: 2020, combustivel: 'FLEX' },
@@ -35,7 +32,6 @@ function extrairAno(...valores) {
     if (!Number.isNaN(numero) && numero > 1900) {
       return numero;
     }
-
     const match = String(valor || '').match(/\d{4}/);
     if (match) return Number(match[0]);
   }
@@ -45,30 +41,19 @@ function extrairAno(...valores) {
 function separarMarcaModelo(brandModel = '') {
   const texto = String(brandModel || '').toUpperCase().trim();
 
-  if (!texto) {
-    return { marca: null, modelo: null };
-  }
+  if (!texto) return { marca: null, modelo: null };
 
   if (texto.includes('/')) {
     const [marca, ...resto] = texto.split('/');
-    return {
-      marca: marca?.trim() || null,
-      modelo: resto.join('/').trim() || null
-    };
+    return { marca: marca?.trim() || null, modelo: resto.join('/').trim() || null };
   }
 
   if (texto.includes('-')) {
     const [marca, ...resto] = texto.split('-');
-    return {
-      marca: marca?.trim() || null,
-      modelo: resto.join('-').trim() || null
-    };
+    return { marca: marca?.trim() || null, modelo: resto.join('-').trim() || null };
   }
 
-  return {
-    marca: texto,
-    modelo: null
-  };
+  return { marca: texto, modelo: null };
 }
 
 function montarRespostaPadrao(result, placaLimpa) {
@@ -88,7 +73,8 @@ function montarRespostaPadrao(result, placaLimpa) {
   };
 }
 
-async function consultarExato(placaLimpa) {
+// Tenta chamar a Exato até `tentativas` vezes antes de desistir
+async function consultarExatoComRetry(placaLimpa, tentativas = 2) {
   const url = process.env.EXATO_VEHICLES_URL;
   const token = process.env.EXATO_TOKEN;
 
@@ -96,22 +82,23 @@ async function consultarExato(placaLimpa) {
     throw new Error('Credenciais da Exato não configuradas');
   }
 
-  const response = await axios.post(
-    url,
-    {
-      token: token,
-      license_plate: placaLimpa,
-      restrictions: false
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 7000
-    }
-  );
+  let ultimoErro = null;
 
-  return response.data;
+  for (let i = 1; i <= tentativas; i++) {
+    try {
+      const response = await axios.post(
+        url,
+        { token, license_plate: placaLimpa, restrictions: false },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
+      );
+      return response.data;
+    } catch (err) {
+      ultimoErro = err;
+      console.warn(`Exato tentativa ${i}/${tentativas} falhou:`, err.message);
+    }
+  }
+
+  throw ultimoErro;
 }
 
 async function buscarVeiculoPorPlaca(placa) {
@@ -122,7 +109,7 @@ async function buscarVeiculoPorPlaca(placa) {
   }
 
   try {
-    const data = await consultarExato(placaLimpa);
+    const data = await consultarExatoComRetry(placaLimpa);
     const result = data?.Result;
 
     if (!result || typeof result !== 'object') {
@@ -147,6 +134,4 @@ async function buscarVeiculoPorPlaca(placa) {
   }
 }
 
-module.exports = {
-  buscarVeiculoPorPlaca
-};
+module.exports = { buscarVeiculoPorPlaca };
