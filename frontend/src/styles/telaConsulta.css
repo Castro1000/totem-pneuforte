@@ -747,3 +747,188 @@
 .glow-measure {
   animation: glow-measure 2s ease-in-out infinite;
 }
+
+/* =============================================
+   LOADING OVERLAY
+   ============================================= */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(8px);
+  animation: loadingFadeIn 0.25s ease;
+}
+
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 2.5vh, 32px);
+}
+
+.loading-placa-wrap {
+  position: relative;
+  width: clamp(260px, 36vw, 480px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-placa-img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  filter: drop-shadow(0 0 20px rgba(255,212,0,0.25));
+}
+
+.loading-placa-texto {
+  position: absolute;
+  top: 62%;
+  left: 53%;
+  transform: translate(-50%, -50%);
+  font-family: 'Arial Black', 'Impact', sans-serif;
+  font-size: clamp(28px, 5.5vw, 72px);
+  font-weight: 900;
+  color: #111;
+  letter-spacing: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.loading-placa-traco {
+  margin: 0 2px;
+}
+
+.loading-scanner-line {
+  position: absolute;
+  top: 20%;
+  left: 5%;
+  width: 90%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ffd400, #fff, #ffd400, transparent);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(255,212,0,0.8), 0 0 24px rgba(255,212,0,0.4);
+  animation: scannerVarrer 1.4s ease-in-out infinite;
+}
+
+.loading-radar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-radar {
+  position: relative;
+  width: clamp(56px, 8vw, 90px);
+  height: clamp(56px, 8vw, 90px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-radar-anel {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,212,0,0.5);
+}
+
+.loading-radar-anel-1 {
+  width: 100%;
+  height: 100%;
+  animation: radarPulse 1.6s ease-out infinite;
+}
+
+.loading-radar-anel-2 {
+  width: 68%;
+  height: 68%;
+  animation: radarPulse 1.6s ease-out infinite 0.4s;
+}
+
+.loading-radar-anel-3 {
+  width: 36%;
+  height: 36%;
+  animation: radarPulse 1.6s ease-out infinite 0.8s;
+}
+
+.loading-radar-ponto {
+  width: clamp(10px, 1.4vw, 16px);
+  height: clamp(10px, 1.4vw, 16px);
+  background: #ffd400;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255,212,0,0.8);
+  animation: pontoPulse 1.6s ease-in-out infinite;
+  z-index: 1;
+}
+
+.loading-titulo {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(20px, 2.8vw, 40px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.loading-dots {
+  display: flex;
+  gap: clamp(8px, 1.2vw, 16px);
+  align-items: center;
+}
+
+.loading-dot {
+  width: clamp(10px, 1.4vw, 18px);
+  height: clamp(10px, 1.4vw, 18px);
+  background: #ffd400;
+  border-radius: 50%;
+  display: block;
+}
+
+.loading-dot-1 { animation: dotBounce 1.2s ease-in-out infinite 0s; }
+.loading-dot-2 { animation: dotBounce 1.2s ease-in-out infinite 0.2s; }
+.loading-dot-3 { animation: dotBounce 1.2s ease-in-out infinite 0.4s; }
+
+.loading-subtitulo {
+  margin: 0;
+  color: #666;
+  font-size: clamp(13px, 1.3vw, 20px);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+@keyframes loadingFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scannerVarrer {
+  0%   { top: 15%; opacity: 1; }
+  48%  { top: 78%; opacity: 1; }
+  50%  { top: 78%; opacity: 0; }
+  52%  { top: 15%; opacity: 0; }
+  54%  { top: 15%; opacity: 1; }
+  100% { top: 15%; opacity: 1; }
+}
+
+@keyframes radarPulse {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  70%  { transform: scale(1.15); opacity: 0.2; }
+  100% { transform: scale(1);    opacity: 0.7; }
+}
+
+@keyframes pontoPulse {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 10px rgba(255,212,0,0.8); }
+  50%       { transform: scale(1.25); box-shadow: 0 0 20px rgba(255,212,0,1); }
+}
+
+@keyframes dotBounce {
+  0%, 60%, 100% { transform: translateY(0);        opacity: 0.4; }
+  30%            { transform: translateY(-12px);    opacity: 1;   }
+}

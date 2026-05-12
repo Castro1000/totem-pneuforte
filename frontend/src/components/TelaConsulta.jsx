@@ -135,6 +135,47 @@ export default function TelaConsulta({
         </div>
       )}
 
+      {/* =============================================
+          LOADING — ANIMAÇÃO DE BUSCA
+          ============================================= */}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="loading-box">
+
+            {/* Placa sendo "escaneada" */}
+            <div className="loading-placa-wrap">
+              <img src="/placavazia.png" alt="Placa" className="loading-placa-img" />
+              <div className="loading-placa-texto">
+                {placa.slice(0, 3)}
+                <span className="loading-placa-traco">-</span>
+                {placa.slice(3)}
+              </div>
+              <div className="loading-scanner-line" />
+            </div>
+
+            {/* Ícone radar + texto */}
+            <div className="loading-radar-wrap">
+              <div className="loading-radar">
+                <div className="loading-radar-anel loading-radar-anel-1" />
+                <div className="loading-radar-anel loading-radar-anel-2" />
+                <div className="loading-radar-anel loading-radar-anel-3" />
+                <div className="loading-radar-ponto" />
+              </div>
+            </div>
+
+            <p className="loading-titulo">CONSULTANDO VEÍCULO</p>
+
+            <div className="loading-dots">
+              <span className="loading-dot loading-dot-1" />
+              <span className="loading-dot loading-dot-2" />
+              <span className="loading-dot loading-dot-3" />
+            </div>
+
+            <p className="loading-subtitulo">Buscando informações da placa</p>
+          </div>
+        </div>
+      )}
+
       {/* ERRO */}
       {erro && !resultado && (
         <div className="popup-erro-bar">{erro}</div>
