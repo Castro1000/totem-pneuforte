@@ -124,23 +124,30 @@ export default function App() {
     setPlaca(sanitizePlaca(valor));
   }
 
-  async function buscar() {
+ async function buscar() {
     try {
       setLoading(true);
       setErro('');
       setResultado(null);
       setMostrarMaisMedidas(false);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/totem/buscar-por-placa`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ placa })
-      });
+      const tentarBusca = async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/totem/buscar-por-placa`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ placa })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.erro || 'Erro ao buscar veículo');
+        return data;
+      };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.erro || 'Erro ao buscar veículo');
+      let data;
+      try {
+        data = await tentarBusca();
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        data = await tentarBusca();
       }
 
       setResultado(data);
