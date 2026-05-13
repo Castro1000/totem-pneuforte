@@ -6,6 +6,11 @@ function limparTexto(valor) {
   return String(valor || '').trim().toUpperCase();
 }
 
+function anoValido(ano) {
+  const n = Number(ano);
+  return !isNaN(n) && n >= 1900 && n <= 2050;
+}
+
 async function salvarVeiculoConsultado({
   codigo_fipe,
   marca,
@@ -16,7 +21,8 @@ async function salvarVeiculoConsultado({
 }) {
   const anoNumero = Number(ano);
 
-  if (!marca || !modelo || !anoNumero) {
+  // Rejeita anos inválidos — evita salvar 32000, 0, null, etc.
+  if (!marca || !modelo || !anoValido(anoNumero)) {
     return null;
   }
 
@@ -142,6 +148,44 @@ async function registrarConsultaTotem({
   }
 }
 
+// Salva veículo e registra log em background — não bloqueia a resposta
+function salvarERegistrarEmBackground({ veiculo, pneus, placa, origem, req }) {
+  Promise.resolve()
+    .then(async () => {
+      const veiculoId = await salvarVeiculoConsultado({
+        codigo_fipe: veiculo.codigo_fipe,
+        marca: veiculo.marca,
+        modelo: veiculo.modelo,
+        versao: veiculo.versao,
+        ano: veiculo.ano,
+        combustivel: veiculo.combustivel
+      });
+
+      await registrarConsultaTotem({
+        origem,
+        placa: placa || null,
+        codigo_fipe: veiculo.codigo_fipe,
+        marca: veiculo.marca,
+        modelo: veiculo.modelo,
+        versao: veiculo.versao,
+        ano: veiculo.ano,
+        combustivel: veiculo.combustivel,
+        veiculo_id: veiculoId,
+        medida_recomendada: pneus?.[0]?.medida || null,
+        status: pneus?.length ? 'encontrado' : 'nao_encontrado',
+        observacao: pneus?.length
+          ? `Consulta por ${origem} com medida encontrada`
+          : 'Veículo salvo, mas sem medida cadastrada',
+        req
+      });
+    })
+    .catch((err) => {
+      console.error('ERRO NO BACKGROUND SAVE:', err.message || err);
+    });
+}
+
+// ─── buscarPorPlaca ───────────────────────────────────────────────────────────
+
 async function buscarPorPlaca(req, res) {
   try {
     const { placa } = req.body;
@@ -153,25 +197,18 @@ async function buscarPorPlaca(req, res) {
     const veiculo = await buscarVeiculoPorPlaca(placa);
 
     if (!veiculo) {
-      await registrarConsultaTotem({
-        origem: 'placa',
-        placa,
-        status: 'nao_encontrado',
-        observacao: 'Veículo não encontrado pela placa',
-        req
-      });
+      Promise.resolve()
+        .then(() => registrarConsultaTotem({
+          origem: 'placa',
+          placa,
+          status: 'nao_encontrado',
+          observacao: 'Veículo não encontrado pela placa',
+          req
+        }))
+        .catch(() => {});
 
       return res.status(404).json({ erro: 'Veículo não encontrado' });
     }
-
-    const veiculoId = await salvarVeiculoConsultado({
-      codigo_fipe: veiculo.codigo_fipe,
-      marca: veiculo.marca,
-      modelo: veiculo.modelo,
-      versao: veiculo.versao,
-      ano: veiculo.ano,
-      combustivel: veiculo.combustivel
-    });
 
     const pneus = await buscarPneusCompativeis({
       codigo_fipe: veiculo.codigo_fipe,
@@ -181,28 +218,11 @@ async function buscarPorPlaca(req, res) {
       ano: veiculo.ano
     });
 
-    await registrarConsultaTotem({
-      origem: 'placa',
-      placa,
-      codigo_fipe: veiculo.codigo_fipe,
-      marca: veiculo.marca,
-      modelo: veiculo.modelo,
-      versao: veiculo.versao,
-      ano: veiculo.ano,
-      combustivel: veiculo.combustivel,
-      veiculo_id: veiculoId,
-      medida_recomendada: pneus?.[0]?.medida || null,
-      status: pneus?.length ? 'encontrado' : 'nao_encontrado',
-      observacao: pneus?.length
-        ? 'Consulta por placa com medida encontrada'
-        : 'Veículo salvo, mas sem medida cadastrada',
-      req
-    });
+    // Responde imediatamente — save e log vão para background
+    res.json({ veiculo, pneus });
 
-    return res.json({
-      veiculo,
-      pneus
-    });
+    salvarERegistrarEmBackground({ veiculo, pneus, placa, origem: 'placa', req });
+
   } catch (error) {
     console.error('ERRO NO CONTROLLER:', error.message || error);
 
@@ -213,6 +233,8 @@ async function buscarPorPlaca(req, res) {
     return res.status(500).json({ erro: 'Erro ao consultar placa' });
   }
 }
+
+// ─── buscarMedidaVeiculo ──────────────────────────────────────────────────────
 
 async function buscarMedidaVeiculo(req, res) {
   try {
@@ -240,8 +262,6 @@ async function buscarMedidaVeiculo(req, res) {
       combustivel: combustivel || null
     };
 
-    const veiculoId = await salvarVeiculoConsultado(veiculo);
-
     const pneus = await buscarPneusCompativeis({
       codigo_fipe: veiculo.codigo_fipe,
       marca: veiculo.marca,
@@ -251,65 +271,59 @@ async function buscarMedidaVeiculo(req, res) {
     });
 
     if (!pneus || pneus.length === 0) {
-      await registrarConsultaTotem({
-        origem: 'modelo',
-        codigo_fipe: veiculo.codigo_fipe,
-        marca: veiculo.marca,
-        modelo: veiculo.modelo,
-        versao: veiculo.versao,
-        ano: veiculo.ano,
-        combustivel: veiculo.combustivel,
-        veiculo_id: veiculoId,
-        status: 'nao_encontrado',
-        observacao: 'Veículo salvo, mas sem medida cadastrada',
-        req
-      });
+      Promise.resolve()
+        .then(async () => {
+          const veiculoId = await salvarVeiculoConsultado(veiculo);
+          await registrarConsultaTotem({
+            origem: 'modelo',
+            codigo_fipe: veiculo.codigo_fipe,
+            marca: veiculo.marca,
+            modelo: veiculo.modelo,
+            versao: veiculo.versao,
+            ano: veiculo.ano,
+            combustivel: veiculo.combustivel,
+            veiculo_id: veiculoId,
+            status: 'nao_encontrado',
+            observacao: 'Veículo salvo, mas sem medida cadastrada',
+            req
+          });
+        })
+        .catch(() => {});
 
       return res.status(404).json({
         erro: 'Veículo salvo, mas ainda não possui medida cadastrada',
         veiculo_salvo: true,
-        veiculo_id: veiculoId,
         veiculo,
         pneus: []
       });
     }
 
-    await registrarConsultaTotem({
-      origem: 'modelo',
-      codigo_fipe: veiculo.codigo_fipe,
-      marca: veiculo.marca,
-      modelo: veiculo.modelo,
-      versao: veiculo.versao,
-      ano: veiculo.ano,
-      combustivel: veiculo.combustivel,
-      veiculo_id: veiculoId,
-      medida_recomendada: pneus[0]?.medida || null,
-      status: 'encontrado',
-      observacao: 'Consulta por marca/modelo com medida encontrada',
-      req
-    });
-
-    return res.json({
+    // Responde imediatamente
+    res.json({
       encontrado: true,
       veiculo_salvo: true,
-      veiculo_id: veiculoId,
       veiculo,
       pneus
     });
+
+    salvarERegistrarEmBackground({ veiculo, pneus, placa: null, origem: 'modelo', req });
+
   } catch (error) {
     console.error('ERRO AO BUSCAR MEDIDA POR VEÍCULO:', error.message || error);
 
-    await registrarConsultaTotem({
-      origem: 'modelo',
-      marca: req.body?.marca,
-      modelo: req.body?.modelo,
-      versao: req.body?.versao,
-      ano: req.body?.ano,
-      codigo_fipe: req.body?.codigo_fipe,
-      status: 'erro',
-      observacao: error.message || 'Erro ao buscar medida do veículo',
-      req
-    });
+    Promise.resolve()
+      .then(() => registrarConsultaTotem({
+        origem: 'modelo',
+        marca: req.body?.marca,
+        modelo: req.body?.modelo,
+        versao: req.body?.versao,
+        ano: req.body?.ano,
+        codigo_fipe: req.body?.codigo_fipe,
+        status: 'erro',
+        observacao: error.message || 'Erro ao buscar medida do veículo',
+        req
+      }))
+      .catch(() => {});
 
     return res.status(500).json({
       erro: 'Erro ao buscar medida do veículo'
