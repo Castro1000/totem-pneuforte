@@ -136,8 +136,8 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
 
   if (rows.length) return rows;
 
-  // 4. Fallback — Exato manda "NIVUS CL TSI" mas banco tem só "NIVUS"
-  //    Tenta bater com a primeira palavra do modelo
+  // 4. Fallback — modelo da Exato vem como "NIVUS CL TSI" mas banco tem só "NIVUS"
+  //    Tenta bater só com a primeira palavra do modelo
   if (modeloPrimeiraPalavra && modeloPrimeiraPalavra !== modeloNormalizado) {
     const rowsParcial = await executarBusca(
       `
@@ -166,6 +166,43 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     );
 
     if (rowsParcial.length) return rowsParcial;
+  }
+
+  // 5. Fallback — modelo com espaço no lugar de hífen
+  //    Exato manda "T CROSS TSI" mas banco tem "T-CROSS"
+  //    Pega as duas primeiras palavras, junta com hífen e testa
+  const tokens = modeloNormalizado.split(' ');
+  if (tokens.length >= 2) {
+    const modeloComHifen = tokens.slice(0, 2).join('-');
+    if (modeloComHifen !== modeloNormalizado) {
+      const rowsHifen = await executarBusca(
+        `
+        SELECT
+          v.id AS veiculo_id,
+          v.codigo_fipe,
+          v.marca,
+          v.modelo,
+          v.versao,
+          vm.id AS veiculo_medida_id,
+          vm.medida,
+          vm.tipo,
+          vm.prioridade,
+          vm.observacao,
+          'modelo_hifen' AS match_tipo
+        FROM veiculos v
+        INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+        WHERE UPPER(v.marca) = UPPER(?)
+          AND UPPER(v.modelo) = UPPER(?)
+          AND ? BETWEEN v.ano_inicio AND v.ano_fim
+          AND v.ativo = 1
+          AND vm.ativo = 1
+        ${orderBase}
+        `,
+        [marcaNormalizada, modeloComHifen, anoNumero]
+      );
+
+      if (rowsHifen.length) return rowsHifen;
+    }
   }
 
   return [];

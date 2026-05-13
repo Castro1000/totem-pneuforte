@@ -58,12 +58,12 @@ function tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe }) {
 }
 
 export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
-  const [popupAberto, setPopupAberto] = useState(false);
+  // Etapa do seletor: marca → modelo → ano → versao → null (concluído)
   const [etapa, setEtapa] = useState('marca');
+  const [seletorAberto, setSeletorAberto] = useState(true); // abre direto
   const [busca, setBusca] = useState('');
 
   const [marcas, setMarcas] = useState([]);
-  const [modelosFipe, setModelosFipe] = useState([]);
   const [modelosBase, setModelosBase] = useState([]);
   const [anos, setAnos] = useState([]);
   const [versoes, setVersoes] = useState([]);
@@ -76,6 +76,12 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   const [loading, setLoading] = useState(false);
   const [erroApi, setErroApi] = useState('');
+
+  // Popup 1 — veículo confirmado
+  const [popupVeiculo, setPopupVeiculo] = useState(false);
+  // Popup 2 — medida
+  const [popupMedida, setPopupMedida] = useState(false);
+
   const [loadingMedida, setLoadingMedida] = useState(false);
   const [erroMedida, setErroMedida] = useState('');
   const [resultadoMedidas, setResultadoMedidas] = useState(null);
@@ -88,7 +94,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       audio.currentTime = 0;
       audio.volume = 0.35;
       audio.play().catch(() => {});
-    } catch { /* silencia erro */ }
+    } catch { /* silencia */ }
   }
 
   const carregarMarcas = useCallback(async () => {
@@ -113,9 +119,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       const response = await fetch(`${API_FIPE}/marcas/${codigoMarca}/modelos`);
       const data = await response.json();
       if (!response.ok) throw new Error('Erro ao carregar modelos');
-      const listaModelos = data?.modelos || [];
-      setModelosFipe(listaModelos);
-      setModelosBase(montarModelosBase(listaModelos));
+      setModelosBase(montarModelosBase(data?.modelos || []));
     } catch {
       setErroApi('Não foi possível carregar os modelos desta marca.');
     } finally {
@@ -130,7 +134,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       const modelosRelacionados = modeloBaseSelecionado?.modelosOriginais || [];
       const mapaAnos = new Map();
 
-      // ⚡ Paralelo
       const resultados = await Promise.allSettled(
         modelosRelacionados.map((item) =>
           fetch(`${API_FIPE}/marcas/${marca.codigo}/modelos/${item.codigo}/anos`)
@@ -197,6 +200,9 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       const data = await response.json();
       if (!response.ok) throw new Error('Erro ao consultar veículo');
       setResultadoFipe(data);
+      // Fecha seletor e abre popup 1
+      setSeletorAberto(false);
+      setPopupVeiculo(true);
     } catch {
       setErroApi('Não foi possível consultar os dados finais do veículo.');
     } finally {
@@ -227,17 +233,16 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       let data;
       let ultimoErro;
       for (let i = 0; i < 3; i++) {
-        try {
-          data = await tentarBusca();
-          break;
-        } catch (err) {
+        try { data = await tentarBusca(); break; }
+        catch (err) {
           ultimoErro = err;
-          if (i < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
+          if (i < 2) await new Promise((r) => setTimeout(r, 1000));
         }
       }
-
       if (!data) throw ultimoErro;
       setResultadoMedidas(data);
+      setPopupVeiculo(false);
+      setPopupMedida(true);
     } catch (error) {
       setErroMedida(error.message || 'Erro ao buscar medida ideal');
     } finally {
@@ -245,16 +250,29 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
+  function novaConsulta() {
+    tocarClique();
+    setEtapa('marca');
+    setSeletorAberto(true);
+    setBusca('');
+    setMarca(null); setModelo(null); setAno(null); setVersao(null);
+    setResultadoFipe(null); setResultadoMedidas(null);
+    setModelosBase([]); setAnos([]); setVersoes([]);
+    setErroApi(''); setErroMedida('');
+    setPopupVeiculo(false); setPopupMedida(false);
+    setLoadingMedida(false);
+  }
+
   useEffect(() => { carregarMarcas(); }, [carregarMarcas]);
 
-  const tituloPopup = {
+  const tituloSeletor = {
     marca: 'ESCOLHA A MARCA DO SEU CARRO',
     modelo: 'ESCOLHA O MODELO DO SEU CARRO',
     ano: 'ESCOLHA O ANO DO SEU CARRO',
     versao: 'ESCOLHA A VERSÃO DO SEU CARRO'
   };
 
-  const placeholderPopup = {
+  const placeholderSeletor = {
     marca: 'DIGITE A MARCA',
     modelo: 'DIGITE O MODELO',
     ano: 'DIGITE O ANO',
@@ -275,8 +293,40 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
   }, [busca, opcoes]);
 
-  const veiculoCompleto = marca && modelo && ano && versao && resultadoFipe;
-  const veiculoTratado = veiculoCompleto
+  async function escolher(item) {
+    tocarClique();
+    if (etapa === 'marca') {
+      setMarca(item); setModelo(null); setAno(null); setVersao(null);
+      setResultadoFipe(null); setModelosBase([]); setAnos([]); setVersoes([]);
+      setBusca(''); setEtapa('modelo');
+      await carregarModelos(item.codigo);
+      return;
+    }
+    if (etapa === 'modelo') {
+      setModelo(item); setAno(null); setVersao(null);
+      setResultadoFipe(null); setAnos([]); setVersoes([]);
+      setBusca(''); setEtapa('ano');
+      await carregarAnosPorModeloBase(item);
+      return;
+    }
+    if (etapa === 'ano') {
+      setAno(item); setVersao(null);
+      setResultadoFipe(null); setVersoes([]);
+      setBusca(''); setEtapa('versao');
+      await carregarVersoesPorAno(item);
+      return;
+    }
+    if (etapa === 'versao') {
+      setVersao(item); setBusca('');
+      await carregarResultadoFinal(item);
+    }
+  }
+
+  function digitar(valor) { tocarClique(); setBusca((prev) => `${prev}${valor}`.toUpperCase()); }
+  function apagar() { tocarClique(); setBusca((prev) => prev.slice(0, -1)); }
+  function limparBusca() { tocarClique(); setBusca(''); }
+
+  const veiculoTratado = marca && modelo && ano && versao && resultadoFipe
     ? tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe })
     : null;
 
@@ -288,231 +338,182 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       self.findIndex((m) => m.medida === item.medida) === index
     ) || [];
 
-  function abrirPopup() {
-    tocarClique();
-    setPopupAberto(true);
-    setEtapa('marca');
-    setBusca('');
-    setErroApi('');
-  }
-
-  function fecharPopup() {
-    tocarClique();
-    setPopupAberto(false);
-    setBusca('');
-  }
-
-  async function escolher(item) {
-    tocarClique();
-    if (etapa === 'marca') {
-      setMarca(item); setModelo(null); setAno(null); setVersao(null);
-      setResultadoFipe(null); setResultadoMedidas(null);
-      setModelosFipe([]); setModelosBase([]); setAnos([]); setVersoes([]);
-      setBusca(''); setEtapa('modelo');
-      await carregarModelos(item.codigo);
-      return;
-    }
-    if (etapa === 'modelo') {
-      setModelo(item); setAno(null); setVersao(null);
-      setResultadoFipe(null); setResultadoMedidas(null);
-      setAnos([]); setVersoes([]);
-      setBusca(''); setEtapa('ano');
-      await carregarAnosPorModeloBase(item);
-      return;
-    }
-    if (etapa === 'ano') {
-      setAno(item); setVersao(null);
-      setResultadoFipe(null); setResultadoMedidas(null);
-      setVersoes([]);
-      setBusca(''); setEtapa('versao');
-      await carregarVersoesPorAno(item);
-      return;
-    }
-    if (etapa === 'versao') {
-      setVersao(item); setBusca(''); setPopupAberto(false);
-      await carregarResultadoFinal(item);
-    }
-  }
-
-  function digitar(valor) { tocarClique(); setBusca((prev) => `${prev}${valor}`.toUpperCase()); }
-  function apagar() { tocarClique(); setBusca((prev) => prev.slice(0, -1)); }
-  function limparBusca() { tocarClique(); setBusca(''); }
-
-  function refazerConsulta() {
-    tocarClique();
-    setPopupAberto(true); setEtapa('marca'); setBusca('');
-    setMarca(null); setModelo(null); setAno(null); setVersao(null);
-    setResultadoFipe(null); setResultadoMedidas(null);
-    setModelosFipe([]); setModelosBase([]); setAnos([]); setVersoes([]);
-    setErroApi(''); setErroMedida('');
-  }
-
   const teclas = etapa === 'ano' ? NUMEROS : LETRAS;
 
   return (
-    <div className="consulta-avancada-page">
+    <div className="app tela-placa-entrada">
       <audio ref={teclaRef} src="/tecla.mp3" preload="auto" />
-      <div className="consulta-avancada-fundo"></div>
-      <div className="consulta-avancada-logo-fundo"></div>
+      <div className="bg-consulta"></div>
+      <div className="bg-consulta-overlay"></div>
 
       <button className="btn-voltar flutuante" onClick={voltarInicio}>Início</button>
 
-      <main className="consulta-avancada-centro">
-        <section className="consulta-avancada-painel">
-          <div className="consulta-avancada-topo-amarelo">
-            <div className="consulta-avancada-mini">CONSULTA AVANÇADA</div>
-            <h1>ENCONTRE A MEDIDA CERTA DO SEU PNEU</h1>
-          </div>
+      {/* =============================================
+          SELETOR — overlay igual ao loading/popup da TelaConsulta
+          ============================================= */}
+      {seletorAberto && (
+        <div className="ca-seletor-overlay">
+          <div className="ca-seletor-box">
 
-          <div className="consulta-avancada-conteudo">
-            <p className="consulta-avancada-descricao">
-              Informe os dados do seu veículo para encontrarmos a medida ideal.
-            </p>
-
-            {!veiculoCompleto ? (
-              <button className="btn-escolher-marca" onClick={abrirPopup}>
-                TOQUE PARA ESCOLHER A MARCA DO SEU CARRO
-              </button>
-            ) : (
-              <div className="ca-resultado-wrapper">
-
-                {/* Card do veículo — mesmo estilo dark da TelaConsulta */}
-                <div className="ca-veiculo-card">
-                  <div className="ca-veiculo-badge">✓ VEÍCULO SELECIONADO</div>
-                  <div className="ca-veiculo-nome">
-                    <span className="ca-veiculo-marca">{veiculoTratado.marca}</span>
-                    <span className="ca-veiculo-modelo">{veiculoTratado.modelo}</span>
-                  </div>
-                  <div className="ca-veiculo-boxes">
-                    <div className="ca-veiculo-box">
-                      <small>ANO</small>
-                      <strong>{veiculoTratado.ano}</strong>
-                    </div>
-                    {veiculoTratado.versao && (
-                      <div className="ca-veiculo-box ca-veiculo-box-wide">
-                        <small>VERSÃO</small>
-                        <strong>{veiculoTratado.versao}</strong>
-                      </div>
-                    )}
-                    {veiculoTratado.combustivel && (
-                      <div className="ca-veiculo-box">
-                        <small>COMBUSTÍVEL</small>
-                        <strong>{veiculoTratado.combustivel}</strong>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Botão buscar medida */}
-                {!resultadoMedidas && !erroMedida && (
-                  <button
-                    className="btn-escolher-marca ca-btn-buscar-medida"
-                    onClick={buscarMedidaIdeal}
-                    disabled={loadingMedida}
-                  >
-                    {loadingMedida ? '🔍 BUSCANDO MEDIDA...' : '🔍 BUSCAR MEDIDA IDEAL'}
-                  </button>
-                )}
-
-                {/* Erro */}
-                {erroMedida && (
-                  <div className="ca-medida-erro">
-                    <p>⚠️ {erroMedida}</p>
-                    <p>Consulte um de nossos atendentes!</p>
-                  </div>
-                )}
-
-                {/* Resultado da medida — mesmo estilo do popup 2 da TelaConsulta */}
-                {medidaPrincipal && (
-                  <div className="ca-medida-card">
-                    <div className="ca-medida-badge">🔍 MEDIDA IDEAL ENCONTRADA</div>
-                    <div className="ca-medida-numero glow-measure-ca">
-                      {medidaPrincipal.medida}
-                    </div>
-                    {medidaPrincipal.observacao && (
-                      <p className="ca-medida-obs">{medidaPrincipal.observacao}</p>
-                    )}
-
-                    {outrasMedidas.length > 0 && (
-                      <div className="ca-outras-medidas">
-                        <p className="ca-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
-                        <div className="ca-outras-grid">
-                          {outrasMedidas.map((item, i) => (
-                            <div key={i} className="ca-outra-medida">{item.medida}</div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Ações */}
-                <div className="ca-acoes">
-                  <button className="ca-btn-acao ca-btn-nova" onClick={refazerConsulta}>
-                    🔄 NOVA CONSULTA
-                  </button>
-                  <button className="ca-btn-acao ca-btn-inicio" onClick={voltarInicio}>
-                    🏠 VOLTAR AO INÍCIO
-                  </button>
-                </div>
-
-              </div>
-            )}
-
-            <div className="consulta-avancada-footer">
-              <img src="/mascote.png" alt="Mascote Pneu Forte" className="consulta-avancada-mascote" />
-              <img src="/logo.png" alt="Pneu Forte" className="consulta-avancada-logo" />
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {popupAberto && (
-        <div className="popup-avancada-overlay">
-          <section className="popup-avancada">
-            <button className="popup-fechar-x" onClick={fecharPopup}>×</button>
-
-            <div className="popup-avancada-topo">
-              <h2>{tituloPopup[etapa]}</h2>
-              <p>{loading ? 'Carregando dados...' : 'Digite no teclado abaixo e toque em uma opção para continuar.'}</p>
+            <div className="ca-seletor-topo">
+              <h2>{tituloSeletor[etapa]}</h2>
+              <p>{loading ? 'Carregando dados...' : 'Digite no teclado e toque em uma opção'}</p>
             </div>
 
             <input
-              className="popup-avancada-input"
+              className="ca-seletor-input"
               value={busca}
-              placeholder={placeholderPopup[etapa]}
+              placeholder={placeholderSeletor[etapa]}
               readOnly
             />
 
-            <div className={`popup-avancada-resultados ${!busca ? 'vazio' : ''}`}>
+            <div className={`ca-seletor-resultados ${!busca ? 'vazio' : ''}`}>
               {loading ? (
-                <div className="sem-resultado-popup">Carregando...</div>
+                <div className="ca-seletor-msg">Carregando...</div>
               ) : erroApi ? (
-                <div className="sem-resultado-popup">{erroApi}</div>
+                <div className="ca-seletor-msg">{erroApi}</div>
               ) : !busca ? (
-                <div className="sem-resultado-popup">Digite para pesquisar</div>
+                <div className="ca-seletor-msg">Digite para pesquisar</div>
               ) : opcoesFiltradas.length > 0 ? (
                 opcoesFiltradas.map((item) => (
-                  <button key={item.codigo} onClick={() => escolher(item)}>{item.nome}</button>
+                  <button key={item.codigo} className="ca-seletor-opcao" onClick={() => escolher(item)}>
+                    {item.nome}
+                  </button>
                 ))
               ) : (
-                <div className="sem-resultado-popup">Nenhum resultado encontrado</div>
+                <div className="ca-seletor-msg">Nenhum resultado encontrado</div>
               )}
             </div>
 
-            <div className="popup-avancada-teclado">
+            <div className="ca-seletor-teclado">
               {teclas.map((tecla) => (
-                <button key={tecla} onClick={() => digitar(tecla)}>{tecla}</button>
+                <button key={tecla} className="ca-tecla" onClick={() => digitar(tecla)}>{tecla}</button>
               ))}
             </div>
 
-            <div className="popup-avancada-acoes">
-              <button onClick={apagar}>APAGAR</button>
-              <button onClick={limparBusca}>LIMPAR</button>
+            <div className="ca-seletor-acoes">
+              <button className="ca-btn-apagar" onClick={apagar}>APAGAR</button>
+              <button className="ca-btn-limpar" onClick={limparBusca}>LIMPAR</button>
             </div>
-          </section>
+
+          </div>
         </div>
       )}
+
+      {/* =============================================
+          POPUP 1 — VEÍCULO ENCONTRADO
+          ============================================= */}
+      {popupVeiculo && veiculoTratado && (
+        <div className="popup-overlay">
+          <div className="popup-veiculo popup-animado">
+
+            <div className="popup-badge popup-badge-verde">✓ VEÍCULO ENCONTRADO</div>
+
+            <div className="popup-veiculo-info">
+              <div className="popup-info-linha popup-marca-modelo">
+                <span className="popup-marca">{veiculoTratado.marca}</span>
+                <span className="popup-modelo">{veiculoTratado.modelo}</span>
+              </div>
+              <div className="popup-info-boxes">
+                <div className="popup-info-box">
+                  <small>ANO</small>
+                  <strong>{veiculoTratado.ano}</strong>
+                </div>
+                {veiculoTratado.versao && (
+                  <div className="popup-info-box popup-info-box-wide">
+                    <small>VERSÃO</small>
+                    <strong>{veiculoTratado.versao}</strong>
+                  </div>
+                )}
+                {veiculoTratado.combustivel && (
+                  <div className="popup-info-box">
+                    <small>COMBUSTÍVEL</small>
+                    <strong>{veiculoTratado.combustivel}</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <p className="popup-pergunta">Este é o seu veículo?</p>
+
+            {erroMedida && (
+              <div className="popup-sem-medida">
+                <p>⚠️ {erroMedida}</p>
+                <p>Consulte um de nossos atendentes!</p>
+              </div>
+            )}
+
+            <div className="popup-acoes">
+              <button
+                className="popup-btn popup-btn-sim"
+                onClick={buscarMedidaIdeal}
+                disabled={loadingMedida}
+              >
+                {loadingMedida ? '🔍 BUSCANDO...' : '✓ SIM, É MEU CARRO'}
+              </button>
+              <button className="popup-btn popup-btn-nao" onClick={novaConsulta}>
+                ✗ NÃO É MEU CARRO
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* =============================================
+          POPUP 2 — MEDIDA IDEAL
+          ============================================= */}
+      {popupMedida && (
+        <div className="popup-overlay">
+          <div className="popup-medida popup-animado">
+
+            <div className="popup-badge popup-badge-amarelo">🔍 MEDIDA IDEAL ENCONTRADA</div>
+
+            {veiculoTratado && (
+              <div className="popup-veiculo-resumo">
+                {veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}
+              </div>
+            )}
+
+            {medidaPrincipal ? (
+              <>
+                <div className="popup-medida-numero glow-measure">
+                  {medidaPrincipal.medida}
+                </div>
+                {medidaPrincipal.observacao && (
+                  <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
+                )}
+                {outrasMedidas.length > 0 && (
+                  <div className="popup-outras-medidas">
+                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
+                    <div className="popup-outras-grid">
+                      {outrasMedidas.map((item, i) => (
+                        <div key={i} className="popup-outra-medida">{item.medida}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="popup-sem-medida">
+                <p>⚠️ Veículo encontrado, mas ainda não temos a medida cadastrada.</p>
+                <p>Consulte um de nossos atendentes!</p>
+              </div>
+            )}
+
+            <div className="popup-acoes">
+              <button className="popup-btn popup-btn-sim" onClick={novaConsulta}>
+                🔄 NOVA CONSULTA
+              </button>
+              <button className="popup-btn popup-btn-nao" onClick={voltarInicio}>
+                🏠 VOLTAR AO INÍCIO
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
