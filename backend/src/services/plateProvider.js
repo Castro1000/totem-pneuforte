@@ -43,9 +43,9 @@ function separarMarcaModelo(brandModel = '') {
 
   if (!texto) return { marca: null, modelo: null };
 
-  // Remove prefixo de origem do DETRAN: "I/" (importado), "N/" (nacional), etc.
-  // Ex: "I/FIAT SIENA EL 1.4 FLEX" → "FIAT SIENA EL 1.4 FLEX"
-  const semPrefixo = texto.replace(/^[A-Z]{1,2}\//, '');
+  // Remove prefixo de origem do DETRAN: "I/", "CHEV/", etc.
+  // Cobre até 4 letras antes da barra: I/, N/, VW/, GM/, CHEV/, etc.
+  const semPrefixo = texto.replace(/^[A-Z]{1,4}\//, '');
 
   if (semPrefixo.includes('/')) {
     const [marca, ...resto] = semPrefixo.split('/');
@@ -53,7 +53,7 @@ function separarMarcaModelo(brandModel = '') {
   }
 
   if (!semPrefixo.includes('/') && semPrefixo !== texto) {
-    // Após remover prefixo, separa por espaço: "FIAT SIENA EL 1.4 FLEX" → marca=FIAT, modelo=SIENA EL 1.4 FLEX
+    // Após remover prefixo, separa por espaço
     const [marca, ...resto] = semPrefixo.split(' ');
     if (resto.length) return { marca: marca?.trim() || null, modelo: resto.join(' ').trim() || null };
     return { marca: semPrefixo, modelo: null };
@@ -64,7 +64,6 @@ function separarMarcaModelo(brandModel = '') {
     return { marca: marca?.trim() || null, modelo: resto.join('-').trim() || null };
   }
 
-  // Sem / nem - : primeiro token é a marca, o resto é o modelo
   if (texto.includes(' ')) {
     const [marca, ...resto] = texto.split(' ');
     return { marca: marca?.trim() || null, modelo: resto.join(' ').trim() || null };
@@ -78,6 +77,7 @@ const MAPA_MARCAS = {
   'VW':            'VW - VOLKSWAGEN',
   'VOLKSWAGEN':    'VW - VOLKSWAGEN',
   'GM':            'GM - CHEVROLET',
+  'CHEV':          'GM - CHEVROLET',
   'CHEVROLET':     'GM - CHEVROLET',
   'KIA':           'KIA MOTORS',
   'LAND-ROVER':    'LAND ROVER',
