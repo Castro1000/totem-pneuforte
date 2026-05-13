@@ -43,9 +43,20 @@ function separarMarcaModelo(brandModel = '') {
 
   if (!texto) return { marca: null, modelo: null };
 
-  if (texto.includes('/')) {
-    const [marca, ...resto] = texto.split('/');
+  // Remove prefixo de origem do DETRAN: "I/" (importado), "N/" (nacional), etc.
+  // Ex: "I/FIAT SIENA EL 1.4 FLEX" → "FIAT SIENA EL 1.4 FLEX"
+  const semPrefixo = texto.replace(/^[A-Z]{1,2}\//, '');
+
+  if (semPrefixo.includes('/')) {
+    const [marca, ...resto] = semPrefixo.split('/');
     return { marca: marca?.trim() || null, modelo: resto.join('/').trim() || null };
+  }
+
+  if (!semPrefixo.includes('/') && semPrefixo !== texto) {
+    // Após remover prefixo, separa por espaço: "FIAT SIENA EL 1.4 FLEX" → marca=FIAT, modelo=SIENA EL 1.4 FLEX
+    const [marca, ...resto] = semPrefixo.split(' ');
+    if (resto.length) return { marca: marca?.trim() || null, modelo: resto.join(' ').trim() || null };
+    return { marca: semPrefixo, modelo: null };
   }
 
   if (texto.includes('-')) {
