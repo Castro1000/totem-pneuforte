@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import '../styles/consultaAvancada.css';
 
 const LETRAS = [
@@ -14,82 +14,39 @@ const API_FIPE = 'https://parallelum.com.br/fipe/api/v1/carros';
 const API_BACKEND = `${import.meta.env.VITE_API_URL}/api/totem`;
 
 function normalizarTexto(texto = '') {
-  return String(texto)
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toUpperCase();
+  return String(texto).trim().replace(/\s+/g, ' ').toUpperCase();
 }
 
 function tratarModeloFipe(nomeModelo = '') {
   const texto = String(nomeModelo).trim().replace(/\s+/g, ' ');
-
-  if (!texto) {
-    return {
-      modeloBase: '',
-      versao: 'VERSÃO NÃO INFORMADA'
-    };
-  }
-
+  if (!texto) return { modeloBase: '', versao: 'VERSÃO NÃO INFORMADA' };
   const partes = texto.split(' ');
-  const modeloBase = partes[0] || texto;
-  const versao = partes.slice(1).join(' ') || 'VERSÃO ÚNICA';
-
-  return {
-    modeloBase,
-    versao
-  };
+  return { modeloBase: partes[0] || texto, versao: partes.slice(1).join(' ') || 'VERSÃO ÚNICA' };
 }
 
 function tratarAnoFipe(nomeAno = '') {
   const texto = String(nomeAno).trim();
-
-  if (!texto) {
-    return {
-      anoNumero: '',
-      combustivel: ''
-    };
-  }
-
+  if (!texto) return { anoNumero: '', combustivel: '' };
   const partes = texto.split(' ');
-  const anoNumero = partes[0] || texto;
-  const combustivel = partes.slice(1).join(' ') || '';
-
-  return {
-    anoNumero,
-    combustivel
-  };
+  return { anoNumero: partes[0] || texto, combustivel: partes.slice(1).join(' ') || '' };
 }
 
 function montarModelosBase(modelosFipe = []) {
   const mapa = new Map();
-
   modelosFipe.forEach((item) => {
     const tratado = tratarModeloFipe(item.nome);
     const chave = normalizarTexto(tratado.modeloBase);
-
     if (!chave) return;
-
     if (!mapa.has(chave)) {
-      mapa.set(chave, {
-        codigo: chave,
-        nome: tratado.modeloBase,
-        modelosOriginais: []
-      });
+      mapa.set(chave, { codigo: chave, nome: tratado.modeloBase, modelosOriginais: [] });
     }
-
-    mapa.get(chave).modelosOriginais.push({
-      ...item,
-      modeloBase: tratado.modeloBase,
-      versao: tratado.versao
-    });
+    mapa.get(chave).modelosOriginais.push({ ...item, modeloBase: tratado.modeloBase, versao: tratado.versao });
   });
-
   return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
 function tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe }) {
   const anoTratado = tratarAnoFipe(ano?.nome);
-
   return {
     marca: marca?.nome || resultadoFipe?.Marca || '',
     modelo: modelo?.nome || '',
@@ -119,7 +76,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   const [loading, setLoading] = useState(false);
   const [erroApi, setErroApi] = useState('');
-
   const [loadingMedida, setLoadingMedida] = useState(false);
   const [erroMedida, setErroMedida] = useState('');
   const [resultadoMedidas, setResultadoMedidas] = useState(null);
@@ -127,51 +83,37 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   function tocarClique() {
     const audio = teclaRef?.current;
     if (!audio) return;
-
     try {
       audio.pause();
       audio.currentTime = 0;
       audio.volume = 0.35;
       audio.play().catch(() => {});
-    } catch {
-      //
-    }
+    } catch { /* silencia erro */ }
   }
 
-  async function carregarMarcas() {
+  const carregarMarcas = useCallback(async () => {
     try {
       setLoading(true);
       setErroApi('');
-
       const response = await fetch(`${API_FIPE}/marcas`);
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error('Erro ao carregar marcas');
-      }
-
+      if (!response.ok) throw new Error('Erro ao carregar marcas');
       setMarcas(data || []);
     } catch {
       setErroApi('Não foi possível carregar as marcas. Verifique a internet.');
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   async function carregarModelos(codigoMarca) {
     try {
       setLoading(true);
       setErroApi('');
-
       const response = await fetch(`${API_FIPE}/marcas/${codigoMarca}/modelos`);
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error('Erro ao carregar modelos');
-      }
-
+      if (!response.ok) throw new Error('Erro ao carregar modelos');
       const listaModelos = data?.modelos || [];
-
       setModelosFipe(listaModelos);
       setModelosBase(montarModelosBase(listaModelos));
     } catch {
@@ -185,33 +127,29 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     try {
       setLoading(true);
       setErroApi('');
-
       const modelosRelacionados = modeloBaseSelecionado?.modelosOriginais || [];
       const mapaAnos = new Map();
 
-      for (const item of modelosRelacionados) {
-        const response = await fetch(
-          `${API_FIPE}/marcas/${marca.codigo}/modelos/${item.codigo}/anos`
-        );
+      // ⚡ Paralelo
+      const resultados = await Promise.allSettled(
+        modelosRelacionados.map((item) =>
+          fetch(`${API_FIPE}/marcas/${marca.codigo}/modelos/${item.codigo}/anos`)
+            .then((r) => r.ok ? r.json() : [])
+            .then((listaAnos) => ({ item, listaAnos }))
+            .catch(() => ({ item, listaAnos: [] }))
+        )
+      );
 
-        if (!response.ok) continue;
-
-        const listaAnos = await response.json();
-
+      resultados.forEach((res) => {
+        if (res.status !== 'fulfilled') return;
+        const { item, listaAnos } = res.value;
         (listaAnos || []).forEach((anoItem) => {
           const anoTratado = tratarAnoFipe(anoItem.nome);
           const chave = normalizarTexto(anoTratado.anoNumero);
-
           if (!chave) return;
-
           if (!mapaAnos.has(chave)) {
-            mapaAnos.set(chave, {
-              codigo: chave,
-              nome: anoTratado.anoNumero,
-              anosOriginais: []
-            });
+            mapaAnos.set(chave, { codigo: chave, nome: anoTratado.anoNumero, anosOriginais: [] });
           }
-
           mapaAnos.get(chave).anosOriginais.push({
             ...anoItem,
             codigoModelo: item.codigo,
@@ -220,13 +158,9 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             versao: item.versao
           });
         });
-      }
+      });
 
-      const listaFinal = Array.from(mapaAnos.values()).sort(
-        (a, b) => Number(b.nome) - Number(a.nome)
-      );
-
-      setAnos(listaFinal);
+      setAnos(Array.from(mapaAnos.values()).sort((a, b) => Number(b.nome) - Number(a.nome)));
     } catch {
       setErroApi('Não foi possível carregar os anos deste modelo.');
     } finally {
@@ -238,17 +172,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     try {
       setLoading(true);
       setErroApi('');
-
       const anosOriginais = anoSelecionado?.anosOriginais || [];
-      const listaVersoes = anosOriginais.map((item, index) => ({
+      setVersoes(anosOriginais.map((item, index) => ({
         codigo: `${item.codigoModelo}-${item.codigo}-${index}`,
         codigoModelo: item.codigoModelo,
         codigoAno: item.codigo,
         nome: item.versao || item.nomeModeloCompleto,
         modeloCompleto: item.nomeModeloCompleto
-      }));
-
-      setVersoes(listaVersoes);
+      })));
     } catch {
       setErroApi('Não foi possível carregar as versões deste veículo.');
     } finally {
@@ -260,17 +191,11 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     try {
       setLoading(true);
       setErroApi('');
-
       const response = await fetch(
         `${API_FIPE}/marcas/${marca.codigo}/modelos/${versaoSelecionada.codigoModelo}/anos/${versaoSelecionada.codigoAno}`
       );
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error('Erro ao consultar veículo');
-      }
-
+      if (!response.ok) throw new Error('Erro ao consultar veículo');
       setResultadoFipe(data);
     } catch {
       setErroApi('Não foi possível consultar os dados finais do veículo.');
@@ -286,28 +211,32 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       setErroMedida('');
       setResultadoMedidas(null);
 
-      const veiculoTratado = tratarVeiculoFipe({
-        marca,
-        modelo,
-        ano,
-        versao,
-        resultadoFipe
-      });
+      const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
 
-      const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(veiculoTratado)
-      });
+      const tentarBusca = async () => {
+        const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(veiculoTratado)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.erro || 'Nenhuma medida encontrada para este veículo');
+        return data;
+      };
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.erro || 'Nenhuma medida encontrada para este veículo');
+      let data;
+      let ultimoErro;
+      for (let i = 0; i < 3; i++) {
+        try {
+          data = await tentarBusca();
+          break;
+        } catch (err) {
+          ultimoErro = err;
+          if (i < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
 
+      if (!data) throw ultimoErro;
       setResultadoMedidas(data);
     } catch (error) {
       setErroMedida(error.message || 'Erro ao buscar medida ideal');
@@ -316,9 +245,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
-  useEffect(() => {
-    carregarMarcas();
-  }, []);
+  useEffect(() => { carregarMarcas(); }, [carregarMarcas]);
 
   const tituloPopup = {
     marca: 'ESCOLHA A MARCA DO SEU CARRO',
@@ -344,22 +271,22 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   const opcoesFiltradas = useMemo(() => {
     const texto = busca.trim().toUpperCase();
-
     if (!texto) return [];
-
-    return opcoes.filter((item) =>
-      String(item.nome).toUpperCase().includes(texto)
-    );
+    return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
   }, [busca, opcoes]);
 
   const veiculoCompleto = marca && modelo && ano && versao && resultadoFipe;
-
   const veiculoTratado = veiculoCompleto
     ? tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe })
     : null;
 
   const medidaPrincipal = resultadoMedidas?.pneus?.[0] || null;
-  const outrasMedidas = resultadoMedidas?.pneus?.slice(1) || [];
+  const outrasMedidas = resultadoMedidas?.pneus
+    ?.slice(1)
+    .filter((item, index, self) =>
+      item.medida !== medidaPrincipal?.medida &&
+      self.findIndex((m) => m.medida === item.medida) === index
+    ) || [];
 
   function abrirPopup() {
     tocarClique();
@@ -377,90 +304,47 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   async function escolher(item) {
     tocarClique();
-
     if (etapa === 'marca') {
-      setMarca(item);
-      setModelo(null);
-      setAno(null);
-      setVersao(null);
-      setResultadoFipe(null);
-      setResultadoMedidas(null);
-      setModelosFipe([]);
-      setModelosBase([]);
-      setAnos([]);
-      setVersoes([]);
-      setBusca('');
-      setEtapa('modelo');
+      setMarca(item); setModelo(null); setAno(null); setVersao(null);
+      setResultadoFipe(null); setResultadoMedidas(null);
+      setModelosFipe([]); setModelosBase([]); setAnos([]); setVersoes([]);
+      setBusca(''); setEtapa('modelo');
       await carregarModelos(item.codigo);
       return;
     }
-
     if (etapa === 'modelo') {
-      setModelo(item);
-      setAno(null);
-      setVersao(null);
-      setResultadoFipe(null);
-      setResultadoMedidas(null);
-      setAnos([]);
-      setVersoes([]);
-      setBusca('');
-      setEtapa('ano');
+      setModelo(item); setAno(null); setVersao(null);
+      setResultadoFipe(null); setResultadoMedidas(null);
+      setAnos([]); setVersoes([]);
+      setBusca(''); setEtapa('ano');
       await carregarAnosPorModeloBase(item);
       return;
     }
-
     if (etapa === 'ano') {
-      setAno(item);
-      setVersao(null);
-      setResultadoFipe(null);
-      setResultadoMedidas(null);
+      setAno(item); setVersao(null);
+      setResultadoFipe(null); setResultadoMedidas(null);
       setVersoes([]);
-      setBusca('');
-      setEtapa('versao');
+      setBusca(''); setEtapa('versao');
       await carregarVersoesPorAno(item);
       return;
     }
-
     if (etapa === 'versao') {
-      setVersao(item);
-      setBusca('');
-      setPopupAberto(false);
+      setVersao(item); setBusca(''); setPopupAberto(false);
       await carregarResultadoFinal(item);
     }
   }
 
-  function digitar(valor) {
-    tocarClique();
-    setBusca((prev) => `${prev}${valor}`.toUpperCase());
-  }
-
-  function apagar() {
-    tocarClique();
-    setBusca((prev) => prev.slice(0, -1));
-  }
-
-  function limparBusca() {
-    tocarClique();
-    setBusca('');
-  }
+  function digitar(valor) { tocarClique(); setBusca((prev) => `${prev}${valor}`.toUpperCase()); }
+  function apagar() { tocarClique(); setBusca((prev) => prev.slice(0, -1)); }
+  function limparBusca() { tocarClique(); setBusca(''); }
 
   function refazerConsulta() {
     tocarClique();
-    setPopupAberto(true);
-    setEtapa('marca');
-    setBusca('');
-    setMarca(null);
-    setModelo(null);
-    setAno(null);
-    setVersao(null);
-    setResultadoFipe(null);
-    setResultadoMedidas(null);
-    setModelosFipe([]);
-    setModelosBase([]);
-    setAnos([]);
-    setVersoes([]);
-    setErroApi('');
-    setErroMedida('');
+    setPopupAberto(true); setEtapa('marca'); setBusca('');
+    setMarca(null); setModelo(null); setAno(null); setVersao(null);
+    setResultadoFipe(null); setResultadoMedidas(null);
+    setModelosFipe([]); setModelosBase([]); setAnos([]); setVersoes([]);
+    setErroApi(''); setErroMedida('');
   }
 
   const teclas = etapa === 'ano' ? NUMEROS : LETRAS;
@@ -468,13 +352,10 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   return (
     <div className="consulta-avancada-page">
       <audio ref={teclaRef} src="/tecla.mp3" preload="auto" />
-
       <div className="consulta-avancada-fundo"></div>
       <div className="consulta-avancada-logo-fundo"></div>
 
-      <button className="btn-voltar flutuante" onClick={voltarInicio}>
-        Início
-      </button>
+      <button className="btn-voltar flutuante" onClick={voltarInicio}>Início</button>
 
       <main className="consulta-avancada-centro">
         <section className="consulta-avancada-painel">
@@ -493,65 +374,88 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 TOQUE PARA ESCOLHER A MARCA DO SEU CARRO
               </button>
             ) : (
-              <div className="consulta-veiculo-final">
-                <h2>VEÍCULO SELECIONADO</h2>
+              <div className="ca-resultado-wrapper">
 
-                <p><strong>Marca:</strong> {veiculoTratado.marca}</p>
-                <p><strong>Modelo:</strong> {veiculoTratado.modelo}</p>
-                <p>
-                  <strong>Ano:</strong> {veiculoTratado.ano}
-                  {veiculoTratado.combustivel ? ` - ${veiculoTratado.combustivel}` : ''}
-                </p>
-                <p><strong>Versão:</strong> {veiculoTratado.versao}</p>
+                {/* Card do veículo — mesmo estilo dark da TelaConsulta */}
+                <div className="ca-veiculo-card">
+                  <div className="ca-veiculo-badge">✓ VEÍCULO SELECIONADO</div>
+                  <div className="ca-veiculo-nome">
+                    <span className="ca-veiculo-marca">{veiculoTratado.marca}</span>
+                    <span className="ca-veiculo-modelo">{veiculoTratado.modelo}</span>
+                  </div>
+                  <div className="ca-veiculo-boxes">
+                    <div className="ca-veiculo-box">
+                      <small>ANO</small>
+                      <strong>{veiculoTratado.ano}</strong>
+                    </div>
+                    {veiculoTratado.versao && (
+                      <div className="ca-veiculo-box ca-veiculo-box-wide">
+                        <small>VERSÃO</small>
+                        <strong>{veiculoTratado.versao}</strong>
+                      </div>
+                    )}
+                    {veiculoTratado.combustivel && (
+                      <div className="ca-veiculo-box">
+                        <small>COMBUSTÍVEL</small>
+                        <strong>{veiculoTratado.combustivel}</strong>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                {veiculoTratado.codigo_fipe && (
-                  <p><strong>Código FIPE:</strong> {veiculoTratado.codigo_fipe}</p>
-                )}
-
-                {!resultadoMedidas && (
+                {/* Botão buscar medida */}
+                {!resultadoMedidas && !erroMedida && (
                   <button
-                    className="btn-escolher-marca"
+                    className="btn-escolher-marca ca-btn-buscar-medida"
                     onClick={buscarMedidaIdeal}
                     disabled={loadingMedida}
                   >
-                    {loadingMedida ? 'BUSCANDO MEDIDA...' : 'BUSCAR MEDIDA IDEAL'}
+                    {loadingMedida ? '🔍 BUSCANDO MEDIDA...' : '🔍 BUSCAR MEDIDA IDEAL'}
                   </button>
                 )}
 
+                {/* Erro */}
                 {erroMedida && (
-                  <div className="consulta-medida-erro">
-                    {erroMedida}
+                  <div className="ca-medida-erro">
+                    <p>⚠️ {erroMedida}</p>
+                    <p>Consulte um de nossos atendentes!</p>
                   </div>
                 )}
 
+                {/* Resultado da medida — mesmo estilo do popup 2 da TelaConsulta */}
                 {medidaPrincipal && (
-                  <div className="consulta-medida-card">
-                    <span>MEDIDA IDEAL</span>
-                    <h3>{medidaPrincipal.medida}</h3>
-                    <p>{medidaPrincipal.observacao || 'Medida recomendada para este veículo.'}</p>
-                  </div>
-                )}
+                  <div className="ca-medida-card">
+                    <div className="ca-medida-badge">🔍 MEDIDA IDEAL ENCONTRADA</div>
+                    <div className="ca-medida-numero glow-measure-ca">
+                      {medidaPrincipal.medida}
+                    </div>
+                    {medidaPrincipal.observacao && (
+                      <p className="ca-medida-obs">{medidaPrincipal.observacao}</p>
+                    )}
 
-                {outrasMedidas.length > 0 && (
-                  <div className="consulta-outras-medidas">
-                    <h4>OUTRAS MEDIDAS COMPATÍVEIS</h4>
-
-                    {outrasMedidas.map((item) => (
-                      <div key={item.id} className="consulta-outra-medida-item">
-                        <strong>{item.medida}</strong>
-                        <small>{item.observacao || item.tipo}</small>
+                    {outrasMedidas.length > 0 && (
+                      <div className="ca-outras-medidas">
+                        <p className="ca-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
+                        <div className="ca-outras-grid">
+                          {outrasMedidas.map((item, i) => (
+                            <div key={i} className="ca-outra-medida">{item.medida}</div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
 
-                <button
-                  className="btn-escolher-marca"
-                  onClick={refazerConsulta}
-                  style={{ marginTop: '16px' }}
-                >
-                  REFAZER CONSULTA
-                </button>
+                {/* Ações */}
+                <div className="ca-acoes">
+                  <button className="ca-btn-acao ca-btn-nova" onClick={refazerConsulta}>
+                    🔄 NOVA CONSULTA
+                  </button>
+                  <button className="ca-btn-acao ca-btn-inicio" onClick={voltarInicio}>
+                    🏠 VOLTAR AO INÍCIO
+                  </button>
+                </div>
+
               </div>
             )}
 
@@ -566,17 +470,11 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       {popupAberto && (
         <div className="popup-avancada-overlay">
           <section className="popup-avancada">
-            <button className="popup-fechar-x" onClick={fecharPopup}>
-              ×
-            </button>
+            <button className="popup-fechar-x" onClick={fecharPopup}>×</button>
 
             <div className="popup-avancada-topo">
               <h2>{tituloPopup[etapa]}</h2>
-              <p>
-                {loading
-                  ? 'Carregando dados...'
-                  : 'Digite no teclado abaixo e toque em uma opção para continuar.'}
-              </p>
+              <p>{loading ? 'Carregando dados...' : 'Digite no teclado abaixo e toque em uma opção para continuar.'}</p>
             </div>
 
             <input
@@ -595,9 +493,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <div className="sem-resultado-popup">Digite para pesquisar</div>
               ) : opcoesFiltradas.length > 0 ? (
                 opcoesFiltradas.map((item) => (
-                  <button key={item.codigo} onClick={() => escolher(item)}>
-                    {item.nome}
-                  </button>
+                  <button key={item.codigo} onClick={() => escolher(item)}>{item.nome}</button>
                 ))
               ) : (
                 <div className="sem-resultado-popup">Nenhum resultado encontrado</div>
@@ -606,9 +502,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
             <div className="popup-avancada-teclado">
               {teclas.map((tecla) => (
-                <button key={tecla} onClick={() => digitar(tecla)}>
-                  {tecla}
-                </button>
+                <button key={tecla} onClick={() => digitar(tecla)}>{tecla}</button>
               ))}
             </div>
 
