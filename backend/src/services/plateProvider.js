@@ -38,41 +38,10 @@ function extrairAno(...valores) {
   return null;
 }
 
-function separarMarcaModelo(brandModel = '') {
-  const texto = String(brandModel || '').toUpperCase().trim();
-
-  if (!texto) return { marca: null, modelo: null };
-
-  // Remove prefixo de origem do DETRAN: "I/", "CHEV/", etc.
-  // Cobre até 4 letras antes da barra: I/, N/, VW/, GM/, CHEV/, etc.
-  const semPrefixo = texto.replace(/^[A-Z]{1,4}\//, '');
-
-  if (semPrefixo.includes('/')) {
-    const [marca, ...resto] = semPrefixo.split('/');
-    return { marca: marca?.trim() || null, modelo: resto.join('/').trim() || null };
-  }
-
-  if (!semPrefixo.includes('/') && semPrefixo !== texto) {
-    // Após remover prefixo, separa por espaço
-    const [marca, ...resto] = semPrefixo.split(' ');
-    if (resto.length) return { marca: marca?.trim() || null, modelo: resto.join(' ').trim() || null };
-    return { marca: semPrefixo, modelo: null };
-  }
-
-  if (texto.includes('-')) {
-    const [marca, ...resto] = texto.split('-');
-    return { marca: marca?.trim() || null, modelo: resto.join('-').trim() || null };
-  }
-
-  if (texto.includes(' ')) {
-    const [marca, ...resto] = texto.split(' ');
-    return { marca: marca?.trim() || null, modelo: resto.join(' ').trim() || null };
-  }
-
-  return { marca: texto, modelo: null };
-}
-
-// Normaliza marca da Exato para bater com o cadastro do banco
+// ─────────────────────────────────────────────────────────────────────────────
+// MAPA DE MARCAS
+// Converte siglas/abreviações da Exato/DETRAN para o nome exato do banco.
+// ─────────────────────────────────────────────────────────────────────────────
 const MAPA_MARCAS = {
   'VW':            'VW - VOLKSWAGEN',
   'VOLKSWAGEN':    'VW - VOLKSWAGEN',
@@ -80,15 +49,93 @@ const MAPA_MARCAS = {
   'CHEV':          'GM - CHEVROLET',
   'CHEVROLET':     'GM - CHEVROLET',
   'KIA':           'KIA MOTORS',
+  'KIA MOTORS':    'KIA MOTORS',
   'LAND-ROVER':    'LAND ROVER',
+  'LANDROVER':     'LAND ROVER',
+  'LAND ROVER':    'LAND ROVER',
   'MERCEDES':      'MERCEDES-BENZ',
   'MERCEDES BENZ': 'MERCEDES-BENZ',
+  'MB':            'MERCEDES-BENZ',
+  'MITSU':         'MITSUBISHI',
+  'NIS':           'NISSAN',
+  'PEU':           'PEUGEOT',
+  'REN':           'RENAULT',
+  'TOYT':          'TOYOTA',
+  'TOY':           'TOYOTA',
+  'HON':           'HONDA',
+  'HYU':           'HYUNDAI',
+  'CITR':          'CITROËN',
+  'CITROEN':       'CITROËN',
+  'SUB':           'SUBARU',
+  'SUZ':           'SUZUKI',
 };
+
+// Prefixos de origem do DETRAN que aparecem antes da barra e devem ser descartados.
+// Ex: "I/FIAT SIENA" → I = importado, não é marca.
+const PREFIXOS_DETRAN = new Set(['I', 'N', 'R', 'E']);
 
 function normalizarMarca(marca) {
   if (!marca) return marca;
   const upper = marca.toUpperCase().trim();
   return MAPA_MARCAS[upper] || marca;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// separarMarcaModelo
+// Interpreta o campo BrandModel da Exato/DETRAN nos formatos conhecidos:
+//   "VW/NIVUS CL TSI"           → marca=VW,   modelo=NIVUS CL TSI
+//   "I/FIAT SIENA EL 1.4 FLEX"  → marca=FIAT, modelo=SIENA EL 1.4 FLEX
+//   "CHEV/ONIX PLUS 10TAT PR1"  → marca=CHEV, modelo=ONIX PLUS 10TAT PR1
+//   "TOYOTA COROLLA"            → marca=TOYOTA, modelo=COROLLA
+//   "MERCEDES-BENZ C200"        → marca=MERCEDES-BENZ, modelo=C200
+// ─────────────────────────────────────────────────────────────────────────────
+function separarMarcaModelo(brandModel = '') {
+  const texto = String(brandModel || '').toUpperCase().trim();
+
+  if (!texto) return { marca: null, modelo: null };
+
+  // ── Caso 1: tem barra ──────────────────────────────────────────────────────
+  if (texto.includes('/')) {
+    const barraIdx = texto.indexOf('/');
+    const antes = texto.slice(0, barraIdx).trim();
+    const depois = texto.slice(barraIdx + 1).trim();
+
+    if (PREFIXOS_DETRAN.has(antes)) {
+      // Prefixo DETRAN (I, N, R, E) — descarta e extrai marca do restante
+      // "I/FIAT SIENA EL 1.4 FLEX" → depois = "FIAT SIENA EL 1.4 FLEX"
+      const tokens = depois.split(' ');
+      return {
+        marca: tokens[0]?.trim() || null,
+        modelo: tokens.slice(1).join(' ').trim() || null,
+      };
+    }
+
+    // Antes da barra é a sigla da marca (VW, CHEV, FIAT, etc.)
+    return {
+      marca: antes || null,
+      modelo: depois || null,
+    };
+  }
+
+  // ── Caso 2: separado só por espaço ────────────────────────────────────────
+  // Tenta identificar marcas compostas: "LAND ROVER", "KIA MOTORS", etc.
+  if (texto.includes(' ')) {
+    const tokens = texto.split(' ');
+
+    // Testa 2 tokens como marca composta primeiro, depois 1 token
+    for (let n = Math.min(2, tokens.length - 1); n >= 1; n--) {
+      const candidata = tokens.slice(0, n).join(' ');
+      if (MAPA_MARCAS[candidata] || n === 1) {
+        return {
+          marca: candidata || null,
+          modelo: tokens.slice(n).join(' ').trim() || null,
+        };
+      }
+    }
+  }
+
+  // ── Caso 3: só uma palavra ─────────────────────────────────────────────────
+  return { marca: texto, modelo: null };
 }
 
 function montarRespostaPadrao(result, placaLimpa) {
