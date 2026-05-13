@@ -27,6 +27,9 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
   const versaoNormalizada = versao ? normalizeText(versao) : '';
   const anoNumero = Number(ano);
 
+  // Primeira palavra do modelo — ex: "NIVUS CL TSI" → "NIVUS"
+  const modeloPrimeiraPalavra = modeloNormalizado.split(' ')[0];
+
   const orderBase = `
     ORDER BY
       CASE WHEN vm.tipo = 'ideal' THEN 0 ELSE 1 END,
@@ -34,6 +37,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     LIMIT 5
   `;
 
+  // 1. Por código FIPE (mais preciso)
   if (codigo_fipe) {
     const rows = await executarBusca(
       `
@@ -62,6 +66,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rows.length) return rows;
   }
 
+  // 2. Por marca + modelo exato + versão + ano
   if (versaoNormalizada) {
     const rows = await executarBusca(
       `
@@ -102,6 +107,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rows.length) return rows;
   }
 
+  // 3. Por marca + modelo exato + ano
   const rows = await executarBusca(
     `
     SELECT
@@ -128,7 +134,41 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     [marcaNormalizada, modeloNormalizado, anoNumero]
   );
 
-  return rows;
+  if (rows.length) return rows;
+
+  // 4. Fallback — Exato manda "NIVUS CL TSI" mas banco tem só "NIVUS"
+  //    Tenta bater com a primeira palavra do modelo
+  if (modeloPrimeiraPalavra && modeloPrimeiraPalavra !== modeloNormalizado) {
+    const rowsParcial = await executarBusca(
+      `
+      SELECT
+        v.id AS veiculo_id,
+        v.codigo_fipe,
+        v.marca,
+        v.modelo,
+        v.versao,
+        vm.id AS veiculo_medida_id,
+        vm.medida,
+        vm.tipo,
+        vm.prioridade,
+        vm.observacao,
+        'modelo_parcial' AS match_tipo
+      FROM veiculos v
+      INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+      WHERE UPPER(v.marca) = UPPER(?)
+        AND UPPER(v.modelo) = UPPER(?)
+        AND ? BETWEEN v.ano_inicio AND v.ano_fim
+        AND v.ativo = 1
+        AND vm.ativo = 1
+      ${orderBase}
+      `,
+      [marcaNormalizada, modeloPrimeiraPalavra, anoNumero]
+    );
+
+    if (rowsParcial.length) return rowsParcial;
+  }
+
+  return [];
 }
 
 module.exports = {
