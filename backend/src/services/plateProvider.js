@@ -62,6 +62,24 @@ function separarMarcaModelo(brandModel = '') {
   return { marca: texto, modelo: null };
 }
 
+// Normaliza marca da Exato para bater com o cadastro do banco
+const MAPA_MARCAS = {
+  'VW':            'VW - VOLKSWAGEN',
+  'VOLKSWAGEN':    'VW - VOLKSWAGEN',
+  'GM':            'GM - CHEVROLET',
+  'CHEVROLET':     'GM - CHEVROLET',
+  'KIA':           'KIA MOTORS',
+  'LAND-ROVER':    'LAND ROVER',
+  'MERCEDES':      'MERCEDES-BENZ',
+  'MERCEDES BENZ': 'MERCEDES-BENZ',
+};
+
+function normalizarMarca(marca) {
+  if (!marca) return marca;
+  const upper = marca.toUpperCase().trim();
+  return MAPA_MARCAS[upper] || marca;
+}
+
 function montarRespostaPadrao(result, placaLimpa) {
   const brandModel = pick(result, ['BrandModel', 'brandModel', 'MarcaModelo']);
   const { marca, modelo } = separarMarcaModelo(brandModel);
@@ -73,7 +91,7 @@ function montarRespostaPadrao(result, placaLimpa) {
 
   return {
     placa: pick(result, ['LicensePlate', 'licensePlate']) || placaLimpa,
-    marca: marca || null,
+    marca: normalizarMarca(marca) || null,
     modelo: modelo || null,
     ano
   };
