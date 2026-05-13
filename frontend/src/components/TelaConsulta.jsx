@@ -28,8 +28,13 @@ export default function TelaConsulta({
   const parte1 = placaExibida.slice(0, 3);
   const parte2 = placaExibida.slice(3, 7);
 
-  const medidaPrincipal = resultado?.pneus?.[0] || null;
-  const outrasMedidas = resultado?.pneus?.slice(1) || [];
+    const medidaPrincipal = resultado?.pneus?.[0] || null;
+    const outrasMedidas = resultado?.pneus
+      ?.slice(1)
+      .filter((item, index, self) =>
+        item.medida !== medidaPrincipal?.medida &&
+        self.findIndex((m) => m.medida === item.medida) === index
+      ) || [];
 
   function handleEMeuCarro() {
     setPopupMedida(true);
