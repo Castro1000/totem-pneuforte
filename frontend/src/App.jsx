@@ -124,7 +124,7 @@ export default function App() {
     setPlaca(sanitizePlaca(valor));
   }
 
- async function buscar() {
+  async function buscar() {
     try {
       setLoading(true);
       setErro('');
@@ -142,14 +142,20 @@ export default function App() {
         return data;
       };
 
+      // Tenta até 3 vezes com 1s de intervalo entre cada
       let data;
-      try {
-        data = await tentarBusca();
-      } catch {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        data = await tentarBusca();
+      let ultimoErro;
+      for (let i = 0; i < 3; i++) {
+        try {
+          data = await tentarBusca();
+          break; // achou — sai do loop imediatamente
+        } catch (err) {
+          ultimoErro = err;
+          if (i < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
 
+      if (!data) throw ultimoErro;
       setResultado(data);
     } catch (err) {
       setErro(err.message);

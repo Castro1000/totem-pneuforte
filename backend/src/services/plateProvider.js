@@ -109,7 +109,7 @@ function montarRespostaPadrao(result, placaLimpa) {
 }
 
 // Tenta chamar a Exato até `tentativas` vezes antes de desistir
-async function consultarExatoComRetry(placaLimpa, tentativas = 2) {
+async function consultarExatoComRetry(placaLimpa, tentativas = 3) {
   const url = process.env.EXATO_VEHICLES_URL;
   const token = process.env.EXATO_TOKEN;
 
@@ -124,7 +124,7 @@ async function consultarExatoComRetry(placaLimpa, tentativas = 2) {
       const response = await axios.post(
         url,
         { token, license_plate: placaLimpa, restrictions: false },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
+        { headers: { 'Content-Type': 'application/json' }, timeout: 8000 }
       );
       return response.data;
     } catch (err) {
