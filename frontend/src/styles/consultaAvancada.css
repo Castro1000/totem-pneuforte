@@ -234,3 +234,191 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+
+/* =============================================
+   SELETOR OVERLAY — Mantido seu original
+   ============================================= */
+.ca-seletor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  animation: caOverlayEntrar 0.25s ease;
+}
+
+.ca-seletor-box {
+  width: min(900px, 96vw);
+  max-height: 96vh;
+  background: linear-gradient(180deg, #141414 0%, #0a0a0a 100%);
+  border: 2px solid rgba(255, 212, 0, 0.35);
+  border-radius: clamp(16px, 2vw, 30px);
+  padding: clamp(14px, 1.8vw, 26px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.2vh, 14px);
+  box-shadow: 0 0 60px rgba(255, 212, 0, 0.12), 0 30px 80px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+  animation: caBoxEntrar 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* =============================================
+   NOVO: BOTÃO INÍCIO (ESTILO 3D IGUAL À PLACA)
+   ============================================= */
+.btn-voltar-inicio-fixo {
+  position: fixed;
+  top: 25px;
+  right: 25px;
+  z-index: 999;
+  background: #ffffff;
+  color: #000000;
+  font-family: 'Arial', sans-serif;
+  font-weight: 900;
+  font-size: clamp(16px, 1.5vw, 22px);
+  text-transform: uppercase;
+  padding: 10px 30px;
+  border: none;
+  border-radius: 10px;
+  /* Sombra 3D cinza embaixo */
+  box-shadow: 0 5px 0 #b3b3b3, 0 8px 15px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.btn-voltar-inicio-fixo:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #b3b3b3, 0 4px 10px rgba(0,0,0,0.4);
+}
+
+/* =============================================
+   TOPO E INPUT — Mantido seu original
+   ============================================= */
+.ca-seletor-topo { text-align: center; }
+.ca-seletor-topo h2 {
+  margin: 0 0 6px;
+  color: #ffd400;
+  font-size: clamp(22px, 2.8vw, 48px);
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ca-seletor-input {
+  width: 100%;
+  height: clamp(52px, 7vh, 80px);
+  border-radius: clamp(12px, 1.5vw, 20px);
+  border: 2px solid rgba(255, 212, 0, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  padding: 0 24px;
+  font-size: clamp(24px, 2.8vw, 44px);
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  outline: none;
+}
+
+/* =============================================
+   RESULTADOS — Mantido seu original
+   ============================================= */
+.ca-seletor-resultados {
+  flex: 1;
+  min-height: clamp(60px, 8vh, 120px);
+  max-height: clamp(80px, 14vh, 160px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px;
+}
+
+.ca-seletor-opcao {
+  width: 100%;
+  min-height: clamp(54px, 7vh, 76px);
+  border: 2px solid rgba(255, 212, 0, 0.18);
+  border-radius: clamp(10px, 1.2vw, 18px);
+  background: linear-gradient(180deg, #1e1e1e 0%, #111 100%);
+  color: #fff;
+  font-size: clamp(18px, 1.8vw, 30px);
+  font-weight: 900;
+  text-align: center;
+}
+
+/* =============================================
+   TECLADO — Mantido seu original
+   ============================================= */
+.ca-seletor-teclado {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: clamp(5px, 0.8vw, 10px);
+}
+
+.ca-tecla {
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: clamp(8px, 1vw, 16px);
+  background: linear-gradient(180deg, #303030 0%, #171717 100%);
+  color: #fff;
+  font-size: clamp(18px, 2vw, 32px);
+  font-weight: 900;
+}
+
+/* =============================================
+   BOTÕES DE AÇÃO — AJUSTADO PARA 3 COLUNAS
+   ============================================= */
+.ca-seletor-acoes {
+  display: grid;
+  /* Mudamos de 1fr 1fr para 3 colunas */
+  grid-template-columns: 1fr 1.2fr 1.2fr; 
+  gap: clamp(8px, 1vw, 14px);
+  flex-shrink: 0;
+}
+
+/* NOVO: Botão Alternar 123/ABC */
+.ca-btn-alternar {
+  height: clamp(44px, 6vh, 64px);
+  border: none;
+  border-radius: clamp(10px, 1.2vw, 18px);
+  background: #f1c40f; /* Amarelo vibrante */
+  color: #000;
+  font-size: clamp(16px, 1.4vw, 24px);
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #b7950b;
+}
+
+.ca-btn-alternar:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #b7950b;
+}
+
+.ca-btn-apagar {
+  height: clamp(44px, 6vh, 64px);
+  border-radius: clamp(10px, 1.2vw, 18px);
+  background: linear-gradient(180deg, #4c4c4c 0%, #282828 100%);
+  color: #fff;
+  font-size: clamp(16px, 1.4vw, 24px);
+  font-weight: 900;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.ca-btn-limpar {
+  height: clamp(44px, 6vh, 64px);
+  border-radius: clamp(10px, 1.2vw, 18px);
+  background: linear-gradient(180deg, #ffd84a 0%, #ffd400 100%);
+  color: #111;
+  font-size: clamp(16px, 1.4vw, 24px);
+  font-weight: 900;
+}
+
+/* Animações e Scroll — Mantidos originais */
+@keyframes caOverlayEntrar { from { opacity: 0; } to { opacity: 1; } }
+@keyframes caBoxEntrar { from { opacity: 0; transform: scale(0.88) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+.ca-seletor-resultados::-webkit-scrollbar { width: 4px; }
+.ca-seletor-resultados::-webkit-scrollbar-thumb { background: rgba(255, 212, 0, 0.3); border-radius: 4px; }
