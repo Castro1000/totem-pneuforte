@@ -336,11 +336,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         <div className="ca-seletor-overlay">
           <div className="ca-seletor-box" style={{ maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             
-            <div className="ca-seletor-topo">
-              <button className="ca-btn-inicio-topo" onClick={voltarInicio}>SAIR</button>
-              <h2>{tituloSeletor[etapa]}</h2>
-            </div>
-
+           
             <input className="ca-seletor-input" value={busca} placeholder={placeholderSeletor[etapa]} readOnly />
 
             <div className="ca-seletor-resultados" style={{ flex: 1, overflowY: 'auto' }}>
