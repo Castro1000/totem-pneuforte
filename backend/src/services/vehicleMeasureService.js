@@ -30,9 +30,15 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
   // Primeira palavra do modelo — ex: "NIVUS CL TSI" → "NIVUS"
   const modeloPrimeiraPalavra = modeloNormalizado.split(' ')[0];
 
+  
   const orderBase = `
     ORDER BY
-      CASE WHEN vm.tipo = 'ideal' THEN 0 ELSE 1 END,
+      CASE 
+        WHEN vm.tipo = 'ideal' THEN 0 
+        WHEN vm.tipo = 'original' THEN 1
+        WHEN vm.tipo = 'opcional' THEN 2
+        ELSE 3 
+      END,
       vm.prioridade ASC
     LIMIT 5
   `;
