@@ -57,6 +57,12 @@ export default function TelaConsulta({
     novaConsulta();
   }
 
+  // Função auxiliar para o botão do modal de erro limpar tudo de verdade
+  function handleFecharErro() {
+    if (typeof limparPlaca === 'function') limparPlaca();
+    if (typeof novaConsulta === 'function') novaConsulta();
+  }
+
   return (
     <div className="app tela-placa-entrada">
       <audio ref={teclaRef} src="/tecla.mp3" preload="auto" />
@@ -67,8 +73,12 @@ export default function TelaConsulta({
         Início
       </button>
 
-      {/* TELA PRINCIPAL — Teclado + Placa (Só renderiza se não houver resultado nem erro na tela) */}
-      {!resultado && !erro && (
+      {/* =============================================
+          TELA PRINCIPAL — Teclado + Placa
+          CORRIGIDO: Só some se houver um RESULTADO de sucesso na tela. 
+          O estado de erro não vai mais bloquear o teclado!
+          ============================================= */}
+      {!resultado && (
         <div className="consulta-wrapper consulta-wrapper-limpa">
           <div className="consulta-card consulta-card-animada consulta-card-limpo">
             <div className="consulta-coluna-unica">
@@ -152,7 +162,7 @@ export default function TelaConsulta({
       )}
 
       {/* =============================================
-          LOADING — ANIMAÇÃO DE BUSCA (Apenas se estiver carregando)
+          LOADING — ANIMAÇÃO DE BUSCA
           ============================================= */}
       {loading && (
         <div className="loading-overlay">
@@ -188,17 +198,19 @@ export default function TelaConsulta({
       )}
 
       {/* =============================================
-          MODAL DE ERRO TRATADO PARA O TOTEM (EntityNotFound ou Conexão)
+          MODAL DE ERRO TRATADO PARA O TOTEM
+          CORRIGIDO: Ele só aparece se a variável 'erro' for uma string válida
+          e não nula, sem travar as próximas consultas.
           ============================================= */}
-      {erro && !resultado && (
-        <div className="popup-overlay">
+      {Boolean(erro) && !resultado && !loading && (
+        <div className="popup-overlay" style={{ zIndex: 9999 }}>
           <div className="popup-veiculo popup-animado">
             <div className="popup-badge" style={{ backgroundColor: '#dc3545', color: '#fff' }}>
               ⚠️ VEÍCULO NÃO ENCONTRADO
             </div>
 
             <div className="popup-placa-tag" style={{ backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb' }}>
-              {placa.toUpperCase()}
+              {placa ? placa.toUpperCase() : 'PLACA'}
             </div>
 
             <div className="popup-veiculo-info" style={{ textAlign: 'center', padding: '20px 10px' }}>
@@ -206,14 +218,14 @@ export default function TelaConsulta({
                 Não conseguimos localizar este veículo de forma automática.
               </p>
               <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.4' }}>
-                Isso acontece quando o cadastro do carro está desatualizado no sistema do Detran nacional.
+                Por favor, verifique se digitou os caracteres corretamente ou chame um atendente.
               </p>
             </div>
 
             <p className="popup-pergunta">O que deseja fazer?</p>
 
             <div className="popup-acoes" style={{ flexDirection: 'column', gap: '15px' }}>
-              <button className="popup-btn popup-btn-sim" style={{ width: '100%' }} onClick={() => { limparPlaca(); novaConsulta(); }}>
+              <button className="popup-btn popup-btn-sim" style={{ width: '100%' }} onClick={handleFecharErro}>
                 🔄 TENTAR OUTRA PLACA
               </button>
               <button className="popup-btn popup-btn-nao" style={{ width: '100%', backgroundColor: '#6c757d' }} onClick={voltarInicio}>
@@ -235,30 +247,30 @@ export default function TelaConsulta({
             </div>
 
             <div className="popup-placa-tag">
-              {resultado.veiculo.placa}
+              {resultado.veiculo?.placa || placa}
             </div>
 
             <div className="popup-veiculo-info">
               <div className="popup-info-linha popup-marca-modelo">
-                <span className="popup-marca">{resultado.veiculo.marca}</span>
-                <span className="popup-modelo">{resultado.veiculo.modelo}</span>
+                <span className="popup-marca">{resultado.veiculo?.marca}</span>
+                <span className="popup-modelo">{resultado.veiculo?.modelo}</span>
               </div>
 
               <div className="popup-info-boxes">
                 <div className="popup-info-box">
                   <small>ANO</small>
-                  <strong>{resultado.veiculo.ano}</strong>
+                  <strong>{resultado.veiculo?.ano}</strong>
                 </div>
-                {resultado.veiculo.versao && (
+                {resultado.veiculo?.versao && (
                   <div className="popup-info-box popup-info-box-wide">
                     <small>VERSÃO</small>
-                    <strong>{resultado.veiculo.versao}</strong>
+                    <strong>{resultado.veiculo?.versao}</strong>
                   </div>
                 )}
-                {resultado.veiculo.combustivel && (
+                {resultado.veiculo?.combustivel && (
                   <div className="popup-info-box">
                     <small>COMBUSTÍVEL</small>
-                    <strong>{resultado.veiculo.combustivel}</strong>
+                    <strong>{resultado.veiculo?.combustivel}</strong>
                   </div>
                 )}
               </div>
@@ -289,7 +301,7 @@ export default function TelaConsulta({
             </div>
 
             <div className="popup-veiculo-resumo">
-              {resultado.veiculo.marca} {resultado.veiculo.modelo} {resultado.veiculo.ano}
+              {resultado.veiculo?.marca} {resultado.veiculo?.modelo} {resultado.veiculo?.ano}
             </div>
 
             {medidaPrincipal ? (
