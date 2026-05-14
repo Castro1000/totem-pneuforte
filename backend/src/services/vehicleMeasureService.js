@@ -66,7 +66,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rows.length) return rows;
   }
 
-  // 2. Por marca + modelo exato + versão + ano
+  // 2. Por marca + modelo exato + versão + ano (Tratando decimais e string aproximada)
   if (versaoNormalizada) {
     const rows = await executarBusca(
       `
@@ -89,8 +89,9 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
         AND (
           UPPER(v.versao) LIKE UPPER(?)
           OR UPPER(?) LIKE CONCAT('%', UPPER(v.versao), '%')
+          OR REPLACE(UPPER(v.versao), '.', '') LIKE CONCAT('%', REPLACE(UPPER(?), '.', ''), '%')
         )
-        AND ? BETWEEN v.ano_inicio AND v.ano_fim
+        AND ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
         AND v.ativo = 1
         AND vm.ativo = 1
       ${orderBase}
@@ -100,6 +101,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
         modeloNormalizado,
         `%${versaoNormalizada}%`,
         versaoNormalizada,
+        versaoNormalizada,
         anoNumero
       ]
     );
@@ -107,7 +109,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rows.length) return rows;
   }
 
-  // 3. Por marca + modelo exato + ano
+  // 3. Por marca + modelo exato + ano (Ajustado para o ano decimal)
   const rows = await executarBusca(
     `
     SELECT
@@ -126,7 +128,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
     WHERE UPPER(v.marca) = UPPER(?)
       AND UPPER(v.modelo) = UPPER(?)
-      AND ? BETWEEN v.ano_inicio AND v.ano_fim
+      AND ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
       AND v.ativo = 1
       AND vm.ativo = 1
     ${orderBase}
@@ -136,8 +138,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
 
   if (rows.length) return rows;
 
-  // 4. Fallback — modelo da Exato vem como "NIVUS CL TSI" mas banco tem só "NIVUS"
-  //    Tenta bater só com a primeira palavra do modelo
+  // 4. Fallback — primeira palavra do modelo (Ajustado para o ano decimal)
   if (modeloPrimeiraPalavra && modeloPrimeiraPalavra !== modeloNormalizado) {
     const rowsParcial = await executarBusca(
       `
@@ -157,7 +158,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
       WHERE UPPER(v.marca) = UPPER(?)
         AND UPPER(v.modelo) = UPPER(?)
-        AND ? BETWEEN v.ano_inicio AND v.ano_fim
+        AND ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
         AND v.ativo = 1
         AND vm.ativo = 1
       ${orderBase}
@@ -168,9 +169,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rowsParcial.length) return rowsParcial;
   }
 
-  // 5. Fallback — modelo com espaço no lugar de hífen
-  //    Exato manda "T CROSS TSI" mas banco tem "T-CROSS"
-  //    Pega as duas primeiras palavras, junta com hífen e testa
+  // 5. Fallback — modelo com espaço no lugar de hífen (Ajustado para o ano decimal)
   const tokens = modeloNormalizado.split(' ');
   if (tokens.length >= 2) {
     const modeloComHifen = tokens.slice(0, 2).join('-');
@@ -193,7 +192,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
         INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
         WHERE UPPER(v.marca) = UPPER(?)
           AND UPPER(v.modelo) = UPPER(?)
-          AND ? BETWEEN v.ano_inicio AND v.ano_fim
+          AND ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
           AND v.ativo = 1
           AND vm.ativo = 1
         ${orderBase}
