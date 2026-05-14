@@ -1,6 +1,9 @@
 const db = require('../config/db');
 const { normalizeText } = require('../utils/normalize');
 
+/**
+ * Função auxiliar para executar a query e mapear os resultados
+ */
 async function executarBusca(sql, params) {
   const [rows] = await db.execute(sql, params);
 
@@ -19,6 +22,9 @@ async function executarBusca(sql, params) {
   }));
 }
 
+/**
+ * Busca principal de medidas
+ */
 async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
   if (!marca || !modelo || !ano) return [];
 
@@ -27,10 +33,10 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
   const versaoNormalizada = versao ? normalizeText(versao) : '';
   const anoNumero = Number(ano);
 
-  // Primeira palavra do modelo — ex: "NIVUS CL TSI" → "NIVUS"
+  // Primeira palavra do modelo para fallback (Ex: "NIVUS CL" -> "NIVUS")
   const modeloPrimeiraPalavra = modeloNormalizado.split(' ')[0];
 
-  
+  // Ordenação inteligente conforme sua regra de negócio
   const orderBase = `
     ORDER BY
       CASE 
@@ -43,180 +49,82 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     LIMIT 5
   `;
 
-  // CORREÇÃO CRÍTICA DA MATEMÁTICA: Multiplica o ano decimal por 1000 para bater com o inteiro enviado pelo Totem
-  // Substitua a condicaoAno por esta, que é mais segura para ambos os formatos:
+  // Condição de ano preparada para formatos decimais (2.025) e inteiros (2025)
+  // Contém 3 interrogações (?), logo exige 3 parâmetros no array
   const condicaoAno = `
     (? BETWEEN v.ano_inicio AND v.ano_fim 
     OR ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
     OR ? = v.ano_inicio)
   `;
 
-// E nos parâmetros das queries, repita o anoNumero 3 vezes para suprir os "?"
-  // 1. Por código FIPE (mais preciso)
+  // --- 1. BUSCA POR CÓDIGO FIPE ---
   if (codigo_fipe) {
     const rows = await executarBusca(
-      `
-      SELECT
-        v.id AS veiculo_id,
-        v.codigo_fipe,
-        v.marca,
-        v.modelo,
-        v.versao,
-        vm.id AS veiculo_medida_id,
-        vm.medida,
-        vm.tipo,
-        vm.prioridade,
-        vm.observacao,
-        'codigo_fipe' AS match_tipo
-      FROM veiculos v
-      INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-      WHERE v.codigo_fipe = ?
-        AND v.ativo = 1
-        AND vm.ativo = 1
-      ${orderBase}
-      `,
+      `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
+              vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'codigo_fipe' AS match_tipo
+       FROM veiculos v
+       INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+       WHERE v.codigo_fipe = ? AND v.ativo = 1 AND vm.ativo = 1
+       ${orderBase}`,
       [codigo_fipe]
     );
-
     if (rows.length) return rows;
   }
 
-  // 2. Por marca + modelo (flexível) + versão (flexível) + ano
+  // --- 2. BUSCA POR VERSÃO (FLEXÍVEL) ---
+  // Ideal para quando a API de placa retorna "DRIVE AT" mas no banco está "DRIVE 1.3 FLEX..."
   if (versaoNormalizada) {
     const rows = await executarBusca(
-      `
-      SELECT
-        v.id AS veiculo_id,
-        v.codigo_fipe,
-        v.marca,
-        v.modelo,
-        v.versao,
-        vm.id AS veiculo_medida_id,
-        vm.medida,
-        vm.tipo,
-        vm.prioridade,
-        vm.observacao,
-        'versao' AS match_tipo
-      FROM veiculos v
-      INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-      WHERE UPPER(v.marca) = UPPER(?)
-        -- Mudança aqui: usamos LIKE para o modelo também, prevenindo erros de prefixo
-        AND (UPPER(v.modelo) LIKE CONCAT('%', UPPER(?), '%') OR UPPER(?) LIKE CONCAT('%', UPPER(v.modelo), '%'))
-        AND (
-          UPPER(v.versao) LIKE UPPER(?) 
-          OR UPPER(?) LIKE CONCAT('%', UPPER(v.versao), '%')
-          OR REPLACE(UPPER(v.versao), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(?), ' ', ''), '%')
-        )
-        AND ${condicaoAno}
-        AND v.ativo = 1
-        AND vm.ativo = 1
-      ${orderBase}
-      `,
+      `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
+              vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'versao' AS match_tipo
+       FROM veiculos v
+       INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+       WHERE UPPER(v.marca) = UPPER(?)
+         AND (UPPER(v.modelo) LIKE CONCAT('%', UPPER(?), '%') OR UPPER(?) LIKE CONCAT('%', UPPER(v.modelo), '%'))
+         AND (
+            UPPER(v.versao) LIKE UPPER(?) 
+            OR UPPER(?) LIKE CONCAT('%', UPPER(v.versao), '%')
+            OR REPLACE(UPPER(v.versao), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(?), ' ', ''), '%')
+         )
+         AND ${condicaoAno}
+         AND v.ativo = 1 AND vm.ativo = 1
+       ${orderBase}`,
       [
-        marcaNormalizada,
-        modeloNormalizado, modeloNormalizado, // Para o LIKE duplo do modelo
-        `%${versaoNormalizada}%`,
-        versaoNormalizada,
-        versaoNormalizada,
-        anoNumero
+        marcaNormalizada, 
+        modeloNormalizado, modeloNormalizado, 
+        `%${versaoNormalizada}%`, versaoNormalizada, versaoNormalizada,
+        anoNumero, anoNumero, anoNumero // Corrigido para suprir os 3 '?' da condicaoAno
       ]
     );
-
     if (rows.length) return rows;
   }
-  // 3. Por marca + modelo exato + ano
-  const rows = await executarBusca(
-    `
-    SELECT
-      v.id AS veiculo_id,
-      v.codigo_fipe,
-      v.marca,
-      v.modelo,
-      v.versao,
-      vm.id AS veiculo_medida_id,
-      vm.medida,
-      vm.tipo,
-      vm.prioridade,
-      vm.observacao,
-      'modelo_ano' AS match_tipo
-    FROM veiculos v
-    INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-    WHERE UPPER(v.marca) = UPPER(?)
-      AND UPPER(v.modelo) = UPPER(?)
-      AND ${condicaoAno}
-      AND v.ativo = 1
-      AND vm.ativo = 1
-    ${orderBase}
-    `,
-    [marcaNormalizada, modeloNormalizado, anoNumero]
-  );
 
+  // --- 3. BUSCA POR MODELO E ANO ---
+  const rows = await executarBusca(
+    `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
+            vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'modelo_ano' AS match_tipo
+     FROM veiculos v
+     INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+     WHERE UPPER(v.marca) = UPPER(?) AND UPPER(v.modelo) = UPPER(?)
+       AND ${condicaoAno} AND v.ativo = 1 AND vm.ativo = 1
+     ${orderBase}`,
+    [marcaNormalizada, modeloNormalizado, anoNumero, anoNumero, anoNumero]
+  );
   if (rows.length) return rows;
 
-  // 4. Fallback — primeira palavra do modelo
+  // --- 4. FALLBACK - MODELO PARCIAL ---
   if (modeloPrimeiraPalavra && modeloPrimeiraPalavra !== modeloNormalizado) {
     const rowsParcial = await executarBusca(
-      `
-      SELECT
-        v.id AS veiculo_id,
-        v.codigo_fipe,
-        v.marca,
-        v.modelo,
-        v.versao,
-        vm.id AS veiculo_medida_id,
-        vm.medida,
-        vm.tipo,
-        vm.prioridade,
-        vm.observacao,
-        'modelo_parcial' AS match_tipo
-      FROM veiculos v
-      INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-      WHERE UPPER(v.marca) = UPPER(?)
-        AND UPPER(v.modelo) = UPPER(?)
-        AND ${condicaoAno}
-        AND v.ativo = 1
-        AND vm.ativo = 1
-      ${orderBase}
-      `,
-      [marcaNormalizada, modeloPrimeiraPalavra, anoNumero]
+      `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
+              vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'modelo_parcial' AS match_tipo
+       FROM veiculos v
+       INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+       WHERE UPPER(v.marca) = UPPER(?) AND UPPER(v.modelo) = UPPER(?)
+         AND ${condicaoAno} AND v.ativo = 1 AND vm.ativo = 1
+       ${orderBase}`,
+      [marcaNormalizada, modeloPrimeiraPalavra, anoNumero, anoNumero, anoNumero]
     );
-
     if (rowsParcial.length) return rowsParcial;
-  }
-
-  // 5. Fallback — modelo com espaço no lugar de hífen
-  const tokens = modeloNormalizado.split(' ');
-  if (tokens.length >= 2) {
-    const modeloComHifen = tokens.slice(0, 2).join('-');
-    if (modeloComHifen !== modeloNormalizado) {
-      const rowsHifen = await executarBusca(
-        `
-        SELECT
-          v.id AS veiculo_id,
-          v.codigo_fipe,
-          v.marca,
-          v.modelo,
-          v.versao,
-          vm.id AS veiculo_medida_id,
-          vm.medida,
-          vm.tipo,
-          vm.prioridade,
-          vm.observacao,
-          'modelo_hifen' AS match_tipo
-        FROM veiculos v
-        INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-        WHERE UPPER(v.marca) = UPPER(?)
-          AND UPPER(v.modelo) = UPPER(?)
-          AND ${condicaoAno}
-          AND v.ativo = 1
-          AND vm.ativo = 1
-        ${orderBase}
-        `,
-        [marcaNormalizada, modeloComHifen, anoNumero]
-      );
-
-      if (rowsHifen.length) return rowsHifen;
-    }
   }
 
   return [];
