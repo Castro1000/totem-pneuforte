@@ -44,10 +44,14 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
   `;
 
   // CORREÇÃO CRÍTICA DA MATEMÁTICA: Multiplica o ano decimal por 1000 para bater com o inteiro enviado pelo Totem
+  // Substitua a condicaoAno por esta, que é mais segura para ambos os formatos:
   const condicaoAno = `
-    (? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000))
+    (? BETWEEN v.ano_inicio AND v.ano_fim 
+    OR ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
+    OR ? = v.ano_inicio)
   `;
 
+// E nos parâmetros das queries, repita o anoNumero 3 vezes para suprir os "?"
   // 1. Por código FIPE (mais preciso)
   if (codigo_fipe) {
     const rows = await executarBusca(
@@ -77,7 +81,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rows.length) return rows;
   }
 
-  // 2. Por marca + modelo exato + versão + ano
+  // 2. Por marca + modelo (flexível) + versão (flexível) + ano
   if (versaoNormalizada) {
     const rows = await executarBusca(
       `
@@ -96,11 +100,12 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       FROM veiculos v
       INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
       WHERE UPPER(v.marca) = UPPER(?)
-        AND UPPER(v.modelo) = UPPER(?)
+        -- Mudança aqui: usamos LIKE para o modelo também, prevenindo erros de prefixo
+        AND (UPPER(v.modelo) LIKE CONCAT('%', UPPER(?), '%') OR UPPER(?) LIKE CONCAT('%', UPPER(v.modelo), '%'))
         AND (
-          UPPER(v.versao) LIKE UPPER(?)
+          UPPER(v.versao) LIKE UPPER(?) 
           OR UPPER(?) LIKE CONCAT('%', UPPER(v.versao), '%')
-          OR REPLACE(UPPER(v.versao), '.', '') LIKE CONCAT('%', REPLACE(UPPER(?), '.', ''), '%')
+          OR REPLACE(UPPER(v.versao), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(?), ' ', ''), '%')
         )
         AND ${condicaoAno}
         AND v.ativo = 1
@@ -109,7 +114,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       `,
       [
         marcaNormalizada,
-        modeloNormalizado,
+        modeloNormalizado, modeloNormalizado, // Para o LIKE duplo do modelo
         `%${versaoNormalizada}%`,
         versaoNormalizada,
         versaoNormalizada,
@@ -119,7 +124,6 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
 
     if (rows.length) return rows;
   }
-
   // 3. Por marca + modelo exato + ano
   const rows = await executarBusca(
     `
