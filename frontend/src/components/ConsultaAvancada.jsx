@@ -330,7 +330,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       <div className="bg-consulta"></div>
       <div className="bg-consulta-overlay"></div>
 
-      <button className="btn-voltar-inicio" onClick={voltarInicio}>Início</button>
+      <button className="btn-voltar-inicio-fixo" onClick={voltarInicio}>Início</button>
 
       {seletorAberto && (
         <div className="ca-seletor-overlay">
