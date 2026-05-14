@@ -24,17 +24,25 @@ export default function TelaConsulta({
 }) {
   const [popupMedida, setPopupMedida] = useState(false);
 
+  // Tratamento visual da placa na tela do totem
   const placaExibida = placa.padEnd(7, ' ');
   const parte1 = placaExibida.slice(0, 3);
   const parte2 = placaExibida.slice(3, 7);
 
-    const medidaPrincipal = resultado?.pneus?.[0] || null;
-    const outrasMedidas = resultado?.pneus
-      ?.slice(1)
-      .filter((item, index, self) =>
-        item.medida !== medidaPrincipal?.medida &&
-        self.findIndex((m) => m.medida === item.medida) === index
-      ) || [];
+  // Lógica de separação das medidas de pneus vindas do banco de dados
+  const medidaPrincipal = resultado?.pneus?.[0] || null;
+  const outrasMedidas = resultado?.pneus
+    ?.slice(1)
+    .filter((item, index, self) =>
+      item.medida !== medidaPrincipal?.medida &&
+      self.findIndex((m) => m.medida === item.medida) === index
+    ) || [];
+
+  // Higieniza a placa (remove hifens, espaços) e envia para a função de busca
+  function handleBuscar() {
+    const placaLimpa = placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    buscar(placaLimpa);
+  }
 
   function handleEMeuCarro() {
     setPopupMedida(true);
@@ -49,6 +57,19 @@ export default function TelaConsulta({
     novaConsulta();
   }
 
+  function handleFecharErro() {
+    if (typeof limparPlaca === 'function') limparPlaca();
+    if (typeof novaConsulta === 'function') novaConsulta();
+  }
+
+  // Descobre se o erro é de limite/sistema ou se é apenas placa inexistente
+  const ehErroDeSistema = erro && (
+    erro.toLowerCase().includes("limite") || 
+    erro.toLowerCase().includes("negado") || 
+    erro.toLowerCase().includes("accessdenied") ||
+    erro.toLowerCase().includes("token")
+  );
+
   return (
     <div className="app tela-placa-entrada">
       <audio ref={teclaRef} src="/tecla.mp3" preload="auto" />
@@ -59,7 +80,7 @@ export default function TelaConsulta({
         Início
       </button>
 
-      {/* TELA PRINCIPAL — teclado + placa */}
+      {/* TELA PRINCIPAL — Teclado + Placa (Nunca é bloqueada por erros em cache) */}
       {!resultado && (
         <div className="consulta-wrapper consulta-wrapper-limpa">
           <div className="consulta-card consulta-card-animada consulta-card-limpo">
@@ -77,7 +98,9 @@ export default function TelaConsulta({
                       </span>
                     ))}
                   </span>
+                  
                   <span className="placa-traco">-</span>
+                  
                   <span className="placa-parte2">
                     {parte2.split('').map((char, i) => (
                       <span key={i} className={`placa-char ${char.trim() ? 'preenchido' : ''}`}>
@@ -93,7 +116,7 @@ export default function TelaConsulta({
 
               <button
                 className={`btn-buscar btn-buscar-grande ${placaCompleta ? 'btn-buscar-pronto' : ''}`}
-                onClick={buscar}
+                onClick={handleBuscar}
                 disabled={loading || placa.length < 7}
               >
                 {loading ? 'BUSCANDO...' : 'BUSCAR'}
@@ -140,14 +163,10 @@ export default function TelaConsulta({
         </div>
       )}
 
-      {/* =============================================
-          LOADING — ANIMAÇÃO DE BUSCA
-          ============================================= */}
+      {/* LOADING */}
       {loading && (
         <div className="loading-overlay">
           <div className="loading-box">
-
-            {/* Placa sendo "escaneada" */}
             <div className="loading-placa-wrap">
               <img src="/placavazia.png" alt="Placa" className="loading-placa-img" />
               <div className="loading-placa-texto">
@@ -158,7 +177,6 @@ export default function TelaConsulta({
               <div className="loading-scanner-line" />
             </div>
 
-            {/* Ícone radar + texto */}
             <div className="loading-radar-wrap">
               <div className="loading-radar">
                 <div className="loading-radar-anel loading-radar-anel-1" />
@@ -169,66 +187,111 @@ export default function TelaConsulta({
             </div>
 
             <p className="loading-titulo">CONSULTANDO VEÍCULO</p>
-
             <div className="loading-dots">
               <span className="loading-dot loading-dot-1" />
               <span className="loading-dot loading-dot-2" />
               <span className="loading-dot loading-dot-3" />
             </div>
-
             <p className="loading-subtitulo">Buscando informações da placa</p>
           </div>
         </div>
       )}
 
-      {/* ERRO */}
-      {erro && !resultado && (
-        <div className="popup-erro-bar">{erro}</div>
+      {/* =============================================
+          MODAL DE ERRO — DINÂMICO E SEGURO
+          ============================================= */}
+      {Boolean(erro) && !resultado && !loading && (
+        <div className="popup-overlay" style={{ zIndex: 9999 }}>
+          <div className="popup-veiculo popup-animado">
+            
+            {ehErroDeSistema ? (
+              /* CENÁRIO A: ERRO DE COBRANÇA / SISTEMA EXATO DIGITAL */
+              <>
+                <div className="popup-badge" style={{ backgroundColor: '#ffc107', color: '#000' }}>
+                  ⚙️ SISTEMA EM MANUTENÇÃO
+                </div>
+                <div className="popup-veiculo-info" style={{ textAlign: 'center', padding: '30px 10px' }}>
+                  <p style={{ fontSize: '22px', fontWeight: 'bold', color: '#333', marginBottom: '12px' }}>
+                    A consulta automática está indisponível no momento.
+                  </p>
+                  <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.4' }}>
+                    Por favor, dirija-se ao balcão para que um de nossos consultores verifique a medida ideal do seu pneu!
+                  </p>
+                </div>
+                <div className="popup-acoes">
+                  <button className="popup-btn popup-btn-sim" style={{ width: '100%', backgroundColor: '#007bff' }} onClick={voltarInicio}>
+                    🏠 VOLTAR AO INÍCIO
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* CENÁRIO B: ERRO REAL DE PLACA (EntityNotFound / Digitação) */
+              <>
+                <div className="popup-badge" style={{ backgroundColor: '#dc3545', color: '#fff' }}>
+                  ⚠️ VEÍCULO NÃO ENCONTRADO
+                </div>
+                <div className="popup-placa-tag" style={{ backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb' }}>
+                  {placa ? placa.toUpperCase() : 'PLACA'}
+                </div>
+                <div className="popup-veiculo-info" style={{ textAlign: 'center', padding: '20px 10px' }}>
+                  <p style={{ fontSize: '22px', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>
+                    Não conseguimos localizar este veículo.
+                  </p>
+                  <p style={{ fontSize: '18px', color: '#666', lineHeight: '1.4' }}>
+                    Verifique se digitou os caracteres corretamente ou solicite ajuda ao nosso time.
+                  </p>
+                </div>
+                <p className="popup-pergunta">O que deseja fazer?</p>
+                <div className="popup-acoes" style={{ flexDirection: 'column', gap: '15px' }}>
+                  <button className="popup-btn popup-btn-sim" style={{ width: '100%' }} onClick={handleFecharErro}>
+                    🔄 TENTAR OUTRA PLACA
+                  </button>
+                  <button className="popup-btn popup-btn-nao" style={{ width: '100%', backgroundColor: '#6c757d' }} onClick={voltarInicio}>
+                    🏠 VOLTAR AO INÍCIO
+                  </button>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
       )}
 
-      {/* =============================================
-          POPUP 1 — VEÍCULO ENCONTRADO
-          ============================================= */}
+      {/* POPUP 1 — VEÍCULO ENCONTRADO */}
       {resultado && !popupMedida && (
         <div className="popup-overlay">
           <div className="popup-veiculo popup-animado">
-
             <div className="popup-badge popup-badge-verde">
               ✓ VEÍCULO ENCONTRADO
             </div>
-
             <div className="popup-placa-tag">
-              {resultado.veiculo.placa}
+              {resultado.veiculo?.placa || placa}
             </div>
-
             <div className="popup-veiculo-info">
               <div className="popup-info-linha popup-marca-modelo">
-                <span className="popup-marca">{resultado.veiculo.marca}</span>
-                <span className="popup-modelo">{resultado.veiculo.modelo}</span>
+                <span className="popup-marca">{resultado.veiculo?.marca}</span>
+                <span className="popup-modelo">{resultado.veiculo?.modelo}</span>
               </div>
-
               <div className="popup-info-boxes">
                 <div className="popup-info-box">
                   <small>ANO</small>
-                  <strong>{resultado.veiculo.ano}</strong>
+                  <strong>{resultado.veiculo?.ano}</strong>
                 </div>
-                {resultado.veiculo.versao && (
+                {resultado.veiculo?.versao && (
                   <div className="popup-info-box popup-info-box-wide">
                     <small>VERSÃO</small>
-                    <strong>{resultado.veiculo.versao}</strong>
+                    <strong>{resultado.veiculo?.versao}</strong>
                   </div>
                 )}
-                {resultado.veiculo.combustivel && (
+                {resultado.veiculo?.combustivel && (
                   <div className="popup-info-box">
                     <small>COMBUSTÍVEL</small>
-                    <strong>{resultado.veiculo.combustivel}</strong>
+                    <strong>{resultado.veiculo?.combustivel}</strong>
                   </div>
                 )}
               </div>
             </div>
-
             <p className="popup-pergunta">Este é o seu veículo?</p>
-
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={handleEMeuCarro}>
                 ✓ SIM, É MEU CARRO
@@ -237,39 +300,31 @@ export default function TelaConsulta({
                 ✗ NÃO É MEU CARRO
               </button>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* =============================================
-          POPUP 2 — MEDIDA IDEAL
-          ============================================= */}
+      {/* POPUP 2 — MEDIDA IDEAL EXIBIDA COM SUCESSO */}
       {resultado && popupMedida && (
         <div className="popup-overlay">
           <div className="popup-medida popup-animado">
-
             <div className="popup-badge popup-badge-amarelo">
               🔍 MEDIDA IDEAL ENCONTRADA
             </div>
-
             <div className="popup-veiculo-resumo">
-              {resultado.veiculo.marca} {resultado.veiculo.modelo} {resultado.veiculo.ano}
+              {resultado.veiculo?.marca} {resultado.veiculo?.modelo} {resultado.veiculo?.ano}
             </div>
-
             {medidaPrincipal ? (
               <>
                 <div className="popup-medida-numero glow-measure">
                   {medidaPrincipal.medida}
                 </div>
-
                 {medidaPrincipal.observacao && (
                   <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
                 )}
-
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
-                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor para confirmar)</p>
+                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor)</p>
                     <div className="popup-outras-grid">
                       {outrasMedidas.map((item, i) => (
                         <div key={i} className="popup-outra-medida">
@@ -286,7 +341,6 @@ export default function TelaConsulta({
                 <p>Consulte um de nossos atendentes!</p>
               </div>
             )}
-
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={handleNovaConsulta}>
                 🔄 NOVA CONSULTA
@@ -295,11 +349,9 @@ export default function TelaConsulta({
                 🏠 VOLTAR AO INÍCIO
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
