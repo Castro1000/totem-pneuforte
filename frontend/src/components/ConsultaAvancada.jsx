@@ -485,7 +485,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 )}
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
-                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
+                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor para confirmar)</p>
                     <div className="popup-outras-grid">
                       {outrasMedidas.map((item, i) => (
                         <div key={i} className="popup-outra-medida">{item.medida}</div>
