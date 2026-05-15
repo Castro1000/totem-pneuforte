@@ -61,7 +61,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [etapa, setEtapa] = useState('marca');
   const [seletorAberto, setSeletorAberto] = useState(true);
   const [busca, setBusca] = useState('');
-  const [tipoTeclado, setTipoTeclado] = useState('ABC'); 
+  const [tipoTeclado, setTipoTeclado] = useState('ABC');
 
   const [marcas, setMarcas] = useState([]);
   const [modelosBase, setModelosBase] = useState([]);
@@ -216,14 +216,30 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
       const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
 
-      const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(veiculoTratado)
-      });
-      
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.erro || 'Nenhuma medida encontrada');
+      // Retry automático — 3 tentativas com 1s de intervalo
+      const tentarBusca = async () => {
+        const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(veiculoTratado)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.erro || 'Nenhuma medida encontrada');
+        return data;
+      };
+
+      let data;
+      let ultimoErro;
+      for (let i = 0; i < 3; i++) {
+        try {
+          data = await tentarBusca();
+          break;
+        } catch (err) {
+          ultimoErro = err;
+          if (i < 2) await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+      if (!data) throw ultimoErro;
 
       setResultadoMedidas(data);
       setPopupVeiculo(false);
@@ -282,18 +298,21 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     tocarClique();
     if (etapa === 'marca') {
       setMarca(item); setModelo(null); setAno(null); setVersao(null);
+      setResultadoFipe(null); setModelosBase([]); setAnos([]); setVersoes([]);
       setBusca(''); setEtapa('modelo');
       await carregarModelos(item.codigo);
       return;
     }
     if (etapa === 'modelo') {
       setModelo(item); setAno(null); setVersao(null);
+      setResultadoFipe(null); setAnos([]); setVersoes([]);
       setBusca(''); setEtapa('ano');
       await carregarAnosPorModeloBase(item);
       return;
     }
     if (etapa === 'ano') {
       setAno(item); setVersao(null);
+      setResultadoFipe(null); setVersoes([]);
       setBusca(''); setEtapa('versao');
       await carregarVersoesPorAno(item);
       return;
@@ -330,14 +349,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       <div className="bg-consulta"></div>
       <div className="bg-consulta-overlay"></div>
 
-      <button className="btn-voltar-inicio" onClick={voltarInicio}>Início</button>
+      {/* Botão Início — igual à tela de placa, fixo no canto superior direito */}
+      <button className="btn-voltar flutuante" onClick={voltarInicio}>Início</button>
 
       {seletorAberto && (
         <div className="ca-seletor-overlay">
           <div className="ca-seletor-box" style={{ maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            
+
             <div className="ca-seletor-topo">
-              <button className="ca-btn-inicio-topo" onClick={voltarInicio}>SAIR</button>
               <h2>{tituloSeletor[etapa]}</h2>
             </div>
 
@@ -370,16 +389,16 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
               <div className="ca-seletor-acoes" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 {etapa !== 'ano' && (
-                  <button 
-                    className="ca-btn-alternar" 
-                    style={{ flex: 1, background: '#f1c40f', color: '#000', fontWeight: 'bold' }} 
+                  <button
+                    className="ca-btn-alternar"
+                    style={{ flex: 1 }}
                     onClick={() => { tocarClique(); setTipoTeclado(tipoTeclado === 'ABC' ? '123' : 'ABC'); }}
                   >
                     {tipoTeclado === 'ABC' ? '123' : 'ABC'}
                   </button>
                 )}
                 <button className="ca-btn-apagar" style={{ flex: 1 }} onClick={apagar}>APAGAR</button>
-                <button className="ca-btn-limpar" style={{ flex: 1 }} onClick={() => setBusca('')}>LIMPAR</button>
+                <button className="ca-btn-limpar" style={{ flex: 1 }} onClick={() => { tocarClique(); setBusca(''); }}>LIMPAR</button>
               </div>
             </div>
 
@@ -398,15 +417,21 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
               </div>
               <div className="popup-info-boxes">
                 <div className="popup-info-box"><small>ANO</small><strong>{veiculoTratado.ano}</strong></div>
-                <div className="popup-info-box" style={{flex: 2}}><small>VERSÃO</small><strong>{veiculoTratado.versao}</strong></div>
+                <div className="popup-info-box" style={{ flex: 2 }}><small>VERSÃO</small><strong>{veiculoTratado.versao}</strong></div>
               </div>
             </div>
             <p className="popup-pergunta">Este é o seu veículo?</p>
+            {erroMedida && (
+              <div className="popup-sem-medida">
+                <p>⚠️ {erroMedida}</p>
+                <p>Consulte um de nossos atendentes!</p>
+              </div>
+            )}
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={buscarMedidaIdeal} disabled={loadingMedida}>
-                {loadingMedida ? 'BUSCANDO...' : '✓ SIM, É MEU CARRO'}
+                {loadingMedida ? '🔍 BUSCANDO...' : '✓ SIM, É MEU CARRO'}
               </button>
-              <button className="popup-btn popup-btn-nao" onClick={novaConsulta}>✗ NÃO</button>
+              <button className="popup-btn popup-btn-nao" onClick={novaConsulta}>✗ NÃO É MEU CARRO</button>
             </div>
           </div>
         </div>
@@ -416,12 +441,22 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         <div className="popup-overlay">
           <div className="popup-medida popup-animado">
             <div className="popup-badge popup-badge-amarelo">🔍 MEDIDA IDEAL ENCONTRADA</div>
+            {veiculoTratado && (
+              <div className="popup-veiculo-resumo">
+                {veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}
+              </div>
+            )}
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero">{medidaPrincipal.medida}</div>
+                <div className="popup-medida-numero glow-measure">
+                  {medidaPrincipal.medida}
+                </div>
+                {medidaPrincipal.observacao && (
+                  <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
+                )}
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
-                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
+                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor para confirmar)</p>
                     <div className="popup-outras-grid">
                       {outrasMedidas.map((item, i) => (
                         <div key={i} className="popup-outra-medida">{item.medida}</div>
@@ -431,11 +466,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 )}
               </>
             ) : (
-              <p>⚠️ Medida não encontrada.</p>
+              <div className="popup-sem-medida">
+                <p>⚠️ Veículo encontrado, mas ainda não temos a medida cadastrada.</p>
+                <p>Consulte um de nossos atendentes!</p>
+              </div>
             )}
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={novaConsulta}>🔄 NOVA CONSULTA</button>
-              <button className="popup-btn popup-btn-nao" onClick={voltarInicio}>🏠 INÍCIO</button>
+              <button className="popup-btn popup-btn-nao" onClick={voltarInicio}>🏠 VOLTAR AO INÍCIO</button>
             </div>
           </div>
         </div>

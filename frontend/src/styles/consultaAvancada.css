@@ -1,37 +1,5 @@
 /* =============================================
-   1. BOTÃO INÍCIO (ESTILO PLACA - BRANCO 3D)
-   ============================================= */
-.btn-voltar-inicio-fixo {
-  position: fixed;
-  top: 25px;
-  right: 25px;
-  z-index: 999 !important; /* Garante que fique acima do overlay preto */
-  
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-family: 'Arial', sans-serif;
-  font-weight: 900;
-  font-size: clamp(16px, 1.5vw, 22px);
-  text-transform: uppercase;
-  
-  padding: 10px 35px;
-  border: none;
-  border-radius: 12px;
-  
-  /* Sombra de relevo igual à foto da placa */
-  box-shadow: 0 5px 0 #b3b3b3, 0 8px 15px rgba(0,0,0,0.5);
-  cursor: pointer;
-  transition: all 0.1s ease;
-  display: block;
-}
-
-.btn-voltar-inicio-fixo:active {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 #b3b3b3, 0 4px 10px rgba(0,0,0,0.5);
-}
-
-/* =============================================
-   2. ESTRUTURA DO SELETOR (OVERLAY E BOX)
+   SELETOR OVERLAY
    ============================================= */
 .ca-seletor-overlay {
   position: fixed;
@@ -48,7 +16,7 @@
 
 .ca-seletor-box {
   width: min(900px, 96vw);
-  max-height: 96vh;
+  max-height: 95vh;
   background: linear-gradient(180deg, #141414 0%, #0a0a0a 100%);
   border: 2px solid rgba(255, 212, 0, 0.35);
   border-radius: clamp(16px, 2vw, 30px);
@@ -57,19 +25,30 @@
   flex-direction: column;
   gap: clamp(8px, 1.2vh, 14px);
   box-shadow: 0 0 60px rgba(255, 212, 0, 0.12), 0 30px 80px rgba(0, 0, 0, 0.6);
-  overflow: hidden; /* Evita scroll duplo no quadro */
+  overflow: hidden;
   animation: caBoxEntrar 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.ca-seletor-topo { text-align: center; }
+/* =============================================
+   TOPO DO SELETOR
+   ============================================= */
+.ca-seletor-topo {
+  text-align: center;
+  flex-shrink: 0;
+}
+
 .ca-seletor-topo h2 {
-  margin: 0 0 6px;
+  margin: 0;
   color: #ffd400;
-  font-size: clamp(22px, 2.8vw, 48px);
+  font-size: clamp(20px, 2.5vw, 44px);
   font-weight: 900;
+  line-height: 1;
   text-transform: uppercase;
 }
 
+/* =============================================
+   INPUT DE BUSCA
+   ============================================= */
 .ca-seletor-input {
   width: 100%;
   height: clamp(52px, 7vh, 80px);
@@ -77,57 +56,99 @@
   border: 2px solid rgba(255, 212, 0, 0.5);
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
+  padding: 0 24px;
   font-size: clamp(24px, 2.8vw, 44px);
   font-weight: 900;
+  text-transform: uppercase;
   text-align: center;
   outline: none;
+  box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.ca-seletor-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
 }
 
 /* =============================================
-   3. RESULTADOS E TECLADO
+   RESULTADOS
    ============================================= */
 .ca-seletor-resultados {
   flex: 1;
+  min-height: clamp(60px, 10vh, 140px);
+  max-height: clamp(100px, 18vh, 200px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 5px;
+  padding-right: 4px;
+}
+
+.ca-seletor-msg {
+  width: 100%;
+  min-height: 60px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(16px, 1.4vw, 22px);
+  font-weight: 800;
+  text-align: center;
+  padding: 16px;
 }
 
 .ca-seletor-opcao {
   width: 100%;
-  min-height: clamp(54px, 7vh, 76px);
-  background: #1a1a1a;
+  min-height: clamp(50px, 6vh, 72px);
   border: 2px solid rgba(255, 212, 0, 0.18);
-  border-radius: 15px;
+  border-radius: clamp(10px, 1.2vw, 16px);
+  background: linear-gradient(180deg, #1e1e1e 0%, #111 100%);
   color: #fff;
-  font-size: clamp(18px, 1.8vw, 30px);
+  font-size: clamp(16px, 1.6vw, 26px);
   font-weight: 900;
   cursor: pointer;
+  text-align: center;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
 }
 
-.ca-seletor-opcao:active {
-  background: #ffd400;
-  color: #000;
+.ca-seletor-opcao:active,
+.ca-seletor-opcao:hover {
+  background: linear-gradient(180deg, #ffd400, #efc71d);
+  color: #111;
+}
+
+/* =============================================
+   TECLADO
+   ============================================= */
+.ca-seletor-teclado-container {
+  background: #111;
+  border-radius: clamp(10px, 1.2vw, 18px);
+  padding: clamp(8px, 1vw, 14px);
+  flex-shrink: 0;
 }
 
 .ca-seletor-teclado {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  padding: 10px 0;
+  gap: clamp(4px, 0.6vw, 8px);
 }
 
 .ca-tecla {
   aspect-ratio: 1;
-  background: linear-gradient(180deg, #303030 0%, #171717 100%);
   border: 2px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  border-radius: clamp(6px, 0.8vw, 12px);
+  background: linear-gradient(180deg, #303030 0%, #171717 100%);
   color: #fff;
-  font-size: clamp(18px, 2vw, 32px);
+  font-size: clamp(16px, 1.8vw, 30px);
   font-weight: 900;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease, filter 0.1s ease;
 }
 
 .ca-tecla:active {
@@ -136,65 +157,102 @@
 }
 
 /* =============================================
-   4. BOTÕES DE AÇÃO (123 / APAGAR / LIMPAR)
+   BOTÕES DE AÇÃO (ABC/123 / APAGAR / LIMPAR)
    ============================================= */
 .ca-seletor-acoes {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr 1.2fr; /* Ajuste para 3 colunas */
-  gap: 12px;
-  margin-top: 5px;
+  display: flex;
+  gap: clamp(6px, 1vw, 12px);
+  margin-top: clamp(6px, 0.8vh, 12px);
 }
 
 .ca-btn-alternar {
+  flex: 1;
   height: clamp(44px, 6vh, 64px);
-  background: #f1c40f !important;
-  color: #000 !important;
+  background: linear-gradient(180deg, #ffe84a 0%, #f1c40f 100%);
+  color: #000;
   font-weight: 900;
-  font-size: clamp(16px, 1.4vw, 24px);
-  border-radius: 15px;
+  font-size: clamp(15px, 1.4vw, 22px);
+  border-radius: clamp(8px, 1vw, 14px);
   border: none;
   box-shadow: 0 4px 0 #b7950b;
   cursor: pointer;
 }
 
+.ca-btn-alternar:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #b7950b;
+}
+
 .ca-btn-apagar {
-  height: clamp(44px, 64px);
-  background: #4c4c4c;
+  flex: 1;
+  height: clamp(44px, 6vh, 64px);
+  background: linear-gradient(180deg, #4c4c4c 0%, #282828 100%);
   color: #fff;
   font-weight: 900;
-  font-size: clamp(16px, 1.4vw, 24px);
-  border-radius: 15px;
-  border: none;
+  font-size: clamp(15px, 1.4vw, 22px);
+  border-radius: clamp(8px, 1vw, 14px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
+}
+
+.ca-btn-apagar:active {
+  transform: translateY(2px);
 }
 
 .ca-btn-limpar {
-  height: clamp(44px, 64px);
-  background: #ffd400;
-  color: #000;
+  flex: 1;
+  height: clamp(44px, 6vh, 64px);
+  background: linear-gradient(180deg, #ffd84a 0%, #ffd400 100%);
+  color: #111;
   font-weight: 900;
-  font-size: clamp(16px, 1.4vw, 24px);
-  border-radius: 15px;
+  font-size: clamp(15px, 1.4vw, 22px);
+  border-radius: clamp(8px, 1vw, 14px);
   border: none;
   cursor: pointer;
 }
 
-/* =============================================
-   ANIMAÇÕES E ROLAGEM
-   ============================================= */
-@keyframes caOverlayEntrar { from { opacity: 0; } to { opacity: 1; } }
-@keyframes caBoxEntrar { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
-
-.ca-seletor-resultados::-webkit-scrollbar { width: 6px; }
-.ca-seletor-resultados::-webkit-scrollbar-thumb { 
-  background: #ffd400; 
-  border-radius: 4px; 
+.ca-btn-limpar:active {
+  transform: translateY(2px);
 }
 
-.ca-seletor-msg {
-  text-align: center;
-  color: #888;
-  padding: 20px;
-  font-size: 20px;
-  font-weight: 800;
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+.ca-seletor-resultados::-webkit-scrollbar { width: 4px; }
+.ca-seletor-resultados::-webkit-scrollbar-track { background: transparent; }
+.ca-seletor-resultados::-webkit-scrollbar-thumb {
+  background: rgba(255, 212, 0, 0.3);
+  border-radius: 4px;
+}
+
+/* =============================================
+   ANIMAÇÕES
+   ============================================= */
+@keyframes caOverlayEntrar {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes caBoxEntrar {
+  from { opacity: 0; transform: scale(0.88) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* =============================================
+   RESPONSIVO
+   ============================================= */
+@media (max-width: 768px) {
+  .ca-seletor-box { padding: 14px; gap: 10px; }
+  .ca-seletor-topo h2 { font-size: 20px; }
+  .ca-seletor-teclado { grid-template-columns: repeat(5, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .ca-seletor-teclado { grid-template-columns: repeat(4, 1fr); }
+}
+
+
+/* Garante que o botão Início apareça acima do overlay do seletor */
+.btn-voltar.flutuante {
+  z-index: 300 !important;
 }

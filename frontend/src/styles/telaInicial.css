@@ -219,10 +219,11 @@
 .kiosk-btn-placa-img {
   width: clamp(200px, 13vw, 380px);
   height: auto;
-  margin-top: clamp(-90px, -10vh, -40px);
+  margin-top: clamp(-70px, -10vh, -40px);
   max-height: none;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.22));
+  margin-bottom: 10px;
 }
 
 .kiosk-btn-pneu {
