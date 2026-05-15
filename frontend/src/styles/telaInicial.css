@@ -157,8 +157,11 @@
   50%       { transform: translateX(-12px); }
 }
 
+/* Trava a altura máxima dos botões para não esticarem demais em telas gigantes */
 .kiosk-buttons {
   width: 100%; height: 100%;
+  max-height: min(280px, 45vh);
+  margin: auto 0;
   display: grid; grid-template-columns: 1fr 1fr;
   gap: clamp(16px,2vw,32px); align-items: stretch; min-height: 0;
 }
@@ -166,7 +169,7 @@
 .kiosk-btn {
   width: 100%; height: 100%;
   border: none; border-radius: clamp(12px,2vw,28px);
-  padding: clamp(10px,1.5vh,24px) clamp(16px,2.2vw,10px);
+  padding: clamp(10px,1.5vh,24px) clamp(16px,2.2vw,36px);
   display: flex; flex-direction: row; align-items: center; justify-content: center;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
@@ -193,7 +196,7 @@
   color: #fff;
   box-shadow: 0 8px 0 #061e52, 0 14px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.15);
   border: 2px solid rgba(255,255,255,0.1);
-  gap: clamp(12px, 2vw, 28px);
+  gap: clamp(12px, 2vw, 15px);
 }
 
 .kiosk-btn-secondary:active {
@@ -226,7 +229,7 @@
 .kiosk-btn-pneu {
   width: clamp(100px, 14vh, 180px);
   height: clamp(100px, 14vh, 180px);
-  object-fit: contain;
+  object-fit: contain; 
   filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));
 }
 
@@ -272,6 +275,7 @@
 
 @media (orientation: portrait) {
   .kiosk-shell { width: min(680px,96vw); height: 96vh; }
+  .kiosk-buttons { max-height: none; margin: 0; }
   .kiosk-topo-big { font-size: clamp(20px,7vw,60px); }
   .kiosk-instrucao-texto { white-space: normal; font-size: clamp(10px,2.8vw,20px); }
   .kiosk-acoes-area { grid-template-columns: 1fr; }
