@@ -166,7 +166,7 @@
 .kiosk-btn {
   width: 100%; height: 100%;
   border: none; border-radius: clamp(12px,2vw,28px);
-  padding: clamp(10px,1.5vh,24px) clamp(16px,2.2vw,36px);
+  padding: clamp(10px,1.5vh,24px) clamp(16px,2.2vw,10px);
   display: flex; flex-direction: row; align-items: center; justify-content: center;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
@@ -180,7 +180,7 @@
   color: #111;
   box-shadow: 0 8px 0 #c49a00, 0 14px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.5);
   border: 2px solid rgba(255,255,255,0.3);
-  gap: 0; /* O espaçamento agora é controlado pela caixinha interna da placa */
+  gap: 0;
 }
 
 .kiosk-btn-primary:active {
@@ -201,10 +201,9 @@
   box-shadow: 0 2px 0 #061e52, 0 4px 12px rgba(0,0,0,0.24);
 }
 
-/* CONTAINER DA PLACA: Remove o espaço invisível gerado pelo rotate */
 .kiosk-btn-primary .kiosk-btn-icon {
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: clamp(70px, 7vw, 110px); /* Trava a largura real para colar o texto perto */
+  width: clamp(70px, 7vw, 110px);
   height: 100%; position: relative; overflow: visible;
 }
 
@@ -213,13 +212,12 @@
   width: auto; height: 100%;
 }
 
-/* PLACA COM COMPORTAMENTO CORRIGIDO */
 .kiosk-btn-placa-img {
   height: auto;
-  width: clamp(140px, 22vh, 200px); /* Controla a altura da placa em pé usando a largura original */
+  width: clamp(140px, 22vh, 200px);
   position: absolute;
   left: 50%; top: 50%;
-  transform: translate(-50%, -50%) rotate(-90deg); /* Centraliza e rotaciona perfeitamente */
+  transform: translate(-50%, -50%) rotate(-90deg);
   max-height: none;
   object-fit: contain;
   filter: drop-shadow(4px 0px 10px rgba(0,0,0,0.22));
@@ -228,7 +226,7 @@
 .kiosk-btn-pneu {
   width: clamp(100px, 14vh, 180px);
   height: clamp(100px, 14vh, 180px);
-  object-fit: contain; 
+  object-fit: contain;
   filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));
 }
 
