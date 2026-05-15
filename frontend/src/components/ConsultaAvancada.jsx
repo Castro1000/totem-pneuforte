@@ -10,7 +10,8 @@ const LETRAS = [
 
 const NUMEROS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-const API_FIPE = 'https://parallelum.com.br/fipe/api/v1/carros';
+//const API_FIPE = 'https://parallelum.com.br/fipe/api/v1/carros';//
+const API_FIPE = `${import.meta.env.VITE_API_URL}/api/fipe`;
 const API_BACKEND = `${import.meta.env.VITE_API_URL}/api/totem`;
 
 function normalizarTexto(texto = '') {

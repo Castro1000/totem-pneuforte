@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const totemRoutes = require('./routes/totemRoutes');
+const fipeRoutes = require('./routes/fipe');
 
 const app = express();
 
@@ -12,5 +13,6 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/totem', totemRoutes);
+app.use('/api/fipe', fipeRoutes);
 
 module.exports = app;
