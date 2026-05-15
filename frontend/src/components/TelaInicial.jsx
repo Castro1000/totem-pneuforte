@@ -1,8 +1,18 @@
+import { useEffect } from 'react';
+
 export default function TelaInicial({
   animandoEntrada,
   iniciarTotem,
   teclaRef
 }) {
+
+  useEffect(() => {
+    const el = document.documentElement;
+    if (el.requestFullscreen && !document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
   return (
     <div className={`entrada-full kiosk-home ${animandoEntrada ? 'entrada-full-saindo' : ''}`}>
       <audio ref={teclaRef} src="/tecla.mp3" preload="auto" />
