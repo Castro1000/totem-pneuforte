@@ -4,12 +4,15 @@ import './styles/telaInicial.css';
 import './styles/telaConsulta.css';
 import './styles/resultado.css';
 import './styles/consultaAvancada.css';
+import './styles/telaBoasVindas.css';
 
+import TelaBoasVindas from './components/TelaBoasVindas';
 import TelaInicial from './components/TelaInicial';
 import TelaConsulta from './components/TelaConsulta';
 import ConsultaAvancada from './components/ConsultaAvancada';
 
 export default function App() {
+  const [boasVindas, setBoasVindas] = useState(true);
   const [telaInicial, setTelaInicial] = useState(true);
   const [animandoEntrada, setAnimandoEntrada] = useState(false);
   const [tipoConsulta, setTipoConsulta] = useState('placa');
@@ -79,13 +82,18 @@ export default function App() {
     }
   }
 
+  async function entrarApp() {
+    await entrarFullscreen();
+    falarBoasVindas();
+    setBoasVindas(false);
+  }
+
   function iniciarTotem(modo) {
     if (animandoEntrada) return;
 
     setTipoConsulta(modo);
     entrarFullscreen();
     setAnimandoEntrada(true);
-    falarBoasVindas();
 
     setTimeout(() => {
       setTelaInicial(false);
@@ -142,13 +150,12 @@ export default function App() {
         return data;
       };
 
-      // Tenta até 3 vezes com 1s de intervalo entre cada
       let data;
       let ultimoErro;
       for (let i = 0; i < 3; i++) {
         try {
           data = await tentarBusca();
-          break; // achou — sai do loop imediatamente
+          break;
         } catch (err) {
           ultimoErro = err;
           if (i < 2) await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -196,6 +203,10 @@ export default function App() {
   function limparPlaca() {
     tocarTecla();
     setPlaca('');
+  }
+
+  if (boasVindas) {
+    return <TelaBoasVindas onTocar={entrarApp} />;
   }
 
   if (telaInicial) {
