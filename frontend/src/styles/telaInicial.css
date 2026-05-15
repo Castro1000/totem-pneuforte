@@ -103,9 +103,9 @@
 .kiosk-header { text-align: center; flex-shrink: 0; }
 
 .kiosk-header h1 {
-  margin: 5 0 clamp(3px,0.5vh,7px); color: #0e0e0e;
+  margin: 5px 0 clamp(3px,0.5vh,7px); color: #0e0e0e;
   font-size: clamp(16px,3.8vw,40px); font-weight: 900; text-transform: uppercase;
-  margin-bottom: 50px;
+  margin-bottom: min(50px, 4vh);
 }
 
 .kiosk-header p {
@@ -160,15 +160,14 @@
 .kiosk-buttons {
   width: 100%; height: 100%;
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: clamp(10px,1.8vw,24px); align-items: stretch; min-height: 0;
+  gap: clamp(16px,2vw,32px); align-items: stretch; min-height: 0;
 }
 
-/* PONTO 2 — botão menor */
 .kiosk-btn {
   width: 100%; height: 100%;
   border: none; border-radius: clamp(12px,2vw,28px);
-  padding: clamp(10px,1.8vh,28px) clamp(12px,2vw,28px);
-  display: flex; align-items: center; gap: clamp(8px,1.5vw,16px);
+  padding: clamp(10px,1.5vh,24px) clamp(16px,2.2vw,36px);
+  display: flex; flex-direction: row; align-items: center; justify-content: center;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   position: relative; overflow: hidden;
@@ -179,11 +178,9 @@
 .kiosk-btn-primary {
   background: linear-gradient(160deg, #ffe94d 0%, #ffd400 40%, #f0c000 100%);
   color: #111;
-  flex-direction: column; justify-content: center; align-items: center;
-  gap: 10px;
   box-shadow: 0 8px 0 #c49a00, 0 14px 28px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.5);
-  padding-top: clamp(6px, 0.8vh, 12px);
   border: 2px solid rgba(255,255,255,0.3);
+  gap: 0; /* O espaçamento agora é controlado pela caixinha interna da placa */
 }
 
 .kiosk-btn-primary:active {
@@ -193,11 +190,10 @@
 
 .kiosk-btn-secondary {
   background: linear-gradient(160deg, #1a6fd4 0%, #0f4fc4 50%, #082b73 100%);
-  color: #fff; flex-direction: row; justify-content: flex-start;
-  gap: clamp(10px,2vw,22px);
+  color: #fff;
   box-shadow: 0 8px 0 #061e52, 0 14px 28px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.15);
   border: 2px solid rgba(255,255,255,0.1);
-  gap: 20px;
+  gap: clamp(12px, 2vw, 28px);
 }
 
 .kiosk-btn-secondary:active {
@@ -205,50 +201,56 @@
   box-shadow: 0 2px 0 #061e52, 0 4px 12px rgba(0,0,0,0.24);
 }
 
+/* CONTAINER DA PLACA: Remove o espaço invisível gerado pelo rotate */
 .kiosk-btn-primary .kiosk-btn-icon {
-  width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  margin-bottom: -90px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: clamp(70px, 7vw, 110px); /* Trava a largura real para colar o texto perto */
+  height: 100%; position: relative; overflow: visible;
 }
 
 .kiosk-btn-secondary .kiosk-btn-icon {
-  width: clamp(55px,9vw,140px); min-width: clamp(55px,9vw,140px);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: auto; height: 100%;
 }
 
-/* PONTO 1 — placa maior */
+/* PLACA COM COMPORTAMENTO CORRIGIDO */
 .kiosk-btn-placa-img {
-  width: clamp(200px, 13vw, 380px);
   height: auto;
-  margin-top: clamp(-70px, -10vh, -40px);
+  width: clamp(140px, 22vh, 200px); /* Controla a altura da placa em pé usando a largura original */
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg); /* Centraliza e rotaciona perfeitamente */
   max-height: none;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.22));
-  margin-bottom: 10px;
+  filter: drop-shadow(4px 0px 10px rgba(0,0,0,0.22));
 }
 
 .kiosk-btn-pneu {
-  width: clamp(55px,9vw,140px); height: clamp(55px,9vw,140px);
-  object-fit: contain; filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));
+  width: clamp(100px, 14vh, 180px);
+  height: clamp(100px, 14vh, 180px);
+  object-fit: contain; 
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.35));
 }
 
 .kiosk-btn-primary .kiosk-btn-text {
-  display: flex; flex-direction: column; align-items: center;
-  text-align: center; gap: clamp(4px,0.7vh,8px); width: 100%;
+  display: flex; flex-direction: column; align-items: flex-start;
+  text-align: left; gap: clamp(4px,0.7vh,8px); flex: 1; min-width: 0;
+  padding-left: clamp(4px, 1vw, 12px);
 }
 
 .kiosk-btn-secondary .kiosk-btn-text {
-  display: flex; flex-direction: column; justify-content: center;
-  gap: clamp(4px,0.8vh,10px); text-align: left; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: flex-start;
+  text-align: left; gap: clamp(4px,0.8vh,10px); flex: 1; min-width: 0;
 }
 
 .kiosk-btn-text strong {
-  font-size: clamp(14px,2.5vw,50px); font-weight: 900;
+  font-size: clamp(14px,2.4vw,44px); font-weight: 900;
   line-height: 1.05; text-transform: uppercase;
   word-break: break-word; white-space: normal; display: block;
 }
 
 .kiosk-btn-text small {
-  font-size: clamp(11px,1.3vw,24px); line-height: 1.35;
+  font-size: clamp(11px,1.2vw,20px); line-height: 1.35;
   opacity: 0.90; font-weight: 600;
   white-space: normal; word-break: break-word; display: block;
 }
@@ -284,7 +286,7 @@
   }
   .kiosk-btn-primary .kiosk-btn-icon { width: clamp(80px,16vw,130px); min-width: clamp(80px,16vw,130px); }
   .kiosk-btn-primary .kiosk-btn-text { align-items: flex-start; text-align: left; }
-  .kiosk-btn-placa-img { width: clamp(80px,16vw,140px); max-height: clamp(40px,8vh,80px); }
+  .kiosk-btn-placa-img { width: clamp(80px,16vw,140px); max-height: clamp(40px,8vh,80px); transform: none; position: static; }
   .kiosk-btn-pneu { width: clamp(50px,12vw,100px); height: clamp(50px,12vw,100px); }
 }
 
