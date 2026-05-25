@@ -66,7 +66,6 @@ async function registrarConsultaTotem({ origem, placa, marca, modelo, versao, an
     [origem, placa || null, marca || null, modelo || null, versao || null, ano || null, status, observacao, req?.ip]);
   } catch (err) { console.error('Erro ao registrar:', err); }
 }
-
 async function buscarPorPlaca(req, res) {
   try {
     const { placa } = req.body;
@@ -74,19 +73,34 @@ async function buscarPorPlaca(req, res) {
     const veiculo = await buscarVeiculoPorPlaca(placa);
     if (!veiculo) return res.status(404).json({ erro: 'Veículo não encontrado' });
 
+    // 1. Tenta a API externa primeiro
     let pneus = await buscarMedidasWheelSize({ 
       marca: veiculo.marca, 
       modelo: veiculo.modelo, 
       ano: veiculo.ano, 
-      versao: veiculo.versao || veiculo.modelo 
+      versao: veiculo.versao 
     });
     
-    let fonte = pneus ? 'wheel-size' : 'banco';
-    if (!pneus) pneus = await buscarPneusCompativeis({ ...veiculo });
+    let fonte = 'wheel-size';
+
+    // 2. Só tenta o banco local se a API retornar null ou vazio
+    if (!pneus || pneus.length === 0) {
+      console.log(`[DEBUG] API falhou para ${veiculo.modelo}, tentando banco...`);
+      pneus = await buscarPneusCompativeis({ ...veiculo });
+      fonte = 'banco';
+      
+      // Se nem no banco achou, pneus será null/vazio
+      if (!pneus || pneus.length === 0) {
+        return res.json({ veiculo, pneus: [], fonte: 'Nenhum dado encontrado' });
+      }
+    }
 
     await registrarConsultaTotem({ origem: 'placa', placa, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano, status: 'encontrado', observacao: `Fonte: ${fonte}`, req });
-    res.json({ veiculo, pneus: pneus || [], fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
-  } catch (error) { return res.status(500).json({ erro: 'Erro interno' }); }
+    res.json({ veiculo, pneus: pneus, fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
+  } catch (error) { 
+    console.error("ERRO:", error);
+    return res.status(500).json({ erro: 'Erro interno' }); 
+  }
 }
 
 async function buscarMedidaVeiculo(req, res) {
