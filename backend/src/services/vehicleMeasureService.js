@@ -26,6 +26,10 @@ async function executarBusca(sql, params) {
  * Busca principal de medidas
  */
 async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
+  // LOG DE SINALIZAÇÃO DE VERSÃO
+  console.log("--- INICIANDO BUSCA DE VEÍCULO v2026.05.25 ---");
+  console.log("DETETIVE_FIPE: Recebido ->", { codigo_fipe, marca, modelo, versao, ano });
+
   if (!marca || !modelo || !ano) return [];
 
   const marcaNormalizada = normalizeText(marca);
@@ -33,10 +37,8 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
   const versaoNormalizada = versao ? normalizeText(versao) : '';
   const anoNumero = Number(ano);
 
-  // Primeira palavra do modelo para fallback (Ex: "NIVUS CL" -> "NIVUS")
   const modeloPrimeiraPalavra = modeloNormalizado.split(' ')[0];
 
-  // Ordenação inteligente conforme sua regra de negócio
   const orderBase = `
     ORDER BY
       CASE 
@@ -49,8 +51,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     LIMIT 5
   `;
 
-  // Condição de ano preparada para formatos decimais (2.025) e inteiros (2025)
-  // Contém 3 interrogações (?), logo exige 3 parâmetros no array
+  // Mantendo a estrutura original que funciona no seu banco
   const condicaoAno = `
     (? BETWEEN v.ano_inicio AND v.ano_fim 
     OR ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
@@ -68,11 +69,14 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
        ${orderBase}`,
       [codigo_fipe]
     );
-    if (rows.length) return rows;
+
+    if (rows.length > 0) {
+      console.log("DETETIVE_FIPE: Sucesso via FIPE!");
+      return rows;
+    }
   }
 
   // --- 2. BUSCA POR VERSÃO (FLEXÍVEL) ---
-  // Ideal para quando a API de placa retorna "DRIVE AT" mas no banco está "DRIVE 1.3 FLEX..."
   if (versaoNormalizada) {
     const rows = await executarBusca(
       `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
@@ -82,30 +86,26 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
        WHERE UPPER(v.marca) = UPPER(?)
          AND (UPPER(v.modelo) LIKE CONCAT('%', UPPER(?), '%') OR UPPER(?) LIKE CONCAT('%', UPPER(v.modelo), '%'))
          AND (
-            UPPER(v.versao) LIKE UPPER(?) 
-            OR UPPER(?) LIKE CONCAT('%', UPPER(v.versao), '%')
-            OR REPLACE(UPPER(v.versao), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(?), ' ', ''), '%')
+           UPPER(v.versao) LIKE UPPER(?) 
+           OR UPPER(?) LIKE CONCAT('%', UPPER(v.versao), '%')
+           OR REPLACE(UPPER(v.versao), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(?), ' ', ''), '%')
          )
          AND ${condicaoAno}
          AND v.ativo = 1 AND vm.ativo = 1
        ${orderBase}`,
-      [
-        marcaNormalizada, 
-        modeloNormalizado, modeloNormalizado, 
-        `%${versaoNormalizada}%`, versaoNormalizada, versaoNormalizada,
-        anoNumero, anoNumero, anoNumero // Corrigido para suprir os 3 '?' da condicaoAno
-      ]
+      [marcaNormalizada, modeloNormalizado, modeloNormalizado, `%${versaoNormalizada}%`, versaoNormalizada, versaoNormalizada, anoNumero, anoNumero, anoNumero]
     );
     if (rows.length) return rows;
   }
 
-  // --- 3. BUSCA POR MODELO E ANO ---
+  // --- 3. BUSCA POR MODELO E ANO (AJUSTADO: Usa LIKE para ser tolerante ao modelo grudado) ---
   const rows = await executarBusca(
     `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
             vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'modelo_ano' AS match_tipo
      FROM veiculos v
      INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-     WHERE UPPER(v.marca) = UPPER(?) AND UPPER(v.modelo) = UPPER(?)
+     WHERE UPPER(v.marca) = UPPER(?) 
+       AND UPPER(?) LIKE CONCAT(UPPER(v.modelo), '%') 
        AND ${condicaoAno} AND v.ativo = 1 AND vm.ativo = 1
      ${orderBase}`,
     [marcaNormalizada, modeloNormalizado, anoNumero, anoNumero, anoNumero]
@@ -113,13 +113,14 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
   if (rows.length) return rows;
 
   // --- 4. FALLBACK - MODELO PARCIAL ---
-  if (modeloPrimeiraPalavra && modeloPrimeiraPalavra !== modeloNormalizado) {
+  if (modeloPrimeiraPalavra) {
     const rowsParcial = await executarBusca(
       `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
               vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'modelo_parcial' AS match_tipo
        FROM veiculos v
        INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-       WHERE UPPER(v.marca) = UPPER(?) AND UPPER(v.modelo) = UPPER(?)
+       WHERE UPPER(v.marca) = UPPER(?) 
+         AND UPPER(v.modelo) LIKE CONCAT(UPPER(?), '%')
          AND ${condicaoAno} AND v.ativo = 1 AND vm.ativo = 1
        ${orderBase}`,
       [marcaNormalizada, modeloPrimeiraPalavra, anoNumero, anoNumero, anoNumero]
@@ -127,6 +128,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rowsParcial.length) return rowsParcial;
   }
 
+  console.warn("DETETIVE_FIPE: Nenhuma medida encontrada em nenhum fallback.");
   return [];
 }
 
