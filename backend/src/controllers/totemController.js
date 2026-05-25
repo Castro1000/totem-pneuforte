@@ -24,41 +24,55 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
   try {
     const marcaSlug = MARCA_MAP[(marca || '').trim().toUpperCase()];
     if (!marcaSlug) return null;
-    
-    // LIMPEZA: Extrai apenas o modelo principal (ex: "FIAT/TORO" -> "TORO")
+
     let modeloLimpo = modelo.split('/')[1] || modelo.split(' ')[0] || modelo;
     let modeloSlug = normalizarModelo(modeloLimpo);
 
-    const response = await axios.get(WHEEL_SIZE_URL, { 
-      params: { make: marcaSlug, model: modeloSlug, year: ano, region: REGION, user_key: WHEEL_SIZE_KEY }, 
-      timeout: 8000 
-    });
-    
-    const data = response.data?.data || [];
-    if (!data.length) return null;
+    // FUNÇÃO INTERNA PARA BUSCAR NA API
+    const fetchFromAPI = async (isVersaoFlexivel) => {
+      const response = await axios.get(WHEEL_SIZE_URL, { 
+        params: { make: marcaSlug, model: modeloSlug, year: ano, region: REGION, user_key: WHEEL_SIZE_KEY }, 
+        timeout: 8000 
+      });
+      const data = response.data?.data || [];
+      const medidas = new Set();
+      const versaoUpper = (versao || '').toUpperCase();
 
-    const medidasOE = new Set();
-    const versaoUpper = (versao || '').toUpperCase();
-    const semVersao = !versao || versao === 'undefined' || versao === '';
+      for (const item of data) {
+        const trimUpper = (item.trim || '').toUpperCase();
+        const levels = (item.trim_levels || []).map(l => l.toUpperCase());
+        
+        // Se isVersaoFlexivel for true, aceitamos qualquer trim (fallback)
+        const bate = isVersaoFlexivel ? true : (levels.some(l => versaoUpper.includes(l)) || versaoUpper.includes(trimUpper));
 
-    for (const item of data) {
-      const trimUpper = (item.trim || '').toUpperCase();
-      const levels = (item.trim_levels || []).map(l => l.toUpperCase());
-      const bate = semVersao ? true : (levels.some(l => versaoUpper.includes(l)) || versaoUpper.includes(trimUpper));
-
-      if (bate) {
-        for (const wheel of (item.wheels || [])) {
-          const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
-          if (medida && wheel.is_stock) medidasOE.add(medida);
+        if (bate) {
+          for (const wheel of (item.wheels || [])) {
+            const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
+            if (medida && wheel.is_stock) medidas.add(medida);
+          }
         }
-        if (medidasOE.size > 0) break; 
       }
+      return Array.from(medidas);
+    };
+
+    // TENTATIVA 1: Busca rigorosa com a versão
+    let resultados = await fetchFromAPI(false);
+
+    // TENTATIVA 2: Se falhar, busca flexível (ignora a versão e pega o modelo geral)
+    if (!resultados || resultados.length === 0) {
+      resultados = await fetchFromAPI(true);
     }
-    const pneus = []; let idx = 1;
-    medidasOE.forEach(m => pneus.push({ id: idx++, medida: m, tipo: 'original', prioridade: 1, fonte: 'wheel-size' }));
+
+    const pneus = resultados.map((m, idx) => ({ id: idx + 1, medida: m, tipo: 'original', prioridade: 1, fonte: 'wheel-size' }));
     return pneus.length > 0 ? pneus : null;
-  } catch (error) { return null; }
+  } catch (error) { 
+    console.error("ERRO NA API WHEELSIZE:", error.message);
+    return null; 
+  }
 }
+
+
+
 
 async function registrarConsultaTotem({ origem, placa, marca, modelo, versao, ano, status, observacao, req }) {
   try {
@@ -66,6 +80,9 @@ async function registrarConsultaTotem({ origem, placa, marca, modelo, versao, an
     [origem, placa || null, marca || null, modelo || null, versao || null, ano || null, status, observacao, req?.ip]);
   } catch (err) { console.error('Erro ao registrar:', err); }
 }
+
+
+
 async function buscarPorPlaca(req, res) {
   try {
     const { placa } = req.body;
