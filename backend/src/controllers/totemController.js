@@ -21,7 +21,7 @@ async function salvarVeiculoConsultado({
 }) {
   const anoNumero = Number(ano);
 
-  // Rejeita anos inválidos — evita salvar 32000, 0, null, etc.
+  // Rejeita anos inválidos
   if (!marca || !modelo || !anoValido(anoNumero)) {
     return null;
   }
@@ -29,7 +29,6 @@ async function salvarVeiculoConsultado({
   const marcaLimpa = limparTexto(marca);
   const modeloLimpo = limparTexto(modelo);
   const versaoLimpa = limparTexto(versao || 'VERSÃO NÃO INFORMADA');
-  const combustivelLimpo = combustivel ? limparTexto(combustivel) : null;
 
   let veiculoExistente = [];
 
@@ -69,24 +68,8 @@ async function salvarVeiculoConsultado({
     return veiculoExistente[0].id;
   }
 
-  const [result] = await db.execute(
-    `
-    INSERT INTO veiculos
-    (codigo_fipe, marca, modelo, versao, ano_inicio, ano_fim, combustivel, ativo)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-    `,
-    [
-      codigo_fipe || null,
-      marcaLimpa,
-      modeloLimpo,
-      versaoLimpa,
-      anoNumero,
-      anoNumero,
-      combustivelLimpo
-    ]
-  );
-
-  return result.insertId;
+  // --- ALTERAÇÃO AQUI: Removemos o INSERT. Se não achar, retorna null ---
+  return null;
 }
 
 async function registrarConsultaTotem({
@@ -175,7 +158,7 @@ function salvarERegistrarEmBackground({ veiculo, pneus, placa, origem, req }) {
         status: pneus?.length ? 'encontrado' : 'nao_encontrado',
         observacao: pneus?.length
           ? `Consulta por ${origem} com medida encontrada`
-          : 'Veículo salvo, mas sem medida cadastrada',
+          : 'Veículo não encontrado no banco, log registrado',
         req
       });
     })
@@ -218,7 +201,6 @@ async function buscarPorPlaca(req, res) {
       ano: veiculo.ano
     });
 
-    // Responde imediatamente — save e log vão para background
     res.json({ veiculo, pneus });
 
     salvarERegistrarEmBackground({ veiculo, pneus, placa, origem: 'placa', req });
@@ -284,21 +266,18 @@ async function buscarMedidaVeiculo(req, res) {
             combustivel: veiculo.combustivel,
             veiculo_id: veiculoId,
             status: 'nao_encontrado',
-            observacao: 'Veículo salvo, mas sem medida cadastrada',
+            observacao: 'Veículo não encontrado com medida, log registrado',
             req
           });
         })
         .catch(() => {});
 
       return res.status(404).json({
-        erro: 'Veículo salvo, mas ainda não possui medida cadastrada',
-        veiculo_salvo: true,
-        veiculo,
+        erro: 'Veículo não encontrado ou sem medida',
         pneus: []
       });
     }
 
-    // Responde imediatamente
     res.json({
       encontrado: true,
       veiculo_salvo: true,
