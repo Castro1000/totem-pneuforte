@@ -10,9 +10,9 @@ const LETRAS = [
 
 const NUMEROS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-//const API_FIPE = 'https://parallelum.com.br/fipe/api/v1/carros';//
 const API_FIPE = `${import.meta.env.VITE_API_URL}/api/fipe`;
 const API_BACKEND = `${import.meta.env.VITE_API_URL}/api/totem`;
+const API_WHEEL_SIZE = `${import.meta.env.VITE_API_URL}/api/wheel-size`;
 
 function normalizarTexto(texto = '') {
   return String(texto).trim().replace(/\s+/g, ' ').toUpperCase();
@@ -84,6 +84,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [loadingMedida, setLoadingMedida] = useState(false);
   const [erroMedida, setErroMedida] = useState('');
   const [resultadoMedidas, setResultadoMedidas] = useState(null);
+  const [fonteMedida, setFonteMedida] = useState('banco'); // 'banco' ou 'wheel-size'
 
   function tocarClique() {
     const audio = teclaRef?.current;
@@ -214,37 +215,68 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       setLoadingMedida(true);
       setErroMedida('');
       setResultadoMedidas(null);
+      setFonteMedida('wheel-size');
 
       const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
 
-      // Retry automático — 3 tentativas com 1s de intervalo
-      const tentarBusca = async () => {
-        const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
+      let data = null;
+
+      // 1ª tentativa — wheel-size API
+      try {
+        const responseWS = await fetch(`${API_WHEEL_SIZE}/buscar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(veiculoTratado)
+          body: JSON.stringify({
+            marca: veiculoTratado.marca,
+            modelo: veiculoTratado.modelo,
+            ano: veiculoTratado.ano,
+            versao: veiculoTratado.versao
+          })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.erro || 'Nenhuma medida encontrada');
-        return data;
-      };
 
-      let data;
-      let ultimoErro;
-      for (let i = 0; i < 3; i++) {
+        const jsonWS = await responseWS.json();
+        if (!responseWS.ok) throw new Error(jsonWS.erro || 'Não encontrado na wheel-size');
+
+        data = jsonWS;
+        setFonteMedida('wheel-size');
+
+      } catch {
+        // 2ª tentativa — banco local
         try {
-          data = await tentarBusca();
-          break;
-        } catch (err) {
-          ultimoErro = err;
-          if (i < 2) await new Promise((r) => setTimeout(r, 1000));
+          const tentarBanco = async () => {
+            const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(veiculoTratado)
+            });
+            const json = await response.json();
+            if (!response.ok) throw new Error(json.erro || 'Não encontrado no banco');
+            return json;
+          };
+
+          let ultimoErroBanco;
+          for (let i = 0; i < 3; i++) {
+            try {
+              data = await tentarBanco();
+              break;
+            } catch (err) {
+              ultimoErroBanco = err;
+              if (i < 2) await new Promise((r) => setTimeout(r, 1000));
+            }
+          }
+          if (!data) throw ultimoErroBanco;
+
+          setFonteMedida('banco');
+
+        } catch (errBanco) {
+          throw new Error(errBanco.message || 'Veículo não encontrado em nenhuma fonte');
         }
       }
-      if (!data) throw ultimoErro;
 
       setResultadoMedidas(data);
       setPopupVeiculo(false);
       setPopupMedida(true);
+
     } catch (error) {
       setErroMedida(error.message || 'Erro ao buscar medida ideal');
     } finally {
@@ -262,7 +294,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     setModelosBase([]); setAnos([]); setVersoes([]);
     setErroApi(''); setErroMedida('');
     setPopupVeiculo(false); setPopupMedida(false);
-    setLoadingMedida(false);
+    setLoadingMedida(false); setFonteMedida('banco');
   }
 
   useEffect(() => { carregarMarcas(); }, [carregarMarcas]);
@@ -350,7 +382,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       <div className="bg-consulta"></div>
       <div className="bg-consulta-overlay"></div>
 
-      {/* Botão Início — igual à tela de placa, fixo no canto superior direito */}
       <button className="btn-voltar flutuante" onClick={voltarInicio}>Início</button>
 
       {seletorAberto && (
@@ -464,6 +495,11 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                       ))}
                     </div>
                   </div>
+                )}
+                {fonteMedida === 'wheel-size' && (
+                  <p className="popup-medida-obs" style={{ fontSize: '12px', opacity: 0.6, marginTop: '8px' }}>
+                    * Medida obtida via base internacional wheel-size.com
+                  </p>
                 )}
               </>
             ) : (
