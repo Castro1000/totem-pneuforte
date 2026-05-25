@@ -76,23 +76,31 @@ async function buscarPorPlaca(req, res) {
   try {
     const { placa } = req.body;
     if (!placa) return res.status(400).json({ erro: 'Placa obrigatória' });
+    
     const veiculo = await buscarVeiculoPorPlaca(placa);
     if (!veiculo) {
-      await registrarConsultaTotem({ origem: 'placa', placa, status: 'nao_encontrado', observacao: 'Placa não encontrada', req });
       return res.status(404).json({ erro: 'Veículo não encontrado' });
     }
+
+    // DIAGNÓSTICO: Vamos ver o que está tentando buscar
+    console.log(`[DIAGNOSTICO] Buscando via WheelSize: Marca=${veiculo.marca}, Modelo=${veiculo.modelo}, Ano=${veiculo.ano}, Versao=${veiculo.versao}`);
 
     let pneus = await buscarMedidasWheelSize({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao });
     let fonte = 'wheel-size';
 
     if (!pneus || pneus.length === 0) {
+      console.log(`[DIAGNOSTICO] API falhou ou vazia. Tentando banco local para: ${veiculo.modelo}`);
       pneus = await buscarPneusCompativeis({ ...veiculo });
       fonte = 'banco';
+    } else {
+      console.log(`[DIAGNOSTICO] API funcionou! Medidas encontradas: ${pneus.length}`);
     }
 
-    await registrarConsultaTotem({ origem: 'placa', placa, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano, medida_recomendada: pneus?.[0]?.medida, status: 'encontrado', observacao: `Fonte: ${fonte}`, req });
     res.json({ veiculo, pneus: pneus || [], fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
-  } catch (error) { return res.status(500).json({ erro: 'Erro ao consultar placa' }); }
+  } catch (error) { 
+    console.error("[ERRO_PLACA]", error);
+    return res.status(500).json({ erro: 'Erro ao consultar placa' }); 
+  }
 }
 
 async function buscarMedidaVeiculo(req, res) {
