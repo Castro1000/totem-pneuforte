@@ -41,6 +41,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
 
   const orderBase = `
     ORDER BY
+      (vm.medida IS NULL OR vm.medida = '') ASC,
       CASE 
         WHEN vm.tipo = 'ideal' THEN 0 
         WHEN vm.tipo = 'original' THEN 1
