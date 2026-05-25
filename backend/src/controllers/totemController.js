@@ -265,6 +265,7 @@ async function buscarPorPlaca(req, res) {
       fonte = 'wheel-size';
       console.log(`[PLACA] Medida encontrada via wheel-size para ${veiculo.marca} ${veiculo.modelo} ${veiculo.ano}`);
     } else {
+      // 2ª tentativa — banco local
       console.log(`[PLACA] wheel-size não encontrou, tentando banco local...`);
       pneus = await buscarPneusCompativeis({
         codigo_fipe: veiculo.codigo_fipe,
@@ -276,18 +277,17 @@ async function buscarPorPlaca(req, res) {
       fonte = 'banco';
     }
 
-    // AQUI: Retornamos o rótulo amigável
-    res.json({ 
-        veiculo, 
-        pneus: pneus || [], 
-        fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' 
-    });
+    res.json({ veiculo, pneus: pneus || [], fonte });
 
     salvarERegistrarEmBackground({ veiculo, pneus: pneus || [], placa, origem: 'placa', req, fonte });
 
   } catch (error) {
     console.error('ERRO NO CONTROLLER:', error.message || error);
-    if (error.message === 'Placa inválida') return res.status(400).json({ erro: 'Placa inválida' });
+
+    if (error.message === 'Placa inválida') {
+      return res.status(400).json({ erro: 'Placa inválida' });
+    }
+
     return res.status(500).json({ erro: 'Erro ao consultar placa' });
   }
 }
@@ -320,25 +320,35 @@ async function buscarMedidaVeiculo(req, res) {
     });
 
     if (!pneus || pneus.length === 0) {
-      // ... (mantive seu bloco de erro igual)
+      Promise.resolve()
+        .then(async () => {
+          const veiculoId = await salvarVeiculoConsultado(veiculo);
+          await registrarConsultaTotem({
+            origem: 'modelo',
+            codigo_fipe: veiculo.codigo_fipe,
+            marca: veiculo.marca,
+            modelo: veiculo.modelo,
+            versao: veiculo.versao,
+            ano: veiculo.ano,
+            combustivel: veiculo.combustivel,
+            veiculo_id: veiculoId,
+            status: 'nao_encontrado',
+            observacao: 'Veículo não encontrado com medida, log registrado',
+            req
+          });
+        })
+        .catch(() => {});
+
       return res.status(404).json({ erro: 'Veículo não encontrado ou sem medida', pneus: [] });
     }
 
-    res.json({ 
-        encontrado: true, 
-        veiculo_salvo: true, 
-        veiculo, 
-        pneus,
-        fonte: 'Dados Cadastrados' // Rota modelo sempre usa o banco
-    });
+    res.json({ encontrado: true, veiculo_salvo: true, veiculo, pneus });
 
     salvarERegistrarEmBackground({ veiculo, pneus, placa: null, origem: 'modelo', req, fonte: 'banco' });
 
   } catch (error) {
-    // ... (mantive seu bloco de erro igual)
-    return res.status(500).json({ erro: 'Erro ao buscar medida do veículo' });
-  }
-}
+    console.error('ERRO AO BUSCAR MEDIDA POR VEÍCULO:', error.message || error);
+
     Promise.resolve()
       .then(() => registrarConsultaTotem({
         origem: 'modelo',
