@@ -25,8 +25,8 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
     const marcaSlug = MARCA_MAP[(marca || '').trim().toUpperCase()];
     if (!marcaSlug) return null;
     
-    // LIMPEZA: Remove a marca do modelo caso a API envie "FIAT/TORO"
-    let modeloLimpo = modelo.replace(/FIAT\//i, '').replace(/VW\//i, '').split(' ')[0];
+    // LIMPEZA: Extrai apenas o modelo principal (ex: "FIAT/TORO" -> "TORO")
+    let modeloLimpo = modelo.split('/')[1] || modelo.split(' ')[0] || modelo;
     let modeloSlug = normalizarModelo(modeloLimpo);
 
     const response = await axios.get(WHEEL_SIZE_URL, { 
@@ -37,8 +37,9 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
     const data = response.data?.data || [];
     if (!data.length) return null;
 
-    const medidasOE = new Set(), versaoUpper = (versao || '').toUpperCase();
-    const semVersao = !versao || versao === 'undefined';
+    const medidasOE = new Set();
+    const versaoUpper = (versao || '').toUpperCase();
+    const semVersao = !versao || versao === 'undefined' || versao === '';
 
     for (const item of data) {
       const trimUpper = (item.trim || '').toUpperCase();
@@ -63,7 +64,7 @@ async function registrarConsultaTotem({ origem, placa, marca, modelo, versao, an
   try {
     await db.execute(`INSERT INTO consultas_toten (origem, placa, marca, modelo, versao, ano, status, observacao, ip_origem) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
     [origem, placa || null, marca || null, modelo || null, versao || null, ano || null, status, observacao, req?.ip]);
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error('Erro ao registrar:', err); }
 }
 
 async function buscarPorPlaca(req, res) {
@@ -73,18 +74,17 @@ async function buscarPorPlaca(req, res) {
     const veiculo = await buscarVeiculoPorPlaca(placa);
     if (!veiculo) return res.status(404).json({ erro: 'Veículo não encontrado' });
 
-    // A versão aqui recebe o texto bruto da Exato (BrandModel)
     let pneus = await buscarMedidasWheelSize({ 
       marca: veiculo.marca, 
       modelo: veiculo.modelo, 
       ano: veiculo.ano, 
-      versao: veiculo.modelo 
+      versao: veiculo.versao || veiculo.modelo 
     });
     
     let fonte = pneus ? 'wheel-size' : 'banco';
     if (!pneus) pneus = await buscarPneusCompativeis({ ...veiculo });
 
-    await registrarConsultaTotem({ origem: 'placa', placa, marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, status: 'encontrado', observacao: `Fonte: ${fonte}`, req });
+    await registrarConsultaTotem({ origem: 'placa', placa, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano, status: 'encontrado', observacao: `Fonte: ${fonte}`, req });
     res.json({ veiculo, pneus: pneus || [], fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
   } catch (error) { return res.status(500).json({ erro: 'Erro interno' }); }
 }
@@ -94,12 +94,15 @@ async function buscarMedidaVeiculo(req, res) {
     const { marca, modelo, versao, ano } = req.body;
     let pneus = await buscarMedidasWheelSize({ marca, modelo, ano, versao });
     let fonte = 'wheel-size';
+    
     if (!pneus) {
       pneus = await buscarPneusCompativeis({ marca, modelo, versao, ano });
       fonte = 'banco';
     }
-    res.json({ encontrados: true, pneus, fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
-  } catch (error) { return res.status(500).json({ erro: 'Erro' }); }
+    
+    await registrarConsultaTotem({ origem: 'modelo', marca, modelo, versao, ano, status: pneus ? 'encontrado' : 'nao_encontrado', observacao: `Fonte: ${fonte}`, req });
+    res.json({ encontrados: true, pneus: pneus || [], fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
+  } catch (error) { return res.status(500).json({ erro: 'Erro ao buscar medida' }); }
 }
 
 module.exports = { buscarPorPlaca, buscarMedidaVeiculo };
