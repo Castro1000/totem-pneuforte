@@ -99,19 +99,20 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rows.length) return rows;
   }
 
-  // --- 3. BUSCA POR MODELO E ANO (AJUSTADO: Bidirecional para maior tolerância) ---
+  // --- BUSCA POR MODELO E ANO ---
   const rows = await executarBusca(
-      `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
-              vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'modelo_ano' AS match_tipo
-      FROM veiculos v
-      INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
-      WHERE UPPER(v.marca) = UPPER(?) 
-        AND (UPPER(?) LIKE CONCAT(UPPER(v.modelo), '%') OR UPPER(v.modelo) LIKE CONCAT(UPPER(?), '%'))
-        AND ${condicaoAno} 
-        AND v.ativo = 1 AND vm.ativo = 1
-      ${orderBase}`,
-      [marcaNormalizada, modeloNormalizado, modeloNormalizado, anoNumero, anoNumero, anoNumero]
-    );
+    `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
+            vm.medida, vm.tipo, vm.prioridade, vm.observacao, 'modelo_ano' AS match_tipo
+     FROM veiculos v
+     INNER JOIN veiculo_medidas vm ON vm.veiculo_id = v.id
+     WHERE UPPER(v.marca) = UPPER(?) 
+       AND (UPPER(?) LIKE CONCAT(UPPER(v.modelo), '%') OR UPPER(v.modelo) LIKE CONCAT(UPPER(?), '%'))
+       AND ${condicaoAno} 
+       AND v.ativo = 1 AND vm.ativo = 1
+       AND vm.medida IS NOT NULL AND vm.medida != '' -- ADICIONE ISSO AQUI
+     ${orderBase}`,
+    [marcaNormalizada, modeloNormalizado, modeloNormalizado, anoNumero, anoNumero, anoNumero]
+  );
   if (rows.length) return rows;
 
   // --- 4. FALLBACK - MODELO PARCIAL ---
