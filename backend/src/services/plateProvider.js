@@ -38,40 +38,14 @@ function extrairAno(...valores) {
   return null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAPA DE MARCAS
-// Converte siglas/abreviações da Exato/DETRAN para o nome exato do banco.
-// ─────────────────────────────────────────────────────────────────────────────
 const MAPA_MARCAS = {
-  'VW':            'VW - VOLKSWAGEN',
-  'VOLKSWAGEN':    'VW - VOLKSWAGEN',
-  'GM':            'GM - CHEVROLET',
-  'CHEV':          'GM - CHEVROLET',
-  'CHEVROLET':     'GM - CHEVROLET',
-  'KIA':           'KIA MOTORS',
-  'KIA MOTORS':    'KIA MOTORS',
-  'LAND-ROVER':    'LAND ROVER',
-  'LANDROVER':     'LAND ROVER',
-  'LAND ROVER':    'LAND ROVER',
-  'MERCEDES':      'MERCEDES-BENZ',
-  'MERCEDES BENZ': 'MERCEDES-BENZ',
-  'MB':            'MERCEDES-BENZ',
-  'MITSU':         'MITSUBISHI',
-  'NIS':           'NISSAN',
-  'PEU':           'PEUGEOT',
-  'REN':           'RENAULT',
-  'TOYT':          'TOYOTA',
-  'TOY':           'TOYOTA',
-  'HON':           'HONDA',
-  'HYU':           'HYUNDAI',
-  'CITR':          'CITROËN',
-  'CITROEN':       'CITROËN',
-  'SUB':           'SUBARU',
-  'SUZ':           'SUZUKI',
+  'VW': 'VW - VOLKSWAGEN', 'VOLKSWAGEN': 'VW - VOLKSWAGEN', 'GM': 'GM - CHEVROLET', 'CHEV': 'GM - CHEVROLET', 'CHEVROLET': 'GM - CHEVROLET',
+  'KIA': 'KIA MOTORS', 'KIA MOTORS': 'KIA MOTORS', 'LAND-ROVER': 'LAND ROVER', 'LANDROVER': 'LAND ROVER', 'LAND ROVER': 'LAND ROVER',
+  'MERCEDES': 'MERCEDES-BENZ', 'MERCEDES BENZ': 'MERCEDES-BENZ', 'MB': 'MERCEDES-BENZ', 'MITSU': 'MITSUBISHI', 'NIS': 'NISSAN',
+  'PEU': 'PEUGEOT', 'REN': 'RENAULT', 'TOYT': 'TOYOTA', 'TOY': 'TOYOTA', 'HON': 'HONDA', 'HYU': 'HYUNDAI', 'CITR': 'CITROËN',
+  'CITROEN': 'CITROËN', 'SUB': 'SUBARU', 'SUZ': 'SUZUKI',
 };
 
-// Prefixos de origem do DETRAN que aparecem antes da barra e devem ser descartados.
-// Ex: "I/FIAT SIENA" → I = importado, não é marca.
 const PREFIXOS_DETRAN = new Set(['I', 'N', 'R', 'E']);
 
 function normalizarMarca(marca) {
@@ -81,71 +55,47 @@ function normalizarMarca(marca) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// separarMarcaModelo
-// Interpreta o campo BrandModel da Exato/DETRAN nos formatos conhecidos:
-//   "VW/NIVUS CL TSI"           → marca=VW,   modelo=NIVUS CL TSI
-//   "I/FIAT SIENA EL 1.4 FLEX"  → marca=FIAT, modelo=SIENA EL 1.4 FLEX
-//   "CHEV/ONIX PLUS 10TAT PR1"  → marca=CHEV, modelo=ONIX PLUS 10TAT PR1
-//   "TOYOTA COROLLA"            → marca=TOYOTA, modelo=COROLLA
-//   "MERCEDES-BENZ C200"        → marca=MERCEDES-BENZ, modelo=C200
+// separarMarcaModelo (AJUSTADA PARA LIMPAR O MODELO)
 // ─────────────────────────────────────────────────────────────────────────────
 function separarMarcaModelo(brandModel = '') {
   const texto = String(brandModel || '').toUpperCase().trim();
-
   if (!texto) return { marca: null, modelo: null };
 
-  // ── Caso 1: tem barra ──────────────────────────────────────────────────────
+  let marca = null;
+  let modelo = null;
+
   if (texto.includes('/')) {
     const barraIdx = texto.indexOf('/');
     const antes = texto.slice(0, barraIdx).trim();
     const depois = texto.slice(barraIdx + 1).trim();
 
     if (PREFIXOS_DETRAN.has(antes)) {
-      // Prefixo DETRAN (I, N, R, E) — descarta e extrai marca do restante
-      // "I/FIAT SIENA EL 1.4 FLEX" → depois = "FIAT SIENA EL 1.4 FLEX"
       const tokens = depois.split(' ');
-      return {
-        marca: tokens[0]?.trim() || null,
-        modelo: tokens.slice(1).join(' ').trim() || null,
-      };
+      marca = tokens[0]?.trim();
+      modelo = tokens[1]?.trim(); // Pega apenas a primeira palavra do modelo
+    } else {
+      marca = antes;
+      modelo = depois.split(' ')[0]; // Pega apenas a primeira palavra do modelo
     }
-
-    // Antes da barra é a sigla da marca (VW, CHEV, FIAT, etc.)
-    return {
-      marca: antes || null,
-      modelo: depois || null,
-    };
-  }
-
-  // ── Caso 2: separado só por espaço ────────────────────────────────────────
-  // Tenta identificar marcas compostas: "LAND ROVER", "KIA MOTORS", etc.
-  if (texto.includes(' ')) {
+  } else {
     const tokens = texto.split(' ');
-
-    // Testa 2 tokens como marca composta primeiro, depois 1 token
     for (let n = Math.min(2, tokens.length - 1); n >= 1; n--) {
       const candidata = tokens.slice(0, n).join(' ');
       if (MAPA_MARCAS[candidata] || n === 1) {
-        return {
-          marca: candidata || null,
-          modelo: tokens.slice(n).join(' ').trim() || null,
-        };
+        marca = candidata;
+        modelo = tokens[n]?.trim(); // Pega apenas a primeira palavra do modelo após a marca
+        break;
       }
     }
   }
 
-  // ── Caso 3: só uma palavra ─────────────────────────────────────────────────
-  return { marca: texto, modelo: null };
+  return { marca, modelo };
 }
 
 function montarRespostaPadrao(result, placaLimpa) {
   const brandModel = pick(result, ['BrandModel', 'brandModel', 'MarcaModelo']);
   const { marca, modelo } = separarMarcaModelo(brandModel);
-
-  const ano = extrairAno(
-    pick(result, ['ModelYear', 'modelYear', 'AnoModelo']),
-    pick(result, ['ManufactureYear', 'manufactureYear', 'AnoFabricacao'])
-  );
+  const ano = extrairAno(pick(result, ['ModelYear', 'modelYear', 'AnoModelo']), pick(result, ['ManufactureYear', 'manufactureYear', 'AnoFabricacao']));
 
   return {
     placa: pick(result, ['LicensePlate', 'licensePlate']) || placaLimpa,
@@ -155,63 +105,39 @@ function montarRespostaPadrao(result, placaLimpa) {
   };
 }
 
-// Tenta chamar a Exato até `tentativas` vezes antes de desistir
 async function consultarExatoComRetry(placaLimpa, tentativas = 3) {
   const url = process.env.EXATO_VEHICLES_URL;
   const token = process.env.EXATO_TOKEN;
-
-  if (!url || !token) {
-    throw new Error('Credenciais da Exato não configuradas');
-  }
+  if (!url || !token) throw new Error('Credenciais da Exato não configuradas');
 
   let ultimoErro = null;
-
   for (let i = 1; i <= tentativas; i++) {
     try {
-      const response = await axios.post(
-        url,
-        { token, license_plate: placaLimpa, restrictions: false },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 8000 }
-      );
+      const response = await axios.post(url, { token, license_plate: placaLimpa, restrictions: false }, { headers: { 'Content-Type': 'application/json' }, timeout: 8000 });
       return response.data;
     } catch (err) {
       ultimoErro = err;
       console.warn(`Exato tentativa ${i}/${tentativas} falhou:`, err.message);
     }
   }
-
   throw ultimoErro;
 }
 
 async function buscarVeiculoPorPlaca(placa) {
   const placaLimpa = limparPlaca(placa);
-
-  if (placaLimpa.length !== 7) {
-    throw new Error('Placa inválida');
-  }
+  if (placaLimpa.length !== 7) throw new Error('Placa inválida');
 
   try {
     const data = await consultarExatoComRetry(placaLimpa);
     const result = data?.Result;
-
-    if (!result || typeof result !== 'object') {
-      return mockLocal[placaLimpa] || null;
-    }
+    if (!result || typeof result !== 'object') return mockLocal[placaLimpa] || null;
 
     const veiculo = montarRespostaPadrao(result, placaLimpa);
-
-    if (!veiculo.marca && !veiculo.modelo) {
-      return mockLocal[placaLimpa] || null;
-    }
+    if (!veiculo.marca && !veiculo.modelo) return mockLocal[placaLimpa] || null;
 
     return veiculo;
   } catch (error) {
     console.error('ERRO EXATO:', error.response?.data || error.message || error);
-
-    if (error.message === 'Credenciais da Exato não configuradas') {
-      return mockLocal[placaLimpa] || null;
-    }
-
     return mockLocal[placaLimpa] || null;
   }
 }
