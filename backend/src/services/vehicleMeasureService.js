@@ -26,6 +26,10 @@ async function executarBusca(sql, params) {
  * Busca principal de medidas
  */
 async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
+  // LOG DE SINALIZAÇÃO DE VERSÃO
+  console.log("--- INICIANDO BUSCA DE VEÍCULO v2026.05.25 ---");
+  console.log("DETETIVE_FIPE: Recebido ->", { codigo_fipe, marca, modelo, versao, ano });
+
   if (!marca || !modelo || !ano) return [];
 
   const marcaNormalizada = normalizeText(marca);
@@ -66,10 +70,10 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     );
 
     if (rows.length > 0) {
+      console.log("DETETIVE_FIPE: Sucesso via FIPE!");
       return rows;
     } else {
-      // LOG DE SEGURANÇA: Avisa no console do servidor quando o código FIPE não for achado
-      console.error(`[ALERTA_FIPE] Nenhuma medida encontrada para o código FIPE: ${codigo_fipe} | Modelo: ${modelo} | Versão: ${versao}`);
+      console.error(`[ALERTA_FIPE] Nenhuma medida encontrada para: ${codigo_fipe} | ${modelo}`);
     }
   }
 
@@ -128,6 +132,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     if (rowsParcial.length) return rowsParcial;
   }
 
+  console.warn("DETETIVE_FIPE: Nenhuma medida encontrada em nenhum fallback.");
   return [];
 }
 
