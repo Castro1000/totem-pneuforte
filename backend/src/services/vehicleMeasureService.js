@@ -1,14 +1,13 @@
 const db = require('../config/db');
 
 async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
-  console.log("--- BUSCA DEPURADA V4: COMPATIBILIDADE DE MARCA ---");
-  console.log("Recebido -> Marca:", marca, "| Modelo:", modelo, "| Ano:", ano);
+  console.log("--- BUSCA DEPURADA: MÚLTIPLOS ONIX ---");
 
   if (!marca || !modelo || !ano) return [];
 
   try {
-    // Esta query trata a marca de forma flexível: aceita GM ou CHEVROLET
-    // usando um IN para buscar qualquer uma das variações existentes.
+    // Buscamos qualquer ONIX que tenha a medida preenchida e esteja ativo
+    // Removemos o LIMIT 1 para que o sistema possa listar as opções disponíveis
     const sql = `
       SELECT 
         v.id AS veiculo_id, 
@@ -29,12 +28,12 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
         AND vm.ativo = 1
         AND vm.medida IS NOT NULL 
         AND vm.medida != ''
-      LIMIT 1
+      ORDER BY vm.prioridade ASC
     `;
 
     const [rows] = await db.execute(sql, [modelo, ano]);
     
-    console.log("RESULTADO DA BUSCA:", rows);
+    console.log("TOTAL DE REGISTROS ENCONTRADOS:", rows.length);
 
     return rows.map((row) => ({
       id: row.veiculo_medida_id,
@@ -46,7 +45,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       tipo: row.tipo,
       prioridade: row.prioridade,
       observacao: row.observacao,
-      match_tipo: 'busca_blindada'
+      match_tipo: 'busca_aberta'
     }));
 
   } catch (error) {
