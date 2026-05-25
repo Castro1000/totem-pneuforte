@@ -1,15 +1,14 @@
 const db = require('../config/db');
 
 async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
-  console.log("--- BUSCA DINÂMICA: COMPATÍVEL COM TODAS AS MARCAS ---");
-  console.log("Recebido -> Marca:", marca, "| Modelo:", modelo, "| Ano:", ano);
+  console.log("--- BUSCA DINÂMICA: FILTRANDO POR MARCA, MODELO, ANO E VERSÃO ---");
+  console.log(`Recebido -> Marca: ${marca} | Modelo: ${modelo} | Versão: ${versao} | Ano: ${ano}`);
 
   if (!marca || !modelo || !ano) return [];
 
   try {
-    // A query agora usa a marca e o modelo passados pelo parâmetro,
-    // tornando o sistema genérico para qualquer montadora.
-    const sql = `
+    // Iniciamos a query base
+    let sql = `
       SELECT 
         v.id AS veiculo_id, 
         v.marca, 
@@ -29,11 +28,20 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
         AND vm.ativo = 1
         AND vm.medida IS NOT NULL 
         AND vm.medida != ''
-      ORDER BY vm.prioridade ASC
     `;
 
-    // Agora passamos a MARCA, MODELO e ANO como parâmetros dinâmicos
-    const [rows] = await db.execute(sql, [marca, modelo, ano]);
+    const params = [marca, modelo, ano];
+
+    // Se a versão for enviada, adicionamos o filtro LIKE para maior precisão
+    if (versao && versao.trim() !== '') {
+      sql += ` AND TRIM(UPPER(v.versao)) LIKE TRIM(UPPER(?))`;
+      params.push(`%${versao}%`);
+    }
+
+    sql += ` ORDER BY vm.prioridade ASC`;
+
+    // Executa a busca
+    const [rows] = await db.execute(sql, params);
     
     console.log("TOTAL DE REGISTROS ENCONTRADOS:", rows.length);
 

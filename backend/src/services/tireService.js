@@ -4,14 +4,27 @@ const { buscarMedidasPorVeiculo } = require('./vehicleMeasureService');
  * Busca pneus compatíveis tratando o resultado e adicionando metadados de produtos
  */
 async function buscarPneusCompativeis({ codigo_fipe, marca, modelo, versao, ano }) {
+  
+  // 1. Lógica de Limpeza da Versão:
+  // Extraímos apenas a palavra-chave que identifica a versão no seu banco de dados
+  let versaoLimpa = versao;
+  if (versao) {
+    const v = versao.toUpperCase();
+    if (v.includes('EXCLUSIVE')) versaoLimpa = 'EXCLUSIVE';
+    else if (v.includes('UNIQUE')) versaoLimpa = 'UNIQUE';
+    else if (v.includes('ADVANCE')) versaoLimpa = 'ADVANCE';
+    else if (v.includes('SENSE')) versaoLimpa = 'SENSE';
+    else if (v.includes('V-DRIVE')) versaoLimpa = 'V-DRIVE';
+  }
+
   // LOG PARA DEPURAÇÃO: Ajuda a ver no painel do Render o que exatamente está sendo pesquisado
-  console.log(`[DEBUG_TIRE_SERVICE] Iniciando busca: Marca=${marca}, Modelo=${modelo}, Ano=${ano}`);
+  console.log(`[DEBUG_TIRE_SERVICE] Iniciando busca: Marca=${marca}, Modelo=${modelo}, Versao=${versaoLimpa}, Ano=${ano}`);
 
   const medidas = await buscarMedidasPorVeiculo({
     codigo_fipe,
     marca,
     modelo,
-    versao,
+    versao: versaoLimpa, // Passamos a versão limpa para o service de banco
     ano
   });
 
