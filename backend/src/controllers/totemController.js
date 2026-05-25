@@ -99,9 +99,17 @@ async function buscarMedidaVeiculo(req, res) {
   try {
     const { marca, modelo, versao, ano } = req.body;
     if (!marca || !modelo || !ano) return res.status(400).json({ erro: 'Obrigatórios' });
-    const pneus = await buscarPneusCompativeis({ marca, modelo, versao, ano });
-    await registrarConsultaTotem({ origem: 'modelo', marca, modelo, versao, ano, medida_recomendada: pneus?.[0]?.medida, status: pneus?.length ? 'encontrado' : 'nao_encontrado', observacao: 'Busca manual', req });
-    res.json({ encontrado: true, pneus, fonte: 'Dados Cadastrados' });
+
+    let pneus = await buscarMedidasWheelSize({ marca, modelo, ano, versao });
+    let fonte = 'wheel-size';
+
+    if (!pneus || pneus.length === 0) {
+      pneus = await buscarPneusCompativeis({ marca, modelo, versao, ano });
+      fonte = 'banco';
+    }
+
+    await registrarConsultaTotem({ origem: 'modelo', marca, modelo, versao, ano, medida_recomendada: pneus?.[0]?.medida, status: pneus?.length ? 'encontrado' : 'nao_encontrado', observacao: `Busca manual - Fonte: ${fonte}`, req });
+    res.json({ encontrado: pneus && pneus.length > 0, pneus: pneus || [], fonte: fonte === 'wheel-size' ? 'Consulta Técnica Externa' : 'Dados Cadastrados' });
   } catch (error) { return res.status(500).json({ erro: 'Erro' }); }
 }
 
