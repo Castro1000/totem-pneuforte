@@ -1,13 +1,14 @@
 const db = require('../config/db');
 
 async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
-  console.log("--- BUSCA DEPURADA: MÚLTIPLOS ONIX ---");
+  console.log("--- BUSCA DINÂMICA: COMPATÍVEL COM TODAS AS MARCAS ---");
+  console.log("Recebido -> Marca:", marca, "| Modelo:", modelo, "| Ano:", ano);
 
   if (!marca || !modelo || !ano) return [];
 
   try {
-    // Buscamos qualquer ONIX que tenha a medida preenchida e esteja ativo
-    // Removemos o LIMIT 1 para que o sistema possa listar as opções disponíveis
+    // A query agora usa a marca e o modelo passados pelo parâmetro,
+    // tornando o sistema genérico para qualquer montadora.
     const sql = `
       SELECT 
         v.id AS veiculo_id, 
@@ -21,7 +22,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
         vm.observacao
       FROM veiculos v
       INNER JOIN veiculo_medidas vm ON v.id = vm.veiculo_id
-      WHERE (TRIM(v.marca) IN ('CHEVROLET', 'GM - CHEVROLET'))
+      WHERE TRIM(UPPER(v.marca)) = TRIM(UPPER(?))
         AND TRIM(UPPER(v.modelo)) = TRIM(UPPER(?))
         AND ? BETWEEN v.ano_inicio AND v.ano_fim
         AND v.ativo = 1 
@@ -31,7 +32,8 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       ORDER BY vm.prioridade ASC
     `;
 
-    const [rows] = await db.execute(sql, [modelo, ano]);
+    // Agora passamos a MARCA, MODELO e ANO como parâmetros dinâmicos
+    const [rows] = await db.execute(sql, [marca, modelo, ano]);
     
     console.log("TOTAL DE REGISTROS ENCONTRADOS:", rows.length);
 
@@ -45,7 +47,7 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       tipo: row.tipo,
       prioridade: row.prioridade,
       observacao: row.observacao,
-      match_tipo: 'busca_aberta'
+      match_tipo: 'busca_dinamica'
     }));
 
   } catch (error) {
