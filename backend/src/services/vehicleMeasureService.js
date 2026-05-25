@@ -51,13 +51,14 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
     LIMIT 5
   `;
 
+  // CORRIGIDO: Usando as colunas reais do seu banco (ano_inicial e ano_final)
   const condicaoAno = `
-    (? BETWEEN v.ano_inicio AND v.ano_fim 
-    OR ? BETWEEN ROUND(v.ano_inicio * 1000) AND ROUND(v.ano_fim * 1000)
-    OR ? = v.ano_inicio)
+    (? BETWEEN v.ano_inicial AND v.ano_final 
+    OR ? BETWEEN ROUND(v.ano_inicial * 1000) AND ROUND(v.ano_final * 1000)
+    OR ? = v.ano_inicial)
   `;
 
-  // --- 1. BUSCA POR CÓDIGO FIPE (COM LOG DE DEPURAÇÃO) ---
+  // --- 1. BUSCA POR CÓDIGO FIPE ---
   if (codigo_fipe) {
     const rows = await executarBusca(
       `SELECT v.id AS veiculo_id, v.codigo_fipe, v.marca, v.modelo, v.versao, vm.id AS veiculo_medida_id, 
