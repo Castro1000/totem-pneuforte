@@ -38,7 +38,16 @@ async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano
       params.push(`%${versao}%`);
     }
 
-    sql += ` ORDER BY vm.prioridade ASC`;
+    // A MÁGICA: Prioriza as versões top de linha primeiro para evitar erros de aro
+    sql += ` ORDER BY 
+        CASE 
+            WHEN v.versao LIKE '%EXCLUSIVE%' THEN 1
+            WHEN v.versao LIKE '%UNIQUE%' THEN 2
+            WHEN v.versao LIKE '%ADVANCE%' THEN 3
+            WHEN v.versao LIKE '%SENSE%' THEN 4
+            ELSE 5
+        END ASC,
+        vm.prioridade ASC`;
 
     // Executa a busca
     const [rows] = await db.execute(sql, params);
