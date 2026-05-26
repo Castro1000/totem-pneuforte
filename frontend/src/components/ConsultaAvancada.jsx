@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import '../styles/consultaAvancada.css';
 
 const LETRAS = [
@@ -84,7 +84,9 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [loadingMedida, setLoadingMedida] = useState(false);
   const [erroMedida, setErroMedida] = useState('');
   const [resultadoMedidas, setResultadoMedidas] = useState(null);
-  const [fonteMedida, setFonteMedida] = useState('banco'); // 'banco' ou 'wheel-size'
+  const [fonteMedida, setFonteMedida] = useState('wheel-size');
+
+  const marcasCarregadas = useRef(false);
 
   function tocarClique() {
     const audio = teclaRef?.current;
@@ -111,6 +113,13 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!marcasCarregadas.current) {
+      carregarMarcas();
+      marcasCarregadas.current = true;
+    }
+  }, [carregarMarcas]);
 
   async function carregarModelos(codigoMarca) {
     try {
@@ -233,41 +242,22 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             versao: veiculoTratado.versao
           })
         });
-
         const jsonWS = await responseWS.json();
         if (!responseWS.ok) throw new Error(jsonWS.erro || 'Não encontrado na wheel-size');
-
         data = jsonWS;
         setFonteMedida('wheel-size');
-
       } catch {
         // 2ª tentativa — banco local
         try {
-          const tentarBanco = async () => {
-            const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(veiculoTratado)
-            });
-            const json = await response.json();
-            if (!response.ok) throw new Error(json.erro || 'Não encontrado no banco');
-            return json;
-          };
-
-          let ultimoErroBanco;
-          for (let i = 0; i < 3; i++) {
-            try {
-              data = await tentarBanco();
-              break;
-            } catch (err) {
-              ultimoErroBanco = err;
-              if (i < 2) await new Promise((r) => setTimeout(r, 1000));
-            }
-          }
-          if (!data) throw ultimoErroBanco;
-
+          const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(veiculoTratado)
+          });
+          const json = await response.json();
+          if (!response.ok) throw new Error(json.erro || 'Não encontrado no banco');
+          data = json;
           setFonteMedida('banco');
-
         } catch (errBanco) {
           throw new Error(errBanco.message || 'Veículo não encontrado em nenhuma fonte');
         }
@@ -294,10 +284,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     setModelosBase([]); setAnos([]); setVersoes([]);
     setErroApi(''); setErroMedida('');
     setPopupVeiculo(false); setPopupMedida(false);
-    setLoadingMedida(false); setFonteMedida('banco');
+    setLoadingMedida(false); setFonteMedida('wheel-size');
   }
-
-  useEffect(() => { carregarMarcas(); }, [carregarMarcas]);
 
   const tituloSeletor = {
     marca: 'ESCOLHA A MARCA DO SEU CARRO',
@@ -323,7 +311,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   const opcoesFiltradas = useMemo(() => {
     const texto = busca.trim().toUpperCase();
-    if (!texto) return [];
+    if (texto.length < 2) return [];
     return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
   }, [busca, opcoes]);
 
@@ -368,13 +356,12 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     ? tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe })
     : null;
 
-  const medidaPrincipal = resultadoMedidas?.pneus?.[0] || null;
-  const outrasMedidas = resultadoMedidas?.pneus
-    ?.slice(1)
-    .filter((item, index, self) =>
-      item.medida !== medidaPrincipal?.medida &&
-      self.findIndex((m) => m.medida === item.medida) === index
-    ) || [];
+  // Medidas — backend já retorna limitado a 3 e ordenado corretamente
+  const pneus = resultadoMedidas?.pneus || [];
+  const medidaPrincipal = pneus[0] || null;
+  const outrasMedidas = pneus
+    .slice(1)
+    .filter((item, index, self) => self.findIndex(p => p.medida === item.medida) === index);
 
   return (
     <div className="app tela-placa-entrada" style={{ overflow: 'hidden' }}>
@@ -387,13 +374,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       {seletorAberto && (
         <div className="ca-seletor-overlay">
           <div className="ca-seletor-box" style={{ maxHeight: '95vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-
-            <div className="ca-seletor-topo">
-              <h2>{tituloSeletor[etapa]}</h2>
-            </div>
-
+            <div className="ca-seletor-topo"><h2>{tituloSeletor[etapa]}</h2></div>
             <input className="ca-seletor-input" value={busca} placeholder={placeholderSeletor[etapa]} readOnly />
-
             <div className="ca-seletor-resultados" style={{ flex: 1, overflowY: 'auto' }}>
               {loading ? (
                 <div className="ca-seletor-msg">Carregando...</div>
@@ -411,21 +393,15 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <div className="ca-seletor-msg">Nenhum resultado</div>
               )}
             </div>
-
             <div className="ca-seletor-teclado-container" style={{ background: '#111', padding: '10px' }}>
               <div className="ca-seletor-teclado" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
                 {teclasVisiveis.map((tecla) => (
                   <button key={tecla} className="ca-tecla" onClick={() => digitar(tecla)}>{tecla}</button>
                 ))}
               </div>
-
               <div className="ca-seletor-acoes" style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 {etapa !== 'ano' && (
-                  <button
-                    className="ca-btn-alternar"
-                    style={{ flex: 1 }}
-                    onClick={() => { tocarClique(); setTipoTeclado(tipoTeclado === 'ABC' ? '123' : 'ABC'); }}
-                  >
+                  <button className="ca-btn-alternar" style={{ flex: 1 }} onClick={() => { tocarClique(); setTipoTeclado(tipoTeclado === 'ABC' ? '123' : 'ABC'); }}>
                     {tipoTeclado === 'ABC' ? '123' : 'ABC'}
                   </button>
                 )}
@@ -433,7 +409,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <button className="ca-btn-limpar" style={{ flex: 1 }} onClick={() => { tocarClique(); setBusca(''); }}>LIMPAR</button>
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -480,15 +455,13 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             )}
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero glow-measure">
-                  {medidaPrincipal.medida}
-                </div>
+                <div className="popup-medida-numero glow-measure">{medidaPrincipal.medida}</div>
                 {medidaPrincipal.observacao && (
                   <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
                 )}
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
-                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor para confirmar)</p>
+                    <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
                     <div className="popup-outras-grid">
                       {outrasMedidas.map((item, i) => (
                         <div key={i} className="popup-outra-medida">{item.medida}</div>
@@ -497,8 +470,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                   </div>
                 )}
                 {fonteMedida === 'wheel-size' && (
-                  <p className="popup-medida-obs" style={{ fontSize: '12px', opacity: 0.6, marginTop: '8px' }}>
-                    * Medida obtida via base internacional wheel-size.com
+                  <p className="popup-medida-obs" style={{ fontSize: '11px', opacity: 0.5, marginTop: '6px' }}>
+                    * Dados técnicos via base internacional
                   </p>
                 )}
               </>
