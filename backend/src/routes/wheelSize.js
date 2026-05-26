@@ -6,7 +6,7 @@ const WHEEL_SIZE_KEY = process.env.WHEEL_SIZE_KEY || '3c20bfc74ecd98718e60dfbc56
 const WHEEL_SIZE_URL = 'https://api.wheel-size.com/v2/search/by_model/';
 const REGION = 'ladm';
 
-// Mapeamento de marcas do banco para slug da API
+// ─── MAPEAMENTO DE MARCAS ─────────────────────────────────────────────────────
 const MARCA_MAP = {
   'AUDI': 'audi',
   'BMW': 'bmw',
@@ -25,6 +25,7 @@ const MARCA_MAP = {
   'KIA MOTORS': 'kia',
   'LAND ROVER': 'land-rover',
   'MERCEDES-BENZ': 'mercedes-benz',
+  'MERCEDES BENZ': 'mercedes-benz',
   'MITSUBISHI': 'mitsubishi',
   'NISSAN': 'nissan',
   'PEUGEOT': 'peugeot',
@@ -35,52 +36,252 @@ const MARCA_MAP = {
   'TOYOTA': 'toyota',
   'VW - VOLKSWAGEN': 'volkswagen',
   'VOLKSWAGEN': 'volkswagen',
+  'VW': 'volkswagen',
   'GWM': 'haval',
   'HAVAL': 'haval',
+  'CAOA CHERY': 'chery',
+  'CHERY': 'chery',
+  'VOLVO': 'volvo',
+  'JAGUAR': 'jaguar',
+  'PORSCHE': 'porsche',
+  'MINI': 'mini',
+  'LEXUS': 'lexus',
+  'INFINITI': 'infiniti',
+  'MASERATI': 'maserati',
+  'ALFA ROMEO': 'alfa-romeo',
 };
 
-// Mapeamento especial de modelos BMW
+// ─── MAPEAMENTO DE MODELOS BMW ────────────────────────────────────────────────
 const BMW_MODELO_MAP = {
-  '116IA': '1-series', '118I': '1-series', '118IA': '1-series',
-  '120I': '1-series', '120IA': '1-series', '125I': '1-series',
-  '130I': '1-series', '130IA': '1-series', '135IA': '1-series',
-  '218I': '2-series', '220I': '2-series', '225I': '2-series',
-  '316': '3-series', '316I': '3-series', '318I': '3-series',
-  '318IA': '3-series', '320I': '3-series', '320IA': '3-series',
-  '323I': '3-series', '325I': '3-series', '328I': '3-series',
-  '330I': '3-series', '335I': '3-series', 'M3': 'm3', 'M340I': '3-series',
-  '420I': '4-series', '428I': '4-series', '430I': '4-series',
-  '435IA': '4-series', 'M4': 'm4', 'M440I': '4-series',
-  '520I': '5-series', '525I': '5-series', '528I': '5-series',
-  '530I': '5-series', '535I': '5-series', '540I': '5-series',
-  '545IA': '5-series', '550IA': '5-series', 'M5': 'm5',
-  '640I': '6-series', '645CI': '6-series', '650I': '6-series', 'M6': 'm6',
-  '730I': '7-series', '740I': '7-series', '745IA': '7-series',
-  '750I': '7-series', '760IL': '7-series',
-  '840CI': '8-series', '850I': '8-series', 'M8': 'm8',
-  'X1': 'x1', 'X2': 'x2', 'X3': 'x3', 'X4': 'x4',
-  'X5': 'x5', 'X6': 'x6', 'X7': 'x7',
-  'Z3': 'z3', 'Z4': 'z4',
-  'I3': 'i3', 'I4': 'i4', 'I5': 'i5', 'I7': 'i7', 'I8': 'i8', 'IX': 'ix',
-  'IX1': 'ix1', 'IX2': 'ix2', 'IX3': 'ix3',
-  'M2': 'm2', 'M1': 'm1',
+  '116I': '1-series', '116IA': '1-series',
+  '118I': '1-series', '118IA': '1-series',
+  '120I': '1-series', '120IA': '1-series',
+  '125I': '1-series', '128I': '1-series',
+  '130I': '1-series', '130IA': '1-series',
+  '135I': '1-series', '135IA': '1-series',
+  'M140I': '1-series',
+  '218I': '2-series', '220I': '2-series',
+  '225I': '2-series', '228I': '2-series',
+  '230I': '2-series', 'M235I': '2-series', 'M240I': '2-series',
+  '316': '3-series', '316I': '3-series',
+  '318I': '3-series', '318IA': '3-series',
+  '318IS': '3-series', '318TI': '3-series',
+  '320I': '3-series', '320IA': '3-series',
+  '323I': '3-series', '323IA': '3-series',
+  '323CI': '3-series', '325I': '3-series', '325IA': '3-series',
+  '325CI': '3-series', '328I': '3-series', '328IA': '3-series',
+  '328CI': '3-series', '330I': '3-series', '330IA': '3-series',
+  '330CI': '3-series', '335I': '3-series', '335IA': '3-series',
+  '340I': '3-series', 'M3': 'm3', 'M340I': '3-series',
+  '420I': '4-series', '428I': '4-series',
+  '430I': '4-series', '435I': '4-series', '435IA': '4-series',
+  '440I': '4-series', 'M4': 'm4', 'M440I': '4-series',
+  '520I': '5-series', '523I': '5-series',
+  '525I': '5-series', '528I': '5-series',
+  '530I': '5-series', '535I': '5-series',
+  '540I': '5-series', '545I': '5-series', '545IA': '5-series',
+  '550I': '5-series', '550IA': '5-series',
+  'M5': 'm5', 'M550I': '5-series',
+  '630I': '6-series', '640I': '6-series',
+  '645CI': '6-series', '645IA': '6-series',
+  '650CI': '6-series', '650I': '6-series', '650IA': '6-series',
+  'M6': 'm6',
+  '730I': '7-series', '730IA': '7-series',
+  '735I': '7-series', '740I': '7-series', '740IA': '7-series',
+  '740IL': '7-series', '740ILA': '7-series',
+  '745I': '7-series', '745IA': '7-series', '745LE': '7-series',
+  '750I': '7-series', '750IA': '7-series',
+  '750IL': '7-series', '750ILA': '7-series',
+  '760IL': '7-series', 'M760LI': '7-series',
+  '840CI': '8-series', '840CIA': '8-series',
+  '850CI': '8-series', '850CSI': '8-series', '850I': '8-series',
+  'M8': 'm8', 'M850I': '8-series',
+  'X1': 'x1', 'X2': 'x2', 'X3': 'x3',
+  'X4': 'x4', 'X5': 'x5', 'X6': 'x6', 'X7': 'x7',
+  'Z3': 'z3', 'Z4': 'z4', 'Z8': 'z8',
+  'I3': 'i3', 'I4': 'i4', 'I5': 'i5',
+  'I7': 'i7', 'I8': 'i8',
+  'IX': 'ix', 'IX1': 'ix1', 'IX2': 'ix2', 'IX3': 'ix3',
+  'M1': 'm1', 'M2': 'm2',
 };
 
-// GWM/HAVAL: modelo no banco é "HAVAL H6" ou similar
+// ─── MAPEAMENTO DE MODELOS GWM/HAVAL ─────────────────────────────────────────
 const GWM_MODELO_MAP = {
-  'HAVAL H6': 'h6',
-  'HAVAL JOLION': 'jolion',
-  'HAVAL H5': 'h5',
-  'HAVAL H9': 'h9',
-  'HAVAL DARGO': 'dargo',
-  'H6': 'h6',
-  'JOLION': 'jolion',
+  'H6': 'h6', 'HAVAL H6': 'h6',
+  'H5': 'h5', 'HAVAL H5': 'h5',
+  'H9': 'h9', 'HAVAL H9': 'h9',
+  'JOLION': 'jolion', 'HAVAL JOLION': 'jolion',
+  'DARGO': 'dargo', 'HAVAL DARGO': 'dargo',
+  'H6 GT': 'h6gt', 'HAVAL H6 GT': 'h6gt',
+  'HAVAL': 'h6',
 };
 
+// ─── MAPEAMENTO DE MODELOS ESPECIAIS ─────────────────────────────────────────
+const MODELO_ESPECIAL_MAP = {
+  'HONDA': {
+    'HR-V': 'hr-v', 'HRV': 'hr-v', 'HR V': 'hr-v',
+    'CR-V': 'cr-v', 'CRV': 'cr-v', 'CR V': 'cr-v',
+    'CR-Z': 'cr-z', 'CRZ': 'cr-z',
+    'CR-X': 'cr-x', 'CRX': 'cr-x',
+    'WR-V': 'wr-v', 'WRV': 'wr-v', 'WR V': 'wr-v',
+    'ZR-V': 'zr-v', 'ZRV': 'zr-v',
+    'FIT': 'fit', 'CIVIC': 'civic', 'CITY': 'city',
+    'ACCORD': 'accord', 'PILOT': 'pilot',
+    'PASSPORT': 'passport', 'RIDGELINE': 'ridgeline',
+  },
+  'TOYOTA': {
+    'RAV4': 'rav4', 'RAV 4': 'rav4', 'RAV-4': 'rav4',
+    'C-HR': 'c-hr', 'CHR': 'c-hr', 'C HR': 'c-hr',
+    'LAND CRUISER': 'land-cruiser',
+    'LAND CRUISER PRADO': 'land-cruiser-prado',
+    'HILUX': 'hilux', 'COROLLA': 'corolla',
+    'CAMRY': 'camry', 'YARIS': 'yaris',
+    'PRIUS': 'prius', 'SW4': 'sw4',
+    'FORTUNER': 'fortuner',
+  },
+  'MITSUBISHI': {
+    'L200': 'l200', 'L 200': 'l200',
+    'ASX': 'asx', 'ECLIPSE CROSS': 'eclipse-cross',
+    'OUTLANDER': 'outlander', 'PAJERO': 'pajero',
+    'PAJERO SPORT': 'pajero-sport',
+    'PAJERO FULL': 'pajero-full',
+    'GALANT': 'galant', 'LANCER': 'lancer',
+  },
+  'LAND ROVER': {
+    'RANGE ROVER': 'range-rover',
+    'RANGE ROVER EVOQUE': 'range-rover-evoque',
+    'RANGE ROVER SPORT': 'range-rover-sport',
+    'RANGE ROVER VELAR': 'range-rover-velar',
+    'DISCOVERY': 'discovery',
+    'DISCOVERY SPORT': 'discovery-sport',
+    'DEFENDER': 'defender',
+    'FREELANDER': 'freelander',
+  },
+  'MERCEDES-BENZ': {
+    'A': 'a-class', 'A200': 'a-class', 'A250': 'a-class',
+    'B': 'b-class', 'B200': 'b-class',
+    'C': 'c-class', 'C180': 'c-class', 'C200': 'c-class', 'C250': 'c-class', 'C300': 'c-class',
+    'E': 'e-class', 'E200': 'e-class', 'E250': 'e-class', 'E300': 'e-class', 'E350': 'e-class',
+    'S': 's-class', 'S400': 's-class', 'S500': 's-class',
+    'CLA': 'cla', 'CLA200': 'cla', 'CLA250': 'cla',
+    'CLS': 'cls', 'GLA': 'gla', 'GLB': 'glb',
+    'GLC': 'glc', 'GLE': 'gle', 'GLS': 'gls',
+    'AMG GT': 'amg-gt', 'EQC': 'eqc', 'EQS': 'eqs',
+    'ML': 'ml-class', 'G': 'g-class', 'G63': 'g-class',
+  },
+  'VOLKSWAGEN': {
+    'GOL': 'gol', 'POLO': 'polo', 'VIRTUS': 'virtus',
+    'VOYAGE': 'voyage', 'JETTA': 'jetta',
+    'PASSAT': 'passat', 'TIGUAN': 'tiguan',
+    'T-CROSS': 't-cross', 'TCROSS': 't-cross', 'T CROSS': 't-cross',
+    'T-ROC': 't-roc', 'TROC': 't-roc',
+    'TOUAREG': 'touareg', 'AMAROK': 'amarok',
+    'SAVEIRO': 'saveiro', 'CADDY': 'caddy',
+    'GOLF': 'golf', 'TAOS': 'taos',
+  },
+  'FIAT': {
+    'ARGO': 'argo', 'CRONOS': 'cronos',
+    'TORO': 'toro', 'PULSE': 'pulse',
+    'FASTBACK': 'fastback', 'DOBLO': 'doblo',
+    'MOBI': 'mobi', 'UNO': 'uno',
+    'PALIO': 'palio', 'SIENA': 'siena',
+    'GRAND SIENA': 'grand-siena', 'GRAND': 'grand-siena',
+    'STRADA': 'strada', 'DUCATO': 'ducato',
+    'FREEMONT': 'freemont', 'BRAVO': 'bravo',
+    'PUNTO': 'punto', 'LINEA': 'linea',
+    'TITANO': 'titano', '500': '500',
+    'TIPO': 'tipo', 'SCUDO': 'scudo',
+  },
+  'FORD': {
+    'KA': 'ka', 'KA+': 'ka-plus', 'KA PLUS': 'ka-plus',
+    'FIESTA': 'fiesta', 'FOCUS': 'focus',
+    'FUSION': 'fusion', 'ECOSPORT': 'ecosport',
+    'EDGE': 'edge', 'TERRITORY': 'territory',
+    'RANGER': 'ranger', 'MAVERICK': 'maverick',
+    'F-150': 'f-150', 'F-250': 'f-250',
+    'TRANSIT': 'transit', 'BRONCO': 'bronco',
+    'MUSTANG': 'mustang', 'EXPLORER': 'explorer',
+    'EXPEDITION': 'expedition',
+  },
+  'CHEVROLET': {
+    'ONIX': 'onix', 'ONIX PLUS': 'onix',
+    'TRACKER': 'tracker', 'CRUZE': 'cruze',
+    'EQUINOX': 'equinox', 'BLAZER': 'blazer',
+    'MONTANA': 'montana', 'S10': 's10',
+    'SPIN': 'spin', 'COBALT': 'cobalt',
+    'PRISMA': 'prisma', 'AGILE': 'agile',
+    'CAPTIVA': 'captiva', 'TRAILBLAZER': 'trailblazer',
+    'TRAX': 'trax', 'BOLT': 'bolt',
+    'SILVERADO': 'silverado',
+  },
+  'HYUNDAI': {
+    'HB20': 'hb20', 'HB20S': 'hb20s',
+    'CRETA': 'creta', 'TUCSON': 'tucson',
+    'SANTA FE': 'santa-fe', 'IONIQ': 'ioniq',
+    'IONIQ 5': 'ioniq-5', 'IONIQ 6': 'ioniq-6',
+    'ELANTRA': 'elantra', 'SONATA': 'sonata',
+    'VELOSTER': 'veloster', 'AZERA': 'azera',
+    'I30': 'i30', 'IX35': 'ix35',
+  },
+  'NISSAN': {
+    'VERSA': 'versa', 'MARCH': 'march',
+    'SENTRA': 'sentra', 'ALTIMA': 'altima',
+    'KICKS': 'kicks', 'FRONTIER': 'frontier',
+    'PATHFINDER': 'pathfinder', 'MURANO': 'murano',
+    'LEAF': 'leaf', 'X-TRAIL': 'x-trail',
+    'XTRAIL': 'x-trail', 'X TRAIL': 'x-trail',
+    'TIIDA': 'tiida',
+  },
+  'RENAULT': {
+    'KWID': 'kwid', 'SANDERO': 'sandero',
+    'LOGAN': 'logan', 'DUSTER': 'duster',
+    'CAPTUR': 'captur', 'KARDIAN': 'kardian',
+    'OROCH': 'oroch', 'MASTER': 'master',
+    'CLIO': 'clio', 'MEGANE': 'megane',
+    'FLUENCE': 'fluence', 'SCENIC': 'scenic',
+    'KOLEOS': 'koleos', 'ZOE': 'zoe',
+  },
+  'PEUGEOT': {
+    '208': '208', '308': '308', '408': '408',
+    '2008': '2008', '3008': '3008', '5008': '5008',
+    '107': '107', '206': '206', '207': '207',
+    '307': '307', '406': '406', '407': '407',
+    '508': '508', 'EXPERT': 'expert',
+    'PARTNER': 'partner', 'BOXER': 'boxer',
+  },
+  'JEEP': {
+    'RENEGADE': 'renegade', 'COMPASS': 'compass',
+    'COMMANDER': 'commander', 'WRANGLER': 'wrangler',
+    'GLADIATOR': 'gladiator', 'CHEROKEE': 'cherokee',
+    'GRAND CHEROKEE': 'grand-cherokee',
+  },
+  'KIA': {
+    'SPORTAGE': 'sportage', 'SORENTO': 'sorento',
+    'STINGER': 'stinger', 'CARNIVAL': 'carnival',
+    'TELLURIDE': 'telluride', 'EV6': 'ev6',
+    'CERATO': 'cerato', 'OPTIMA': 'optima',
+    'CADENZA': 'cadenza', 'PICANTO': 'picanto',
+    'SOUL': 'soul', 'NIRO': 'niro',
+    'RIO': 'rio', 'SELTOS': 'seltos',
+  },
+  'SUBARU': {
+    'IMPREZA': 'impreza', 'LEGACY': 'legacy',
+    'OUTBACK': 'outback', 'FORESTER': 'forester',
+    'XV': 'xv', 'CROSSTREK': 'crosstrek',
+    'WRX': 'wrx', 'BRZ': 'brz', 'ASCENT': 'ascent',
+  },
+  'SUZUKI': {
+    'JIMNY': 'jimny', 'SWIFT': 'swift',
+    'VITARA': 'vitara', 'S-CROSS': 's-cross',
+    'SCROSS': 's-cross', 'BALENO': 'baleno',
+    'GRAND VITARA': 'grand-vitara',
+    'IGNIS': 'ignis', 'CIAZ': 'ciaz',
+  },
+};
+
+// ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
 function normalizarModelo(modelo) {
-  return modelo
-    .toLowerCase()
-    .trim()
+  return (modelo || '').toLowerCase().trim()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9\-]/g, '');
 }
@@ -91,8 +292,23 @@ function extrairMedida(tireFull) {
   return match ? match[1] : tireFull.split(' ')[0];
 }
 
-// POST /api/wheel-size/buscar
-// Body: { marca, modelo, ano, versao }
+function resolverModeloSlug(marcaSlug, marcaNome, modelo) {
+  const modeloUpper = (modelo || '').trim().toUpperCase();
+  const marcaUpper = (marcaNome || '').trim().toUpperCase();
+
+  if (marcaSlug === 'bmw') {
+    return BMW_MODELO_MAP[modeloUpper] || normalizarModelo(modelo);
+  }
+  if (marcaSlug === 'haval') {
+    return GWM_MODELO_MAP[modeloUpper] || normalizarModelo(modelo);
+  }
+  if (MODELO_ESPECIAL_MAP[marcaUpper] && MODELO_ESPECIAL_MAP[marcaUpper][modeloUpper]) {
+    return MODELO_ESPECIAL_MAP[marcaUpper][modeloUpper];
+  }
+  return normalizarModelo(modelo);
+}
+
+// ─── POST /api/wheel-size/buscar ──────────────────────────────────────────────
 router.post('/buscar', async (req, res) => {
   try {
     const { marca, modelo, ano, versao } = req.body;
@@ -111,53 +327,34 @@ router.post('/buscar', async (req, res) => {
       });
     }
 
-    // Define o slug do modelo
-    let modeloSlug;
-    if (marcaSlug === 'bmw') {
-      const modeloUpper = modelo.trim().toUpperCase();
-      modeloSlug = BMW_MODELO_MAP[modeloUpper] || normalizarModelo(modelo);
-    } else if (marcaSlug === 'haval') {
-      const modeloUpper = modelo.trim().toUpperCase();
-      modeloSlug = GWM_MODELO_MAP[modeloUpper] || normalizarModelo(modelo);
-    } else {
-      modeloSlug = normalizarModelo(modelo);
-    }
+    const modeloSlug = resolverModeloSlug(marcaSlug, marca, modelo);
 
-    console.log(`[WHEEL-SIZE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano}`);
+    console.log(`[WHEEL-SIZE ROUTE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano}`);
 
     const response = await axios.get(WHEEL_SIZE_URL, {
-      params: {
-        make: marcaSlug,
-        model: modeloSlug,
-        year: ano,
-        region: REGION,
-        user_key: WHEEL_SIZE_KEY
-      },
+      params: { make: marcaSlug, model: modeloSlug, year: ano, region: REGION, user_key: WHEEL_SIZE_KEY },
       timeout: 10000
     });
 
     const data = response.data?.data || [];
 
     if (!data.length) {
-      return res.status(404).json({
-        erro: 'Veículo não encontrado na API wheel-size',
-        pneus: []
-      });
+      return res.status(404).json({ erro: 'Veículo não encontrado na API wheel-size', pneus: [] });
     }
 
-    // Coleta todas as medidas OE (is_stock: true)
+    const versaoUpper = (versao || '').toUpperCase();
     const medidasOE = new Set();
     const medidasAlternativas = new Set();
-    const versaoUpper = (versao || '').toUpperCase();
 
-    // Tenta primeiro match pela versão
+    // Tenta match pela versão primeiro
     let encontrouVersao = false;
     if (versaoUpper) {
       for (const item of data) {
         const levels = (item.trim_levels || []).map(l => l.toUpperCase());
         const trimUpper = (item.trim || '').toUpperCase();
-        const bate = levels.some(l => versaoUpper.includes(l) || l.includes(versaoUpper.split(' ')[0]))
-          || versaoUpper.includes(trimUpper) || trimUpper.includes(versaoUpper.split(' ')[0]);
+        const palavrasVersao = versaoUpper.split(' ').filter(p => p.length > 1);
+        const bate = levels.some(l => palavrasVersao.some(p => l.includes(p) || p.includes(l)))
+          || palavrasVersao.some(p => trimUpper.includes(p));
 
         if (bate) {
           encontrouVersao = true;
@@ -172,7 +369,7 @@ router.post('/buscar', async (req, res) => {
       }
     }
 
-    // Se não encontrou pela versão, pega todas as medidas OE
+    // Fallback: pega todas as medidas OE
     if (!encontrouVersao || medidasOE.size === 0) {
       for (const item of data) {
         for (const wheel of (item.wheels || [])) {
@@ -186,56 +383,29 @@ router.post('/buscar', async (req, res) => {
     }
 
     if (medidasOE.size === 0 && medidasAlternativas.size === 0) {
-      return res.status(404).json({
-        erro: 'Nenhuma medida encontrada para este veículo',
-        pneus: []
-      });
+      return res.status(404).json({ erro: 'Nenhuma medida encontrada para este veículo', pneus: [] });
     }
 
-    // Monta resposta
     const pneus = [];
     let idx = 1;
-
     for (const medida of medidasOE) {
-      pneus.push({
-        id: idx++,
-        medida,
-        tipo: 'original',
-        prioridade: 1,
-        observacao: 'Medida original de fábrica (OE)',
-        fonte: 'wheel-size'
-      });
+      pneus.push({ id: idx++, medida, tipo: 'original', prioridade: 1, observacao: 'Medida original de fábrica (OE)', fonte: 'wheel-size' });
     }
-
     for (const medida of medidasAlternativas) {
       if (!medidasOE.has(medida)) {
-        pneus.push({
-          id: idx++,
-          medida,
-          tipo: 'alternativa',
-          prioridade: 2,
-          observacao: 'Medida alternativa compatível',
-          fonte: 'wheel-size'
-        });
+        pneus.push({ id: idx++, medida, tipo: 'alternativa', prioridade: 2, observacao: 'Medida alternativa compatível', fonte: 'wheel-size' });
       }
     }
 
-    console.log(`[WHEEL-SIZE] Retornando ${pneus.length} medidas para ${marcaSlug} ${modeloSlug} ${ano}`);
+    console.log(`[WHEEL-SIZE ROUTE] ${pneus.length} medidas para ${marcaSlug} ${modeloSlug} ${ano}`);
 
-    return res.json({
-      encontrado: true,
-      fonte: 'wheel-size',
-      veiculo: { marca, modelo, ano, versao },
-      pneus
-    });
+    return res.json({ encontrado: true, fonte: 'wheel-size', veiculo: { marca, modelo, ano, versao }, pneus });
 
   } catch (error) {
-    console.error('[WHEEL-SIZE] ERRO:', error.message);
-
+    console.error('[WHEEL-SIZE ROUTE] ERRO:', error.message);
     if (error.response?.status === 429) {
       return res.status(429).json({ erro: 'Limite da API wheel-size atingido. Tente novamente amanhã.' });
     }
-
     return res.status(500).json({ erro: 'Erro ao consultar API wheel-size' });
   }
 });
