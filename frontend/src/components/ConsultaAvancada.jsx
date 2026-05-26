@@ -356,31 +356,12 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     ? tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe })
     : null;
 
-  // --- ÁREA DE AJUSTE MINUCIOSO ---
-  // Apenas adicione aqui os carros que a API está errando. 
-  // Carros que já funcionam bem não precisam estar aqui.
-  const PREFERENCIAS = { 
-    'HILUX SRX': '265/60R18'
-  };
-
+  // Medidas — backend já retorna limitado a 3 e ordenado corretamente
   const pneus = resultadoMedidas?.pneus || [];
-  const modeloAtual = veiculoTratado?.modelo?.toUpperCase() || '';
-  const versaoAtual = veiculoTratado?.versao?.toUpperCase() || '';
-  const chaveBusca = `${modeloAtual} ${versaoAtual}`;
-
-  // Procura se o modelo atual está na lista de exceções
-  const medidaManual = Object.entries(PREFERENCIAS).find(([k]) => chaveBusca.includes(k))?.[1];
-
-  // Se houver medida manual e ela existir na lista da API, usamos ela.
-  // Caso contrário, usamos a primeira (pneus[0]) como o sistema já fazia.
-  const medidaPrincipal = (medidaManual && pneus.find(p => p.medida === medidaManual))
-                          ? pneus.find(p => p.medida === medidaManual) 
-                          : pneus[0];
-
+  const medidaPrincipal = pneus[0] || null;
   const outrasMedidas = pneus
-    .filter(p => p.medida !== medidaPrincipal?.medida)
+    .slice(1)
     .filter((item, index, self) => self.findIndex(p => p.medida === item.medida) === index);
-  // --- FIM DO AJUSTE ---
 
   return (
     <div className="app tela-placa-entrada" style={{ overflow: 'hidden' }}>
