@@ -304,30 +304,44 @@ router.post('/buscar', async (req, res) => {
       return res.status(404).json({ erro: 'Veículo não encontrado na API', pneus: [] });
     }
 
-    const vistas = new Set();
-    const medidasOE = [];
-    const medidasAlternativas = [];
+    // 1. Conta quantas versões têm cada medida OE (mais frequente = mais comum no Brasil)
+    const contagemOE = new Map();
+    const contagemAlt = new Map();
 
-    // 1. Coleta só medidas stock (OE)
     data.forEach(item => {
       (item.wheels || []).forEach(wheel => {
         const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
-        if (!medida || vistas.has(medida)) return;
-        vistas.add(medida);
-        if (wheel.is_stock) medidasOE.push(medida);
-        else medidasAlternativas.push(medida);
+        if (!medida) return;
+        if (wheel.is_stock) {
+          contagemOE.set(medida, (contagemOE.get(medida) || 0) + 1);
+        } else {
+          contagemAlt.set(medida, (contagemAlt.get(medida) || 0) + 1);
+        }
       });
     });
 
-    // 2. Fallback: se não achou stock, usa alternativas
-    const todasMedidas = medidasOE.length > 0 ? medidasOE : medidasAlternativas;
+    // 2. Ordena por frequência (mais versões com aquela medida = mais comum)
+    const medidasOE = Array.from(contagemOE.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([medida]) => medida);
+
+    const medidasAlt = Array.from(contagemAlt.entries())
+      .filter(([medida]) => !contagemOE.has(medida))
+      .sort((a, b) => b[1] - a[1])
+      .map(([medida]) => medida);
+
+    // 3. Fallback: se não achou OE, usa alternativas
+    const todasMedidas = medidasOE.length > 0 ? medidasOE : medidasAlt;
 
     if (todasMedidas.length === 0) {
       return res.status(404).json({ erro: 'Nenhuma medida encontrada', pneus: [] });
     }
 
-    // 3. Monta resposta limitada a 3
-    const pneus = todasMedidas.slice(0, 3).map((medida, i) => ({
+    // 4. Limita a 3
+    const medidasUnicas = todasMedidas.slice(0, 3);
+
+    // 5. Monta resposta
+    const pneus = medidasUnicas.map((medida, i) => ({
       id: i + 1,
       medida,
       tipo: 'original',

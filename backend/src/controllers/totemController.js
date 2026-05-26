@@ -639,6 +639,11 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
     const medidasOE = new Set();
     const medidasAlternativas = new Set();
 
+    // Conta frequência de cada medida entre versões (mais frequente = mais comum no Brasil)
+    const contagemOE = new Map();
+    const contagemAlt = new Map();
+
+    // Tenta match pela versão primeiro
     let encontrouVersao = false;
     if (versaoUpper) {
       for (const item of data) {
@@ -653,40 +658,49 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
           for (const wheel of (item.wheels || [])) {
             const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
             if (medida) {
-              if (wheel.is_stock) medidasOE.add(medida);
-              else medidasAlternativas.add(medida);
+              if (wheel.is_stock) contagemOE.set(medida, (contagemOE.get(medida) || 0) + 1);
+              else contagemAlt.set(medida, (contagemAlt.get(medida) || 0) + 1);
             }
           }
         }
       }
     }
 
-    if (!encontrouVersao || medidasOE.size === 0) {
+    // Fallback: pega todas as versões
+    if (!encontrouVersao || contagemOE.size === 0) {
       for (const item of data) {
         for (const wheel of (item.wheels || [])) {
           const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
           if (medida) {
-            if (wheel.is_stock) medidasOE.add(medida);
-            else medidasAlternativas.add(medida);
+            if (wheel.is_stock) contagemOE.set(medida, (contagemOE.get(medida) || 0) + 1);
+            else contagemAlt.set(medida, (contagemAlt.get(medida) || 0) + 1);
           }
         }
       }
     }
 
-    if (medidasOE.size === 0 && medidasAlternativas.size === 0) {
+    if (contagemOE.size === 0 && contagemAlt.size === 0) {
       console.log(`[WHEEL-SIZE] Nenhuma medida extraída para ${marcaSlug} ${modeloSlug} ${ano}`);
       return null;
     }
 
+    // Ordena por frequência — medida que aparece em mais versões vem primeiro
+    const medidasOEOrdenadas = Array.from(contagemOE.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([medida]) => medida);
+
+    const medidasAltOrdenadas = Array.from(contagemAlt.entries())
+      .filter(([medida]) => !contagemOE.has(medida))
+      .sort((a, b) => b[1] - a[1])
+      .map(([medida]) => medida);
+
+    const todasMedidas = medidasOEOrdenadas.length > 0 ? medidasOEOrdenadas : medidasAltOrdenadas;
+    const medidasUnicas = todasMedidas.slice(0, 3);
+
     const pneus = [];
     let idx = 1;
-    for (const medida of medidasOE) {
-      pneus.push({ id: idx++, medida, tipo: 'original', prioridade: 1, observacao: 'Medida original de fábrica (OE)', fonte: 'wheel-size' });
-    }
-    for (const medida of medidasAlternativas) {
-      if (!medidasOE.has(medida)) {
-        pneus.push({ id: idx++, medida, tipo: 'alternativa', prioridade: 2, observacao: 'Medida alternativa compatível', fonte: 'wheel-size' });
-      }
+    for (const medida of medidasUnicas) {
+      pneus.push({ id: idx++, medida, tipo: 'original', prioridade: idx === 2 ? 1 : 2, observacao: 'Medida original de fábrica (OE)', fonte: 'wheel-size' });
     }
 
     console.log(`[WHEEL-SIZE] ${pneus.length} medidas encontradas para ${marcaSlug} ${modeloSlug} ${ano}`);
