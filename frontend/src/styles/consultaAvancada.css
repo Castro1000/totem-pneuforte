@@ -256,3 +256,104 @@
 .btn-voltar.flutuante {
   z-index: 300 !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* --- ESTILO FUTURISTA / HOLOGRÁFICO --- */
+
+/* Container da Imagem com Scanner */
+.container-imagem-carro {
+    position: relative;
+    border: 2px solid #00d4ff; /* Azul Ciano Neon */
+    border-radius: 15px;
+    padding: 5px;
+    background: rgba(0, 20, 40, 0.5); /* Fundo profundo */
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.imagem-carro-glow {
+    width: 100%;
+    border-radius: 10px;
+    filter: brightness(1.1) contrast(1.2);
+    /* Efeito de scan sutil na imagem */
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0.2) 100%);
+}
+
+/* Painel HUD Técnico (O estilo dos infográficos) */
+.hud-tecnico {
+    display: flex;
+    justify-content: space-around;
+    background: linear-gradient(180deg, rgba(0,20,40,0.8) 0%, rgba(0,0,0,0.8) 100%);
+    border: 1px solid #00d4ff;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 15px 0;
+    color: #00d4ff;
+    font-family: 'Courier New', monospace; /* Fonte técnica */
+    text-transform: uppercase;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud-item strong {
+    font-size: 0.7rem;
+    color: #fff;
+}
+
+.hud-item span {
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-shadow: 0 0 8px #00d4ff;
+}
+
+/* Texto de Medida Futurista */
+.glow-measure {
+    color: #00d4ff;
+    text-shadow: 0 0 15px #00d4ff, 0 0 30px #00d4ff;
+    font-family: 'Impact', sans-serif;
+    letter-spacing: 2px;
+}
+
+/* Badge Neon */
+.popup-badge-amarelo {
+    background: #00d4ff !important;
+    color: #000 !important;
+    box-shadow: 0 0 10px #00d4ff;
+}
