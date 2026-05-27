@@ -24,12 +24,10 @@ export default function TelaConsulta({
 }) {
   const [popupMedida, setPopupMedida] = useState(false);
 
-  // Tratamento visual da placa na tela do totem
   const placaExibida = placa.padEnd(7, ' ');
   const parte1 = placaExibida.slice(0, 3);
   const parte2 = placaExibida.slice(3, 7);
 
-  // Lógica de separação das medidas de pneus vindas do banco de dados
   const medidaPrincipal = resultado?.pneus?.[0] || null;
   const outrasMedidas = resultado?.pneus
     ?.slice(1)
@@ -38,7 +36,6 @@ export default function TelaConsulta({
       self.findIndex((m) => m.medida === item.medida) === index
     ) || [];
 
-  // Higieniza a placa (remove hifens, espaços) e envia para a função de busca
   function handleBuscar() {
     const placaLimpa = placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     buscar(placaLimpa);
@@ -62,7 +59,6 @@ export default function TelaConsulta({
     if (typeof novaConsulta === 'function') novaConsulta();
   }
 
-  // Descobre se o erro é de limite/sistema ou se é apenas placa inexistente
   const ehErroDeSistema = erro && (
     erro.toLowerCase().includes("limite") || 
     erro.toLowerCase().includes("negado") || 
@@ -80,7 +76,6 @@ export default function TelaConsulta({
         Início
       </button>
 
-      {/* TELA PRINCIPAL — Teclado + Placa (Nunca é bloqueada por erros em cache) */}
       {!resultado && (
         <div className="consulta-wrapper consulta-wrapper-limpa">
           <div className="consulta-card consulta-card-animada consulta-card-limpo">
@@ -163,7 +158,6 @@ export default function TelaConsulta({
         </div>
       )}
 
-      {/* LOADING */}
       {loading && (
         <div className="loading-overlay">
           <div className="loading-box">
@@ -197,15 +191,11 @@ export default function TelaConsulta({
         </div>
       )}
 
-      {/* =============================================
-          MODAL DE ERRO — DINÂMICO E SEGURO
-          ============================================= */}
       {Boolean(erro) && !resultado && !loading && (
         <div className="popup-overlay" style={{ zIndex: 9999 }}>
           <div className="popup-veiculo popup-animado">
             
             {ehErroDeSistema ? (
-              /* CENÁRIO A: ERRO DE COBRANÇA / SISTEMA EXATO DIGITAL */
               <>
                 <div className="popup-badge" style={{ backgroundColor: '#ffc107', color: '#000' }}>
                   ⚙️ SISTEMA EM MANUTENÇÃO
@@ -225,7 +215,6 @@ export default function TelaConsulta({
                 </div>
               </>
             ) : (
-              /* CENÁRIO B: ERRO REAL DE PLACA (EntityNotFound / Digitação) */
               <>
                 <div className="popup-badge" style={{ backgroundColor: '#dc3545', color: '#fff' }}>
                   ⚠️ VEÍCULO NÃO ENCONTRADO
@@ -257,7 +246,6 @@ export default function TelaConsulta({
         </div>
       )}
 
-      {/* POPUP 1 — VEÍCULO ENCONTRADO */}
       {resultado && !popupMedida && (
         <div className="popup-overlay">
           <div className="popup-veiculo popup-animado">
@@ -304,24 +292,40 @@ export default function TelaConsulta({
         </div>
       )}
 
-      {/* POPUP 2 — MEDIDA IDEAL EXIBIDA COM SUCESSO */}
       {resultado && popupMedida && (
         <div className="popup-overlay">
           <div className="popup-medida popup-animado">
             <div className="popup-badge popup-badge-amarelo">
               🔍 MEDIDA IDEAL ENCONTRADA
             </div>
+            
+            {/* INSERÇÃO DE DADOS PROFISSIONAIS */}
+            {medidaPrincipal?.imagem_carro && (
+               <div style={{ margin: '15px 0' }}>
+                 <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
+               </div>
+            )}
+            
             <div className="popup-veiculo-resumo">
               {resultado.veiculo?.marca} {resultado.veiculo?.modelo} {resultado.veiculo?.ano}
             </div>
+
             {medidaPrincipal ? (
               <>
                 <div className="popup-medida-numero glow-measure">
                   {medidaPrincipal.medida}
                 </div>
+
+                {/* DADOS TÉCNICOS ADICIONAIS */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '10px 0', color: '#FFF' }}>
+                  {medidaPrincipal?.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
+                  {medidaPrincipal?.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
+                </div>
+
                 {medidaPrincipal.observacao && (
                   <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
                 )}
+                
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
                     <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor)</p>
@@ -341,6 +345,7 @@ export default function TelaConsulta({
                 <p>Consulte um de nossos atendentes!</p>
               </div>
             )}
+            
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={handleNovaConsulta}>
                 🔄 NOVA CONSULTA
