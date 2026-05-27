@@ -230,6 +230,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
       let data = null;
 
+      // 1ª tentativa — wheel-size API
       try {
         const responseWS = await fetch(`${API_WHEEL_SIZE}/buscar`, {
           method: 'POST',
@@ -246,6 +247,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         data = jsonWS;
         setFonteMedida('wheel-size');
       } catch {
+        // 2ª tentativa — banco local
         try {
           const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
             method: 'POST',
@@ -354,6 +356,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     ? tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe })
     : null;
 
+  // Medidas — backend já retorna limitado a 3 e ordenado corretamente
   const pneus = resultadoMedidas?.pneus || [];
   const medidaPrincipal = pneus[0] || null;
   const outrasMedidas = pneus
@@ -445,30 +448,17 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         <div className="popup-overlay">
           <div className="popup-medida popup-animado">
             <div className="popup-badge popup-badge-amarelo">🔍 MEDIDA IDEAL ENCONTRADA</div>
-            
-            {/* INÍCIO DA INSERÇÃO PROFISSIONAL */}
-            {medidaPrincipal?.imagem_carro && (
-               <div style={{ margin: '15px 0' }}>
-                 <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
-               </div>
-            )}
-            
             {veiculoTratado && (
-              <div className="popup-veiculo-resumo">{veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}</div>
+              <div className="popup-veiculo-resumo">
+                {veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}
+              </div>
             )}
-            
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0' }}>{medidaPrincipal.medida}</div>
-                
-                {/* DADOS TÉCNICOS EXTRAS */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px', color: '#EEE' }}>
-                  {medidaPrincipal.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
-                  {medidaPrincipal.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
-                </div>
-
-                {medidaPrincipal.observacao && <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>}
-                
+                <div className="popup-medida-numero glow-measure">{medidaPrincipal.medida}</div>
+                {medidaPrincipal.observacao && (
+                  <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
+                )}
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
                     <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
@@ -479,6 +469,11 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                     </div>
                   </div>
                 )}
+                {fonteMedida === 'wheel-size' && (
+                  <p className="popup-medida-obs" style={{ fontSize: '11px', opacity: 0.5, marginTop: '6px' }}>
+                    * Dados técnicos via base internacional
+                  </p>
+                )}
               </>
             ) : (
               <div className="popup-sem-medida">
@@ -486,8 +481,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <p>Consulte um de nossos atendentes!</p>
               </div>
             )}
-            {/* FIM DA INSERÇÃO PROFISSIONAL */}
-
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={novaConsulta}>🔄 NOVA CONSULTA</button>
               <button className="popup-btn popup-btn-nao" onClick={voltarInicio}>🏠 VOLTAR AO INÍCIO</button>
