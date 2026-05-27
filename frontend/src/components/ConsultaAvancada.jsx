@@ -449,7 +449,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             {/* INÍCIO DA INSERÇÃO PROFISSIONAL */}
             {medidaPrincipal?.imagem_carro && (
                <div style={{ margin: '15px 0' }}>
-                 <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
+                 <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700', boxShadow: '0 0 15px rgba(255, 215, 0, 0.6)' }} />
                </div>
             )}
             
@@ -459,10 +459,10 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0' }}>{medidaPrincipal.medida}</div>
+                <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0', textShadow: '0 0 10px #FFD700, 0 0 20px #FFD700', fontWeight: 'bold' }}>{medidaPrincipal.medida}</div>
                 
                 {/* DADOS TÉCNICOS EXTRAS */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px', color: '#EEE' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '10px 0', padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', border: '1px solid #444', color: '#FFF' }}>
                   {medidaPrincipal.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
                   {medidaPrincipal.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
                 </div>
@@ -487,7 +487,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
               </div>
             )}
             {/* FIM DA INSERÇÃO PROFISSIONAL */}
-
+            
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={novaConsulta}>🔄 NOVA CONSULTA</button>
               <button className="popup-btn popup-btn-nao" onClick={voltarInicio}>🏠 VOLTAR AO INÍCIO</button>
