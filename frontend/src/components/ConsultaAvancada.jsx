@@ -218,6 +218,27 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
+    // Extrai só o trim level da versão FIPE (ex: "LONGITUDE 1.3 TURBO" → "LONGITUDE")
+  function extrairTrimLevel(versaoFipe) {
+    if (!versaoFipe) return null;
+    const TRIMS = [
+      'LONGITUDE', 'SPORT', 'ALTITUDE', 'TRAILHAWK',
+      'EXL', 'EX-L', 'EX', 'LX', 'TOURING',
+      'LTZ', 'LT', 'LS', 'PREMIER', 'RS',
+      'ULTIMATE', 'LIMITED', 'OVERLAND',
+      'SRX', 'SRV', 'SR',
+      'HIGHLINE', 'COMFORTLINE', 'TRENDLINE',
+      'TITANIUM',
+      'DYNAMIC', 'ALLURE', 'GRIFFE',
+      'ADVENTURE', 'CROSS', 'TREKKING',
+    ];
+    const palavras = versaoFipe.toUpperCase().split(/[\s\-/]+/);
+    for (const trim of TRIMS) {
+      if (palavras.includes(trim)) return trim;
+    }
+    return null;
+  }
+
   async function buscarMedidaIdeal() {
     try {
       tocarClique();
@@ -228,10 +249,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
       const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
 
+      // Extrai o trim level da versão FIPE para mandar para a wheel-size
+      // Ex: "LONGITUDE 1.3 T270 TURBO FLEX" → "LONGITUDE"
+      // Ex: "1.8 16V I-VTEC EXL CVT FLEX ONE" → "EXL"
+      // Ex: "1.3 FIREFLY DRIVE FLEX" → null (sem trim, wheel-size usa frequência)
+      const trimLevel = extrairTrimLevel(veiculoTratado.versao);
+
       let data = null;
 
-      // ─── WHEEL-SIZE: manda só marca + modelo + ano (SEM versão da FIPE)
-      // A versão da FIPE não bate com os nomes da wheel-size e prejudica o resultado
       try {
         const responseWS = await fetch(`${API_WHEEL_SIZE}/buscar`, {
           method: 'POST',
@@ -240,7 +265,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             marca: veiculoTratado.marca,
             modelo: veiculoTratado.modelo,
             ano: veiculoTratado.ano,
-            versao: null  // ← versão da FIPE ignorada intencionalmente
+            versao: trimLevel  // ← só o trim level, não a versão FIPE completa
           })
         });
         const jsonWS = await responseWS.json();
