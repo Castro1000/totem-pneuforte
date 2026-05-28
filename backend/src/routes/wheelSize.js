@@ -229,6 +229,24 @@ const MODELO_ESPECIAL_MAP = {
   },
 };
 
+// ─── MAPA DE PRIORIDADE POR VERSÃO ────────────────────────────────────────────
+// Quando o frontend manda um trim level específico, força a medida correta no topo
+// Chave: slug do modelo | Valor: { TRIM: 'medida' }
+const PRIORIDADE_VERSAO = {
+  'renegade': {
+    'LONGITUDE': '225/55R18',
+    'SERIES': '225/55R18',
+  },
+  'compass': {
+    'LONGITUDE': '225/55R18',
+    'S': '235/50R18',
+  },
+  'commander': {
+    'OVERLAND': '225/55R18',
+    'LIMITED': '225/55R18',
+  },
+};
+
 // ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
 function normalizarModelo(modelo) {
   return (modelo || '').toLowerCase().trim()
@@ -266,7 +284,8 @@ router.post('/buscar', async (req, res) => {
     const modeloSlug = resolverModeloSlug(marcaSlug, marca, modelo);
     if (!modeloSlug) return res.status(404).json({ erro: `Modelo "${modelo}" não existe na API wheel-size`, pneus: [] });
 
-    console.log(`[WHEEL-SIZE ROUTE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano}`);
+    // Log inclui versao para debug
+    console.log(`[WHEEL-SIZE ROUTE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano} versao=${versao || 'null'}`);
 
     const response = await axios.get(WHEEL_SIZE_URL, {
       params: { make: marcaSlug, model: modeloSlug, year: ano, region: REGION, user_key: WHEEL_SIZE_KEY },
@@ -305,9 +324,39 @@ router.post('/buscar', async (req, res) => {
     const mapaOrdenado = contagemOE.size > 0 ? contagemOE : contagemAlt;
     if (mapaOrdenado.size === 0) return res.status(404).json({ erro: 'Nenhuma medida encontrada', pneus: [] });
 
-    const medidasOrdenadas = Array.from(mapaOrdenado.entries())
+    // Ordena por frequência
+    let medidasOrdenadas = Array.from(mapaOrdenado.entries())
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 3);
+
+    // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────
+    // Se o frontend mandou um trim level (ex: "LONGITUDE"), verifica se tem
+    // uma medida prioritária mapeada e move ela para o topo
+    if (versao) {
+      const versaoUpper = versao.toUpperCase().trim();
+      const prioridades = PRIORIDADE_VERSAO[modeloSlug.toLowerCase()];
+
+      if (prioridades && prioridades[versaoUpper]) {
+        const medidaPrioritaria = prioridades[versaoUpper];
+        console.log(`[WHEEL-SIZE ROUTE] Prioridade por versão "${versaoUpper}": ${medidaPrioritaria}`);
+
+        // Busca a medida prioritária em todo o mapa (não só no top 3)
+        const infoMedida = mapaOrdenado.get(medidaPrioritaria);
+
+        if (infoMedida) {
+          // Remove do lugar atual e coloca no topo
+          medidasOrdenadas = medidasOrdenadas.filter(([m]) => m !== medidaPrioritaria);
+          medidasOrdenadas = [[medidaPrioritaria, infoMedida], ...medidasOrdenadas].slice(0, 3);
+        } else {
+          // Medida prioritária não está no mapa OE — busca no mapa alternativo
+          const infoAlt = contagemAlt.get(medidaPrioritaria);
+          if (infoAlt) {
+            medidasOrdenadas = [[medidaPrioritaria, infoAlt], ...medidasOrdenadas].slice(0, 3);
+          }
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const pneus = medidasOrdenadas.map(([medida, info], i) => ({
       id: i + 1,
@@ -322,7 +371,7 @@ router.post('/buscar', async (req, res) => {
       imagem_carro: i === 0 ? imagemCarro : null,
     }));
 
-    console.log(`[WHEEL-SIZE ROUTE] ${pneus.length} medidas para ${marcaSlug} ${modeloSlug} ${ano}`);
+    console.log(`[WHEEL-SIZE ROUTE] ${pneus.length} medidas para ${marcaSlug} ${modeloSlug} ${ano} → principal: ${pneus[0]?.medida}`);
 
     return res.json({ encontrado: true, fonte: 'wheel-size', veiculo: { marca, modelo, ano, versao }, pneus });
 
