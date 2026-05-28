@@ -258,6 +258,19 @@ const PRIORIDADE_VERSAO = {
 };
 
 
+// ─── NORMALIZAÇÃO DE VERSÃO DA EXATO ─────────────────────────────────────────
+// A Exato às vezes retorna versões truncadas: "10" em vez de "1.0", "16" em vez de "1.6"
+function normalizarVersaoExato(versao) {
+  if (!versao) return versao;
+  const mapa = {
+    '10': '1.0', '12': '1.2', '13': '1.3', '14': '1.4',
+    '16': '1.6', '18': '1.8', '20': '2.0', '22': '2.2',
+    '24': '2.4', '25': '2.5', '28': '2.8', '30': '3.0',
+    '32': '3.2', '35': '3.5', '40': '4.0',
+  };
+  return mapa[versao.trim()] || versao;
+}
+
 // ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
 function normalizarModelo(modelo) {
   return (modelo || '').toLowerCase().trim()
@@ -282,7 +295,8 @@ function resolverModeloSlug(marcaSlug, marcaNome, modelo) {
 }
 
 // ─── BUSCA NA WHEEL-SIZE API ──────────────────────────────────────────────────
-async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
+async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
+  let versao = _versao;
   try {
     const marcaUpper = (marca || '').trim().toUpperCase();
     const marcaSlug = MARCA_MAP[marcaUpper];
@@ -290,6 +304,13 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
 
     const modeloSlug = resolverModeloSlug(marcaSlug, marca, modelo);
     if (!modeloSlug) { console.log(`[WHEEL-SIZE] Modelo ${modelo} não existe na API, pulando...`); return null; }
+
+    // Normaliza versão truncada da Exato (ex: "10" → "1.0", "16" → "1.6")
+    const versaoNormalizada = normalizarVersaoExato(versao);
+    if (versaoNormalizada !== versao) {
+      console.log(`[WHEEL-SIZE] Versão normalizada: "${versao}" → "${versaoNormalizada}"`);
+      versao = versaoNormalizada;
+    }
 
     console.log(`[WHEEL-SIZE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano} versao=${versao}`);
 
@@ -499,8 +520,23 @@ async function buscarPorPlaca(req, res) {
       return res.status(404).json({ erro: 'Veículo não encontrado' });
     }
 
-    let pneus = await buscarMedidasWheelSize({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao });
+    // Se a versão for numérica simples (ex: "1.0", "1.6"), tenta banco primeiro
+    // porque a wheel-size não tem esses trim levels e retorna medida errada
+    const versaoEhNumerica = /^\d+\.\d+$/.test((veiculo.versao || '').trim());
+
+    let pneus = null;
     let fonte = 'wheel-size';
+
+    if (versaoEhNumerica) {
+      console.log(`[PLACA] Versão numérica "${veiculo.versao}" — tentando banco primeiro...`);
+      pneus = await buscarPneusCompativeis({ codigo_fipe: veiculo.codigo_fipe, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano });
+      fonte = 'banco';
+    }
+
+    if (!pneus || pneus.length === 0) {
+      pneus = await buscarMedidasWheelSize({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao });
+      fonte = 'wheel-size';
+    }
 
     if (!pneus || pneus.length === 0) {
       console.log(`[PLACA] wheel-size não encontrou, tentando banco local para ${veiculo.modelo}...`);
