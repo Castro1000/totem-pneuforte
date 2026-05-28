@@ -222,7 +222,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   function extrairTrimLevel(versaoFipe) {
     if (!versaoFipe) return null;
     const TRIMS = [
-      'LONGITUDE', 'SPORT', 'ALTITUDE', 'TRAILHAWK',
+      'LONGITUDE', 'LONG.', 'LONG',  // Jeep Longitude (FIPE abrevia como "Long.")
+      'SPORT', 'ALTITUDE', 'TRAILHAWK',
       'EXL', 'EX-L', 'EX', 'LX', 'TOURING',
       'LTZ', 'LT', 'LS', 'PREMIER', 'RS',
       'ULTIMATE', 'LIMITED', 'OVERLAND',
@@ -232,9 +233,16 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       'DYNAMIC', 'ALLURE', 'GRIFFE',
       'ADVENTURE', 'CROSS', 'TREKKING',
     ];
-    const palavras = versaoFipe.toUpperCase().split(/[\s\-/]+/);
+    // Normaliza: remove pontos e divide por espaços/hífens/barras
+    const versaoNorm = versaoFipe.toUpperCase().replace(/\./g, '');
+    const palavras = versaoNorm.split(/[\s\-/]+/);
     for (const trim of TRIMS) {
-      if (palavras.includes(trim)) return trim;
+      const trimNorm = trim.replace(/\./g, '');
+      if (palavras.includes(trimNorm)) {
+        // Sempre retorna LONGITUDE independente de como a FIPE abreviou
+        if (['LONGITUDE', 'LONG'].includes(trimNorm)) return 'LONGITUDE';
+        return trim;
+      }
     }
     return null;
   }
