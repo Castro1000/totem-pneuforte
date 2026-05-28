@@ -246,36 +246,6 @@ const PRIORIDADE_VERSAO = {
   },
 };
 
-// ─── MAPA DE PRIORIDADE POR VERSÃO ───────────────────────────────────────────
-// Quando a versão da Exato contém certas palavras, força a medida correta no topo
-// Chave: slug do modelo | Valor: { 'PALAVRA_NA_VERSAO': 'medida' }
-const PRIORIDADE_VERSAO = {
-  's10': {
-    'HC': '265/60R18',        // High Country
-    'HIGH': '265/60R18',
-    'LTZ': '265/60R18',       // LTZ também tem aro 18
-  },
-  'renegade': {
-    'LONGITUDE': '225/55R18',
-    'LONG': '225/55R18',
-  },
-  'compass': {
-    'LONGITUDE': '225/55R18',
-    'LONG': '225/55R18',
-    'S': '235/50R18',
-  },
-  'commander': {
-    'OVERLAND': '225/55R18',
-    'LIMITED': '225/55R18',
-  },
-  'hilux': {
-    'SRX': '265/60R18',       // Hilux SRX tem aro 18
-    'GR': '265/65R17',
-  },
-  'sw4': {
-    'SRX': '265/60R18',
-  },
-};
 
 // ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
 function normalizarModelo(modelo) {
