@@ -218,35 +218,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
-    // Extrai só o trim level da versão FIPE (ex: "LONGITUDE 1.3 TURBO" → "LONGITUDE")
-  function extrairTrimLevel(versaoFipe) {
-    if (!versaoFipe) return null;
-    const TRIMS = [
-      'LONGITUDE', 'LONG.', 'LONG',  // Jeep Longitude (FIPE abrevia como "Long.")
-      'SPORT', 'ALTITUDE', 'TRAILHAWK',
-      'EXL', 'EX-L', 'EX', 'LX', 'TOURING',
-      'LTZ', 'LT', 'LS', 'PREMIER', 'RS',
-      'ULTIMATE', 'LIMITED', 'OVERLAND',
-      'SRX', 'SRV', 'SR',
-      'HIGHLINE', 'COMFORTLINE', 'TRENDLINE',
-      'TITANIUM',
-      'DYNAMIC', 'ALLURE', 'GRIFFE',
-      'ADVENTURE', 'CROSS', 'TREKKING',
-    ];
-    // Normaliza: remove pontos e divide por espaços/hífens/barras
-    const versaoNorm = versaoFipe.toUpperCase().replace(/\./g, '');
-    const palavras = versaoNorm.split(/[\s\-/]+/);
-    for (const trim of TRIMS) {
-      const trimNorm = trim.replace(/\./g, '');
-      if (palavras.includes(trimNorm)) {
-        // Sempre retorna LONGITUDE independente de como a FIPE abreviou
-        if (['LONGITUDE', 'LONG'].includes(trimNorm)) return 'LONGITUDE';
-        return trim;
-      }
-    }
-    return null;
-  }
-
   async function buscarMedidaIdeal() {
     try {
       tocarClique();
@@ -256,12 +227,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       setFonteMedida('wheel-size');
 
       const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
-
-      // Extrai o trim level da versão FIPE para mandar para a wheel-size
-      // Ex: "LONGITUDE 1.3 T270 TURBO FLEX" → "LONGITUDE"
-      // Ex: "1.8 16V I-VTEC EXL CVT FLEX ONE" → "EXL"
-      // Ex: "1.3 FIREFLY DRIVE FLEX" → null (sem trim, wheel-size usa frequência)
-      const trimLevel = extrairTrimLevel(veiculoTratado.versao);
 
       let data = null;
 
@@ -273,7 +238,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             marca: veiculoTratado.marca,
             modelo: veiculoTratado.modelo,
             ano: veiculoTratado.ano,
-            versao: trimLevel  // ← só o trim level, não a versão FIPE completa
+            versao: veiculoTratado.versao
           })
         });
         const jsonWS = await responseWS.json();
@@ -281,7 +246,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         data = jsonWS;
         setFonteMedida('wheel-size');
       } catch {
-        // Fallback — banco local
         try {
           const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
             method: 'POST',
@@ -481,47 +445,30 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         <div className="popup-overlay">
           <div className="popup-medida popup-animado">
             <div className="popup-badge popup-badge-amarelo">🔍 MEDIDA IDEAL ENCONTRADA</div>
-
-            {/* Imagem do carro */}
+            
+            {/* INÍCIO DA INSERÇÃO PROFISSIONAL */}
             {medidaPrincipal?.imagem_carro && (
-              <div style={{ margin: '15px 0' }}>
-                <img
-                  src={medidaPrincipal.imagem_carro}
-                  alt="Veículo"
-                  style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }}
-                />
-              </div>
+               <div style={{ margin: '15px 0' }}>
+                 <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
+               </div>
             )}
-
+            
             {veiculoTratado && (
-              <div className="popup-veiculo-resumo">
-                {veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}
-              </div>
+              <div className="popup-veiculo-resumo">{veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}</div>
             )}
-
+            
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero glow-measure">{medidaPrincipal.medida}</div>
+                <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0' }}>{medidaPrincipal.medida}</div>
+                
+                {/* DADOS TÉCNICOS EXTRAS */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px', color: '#EEE' }}>
+                  {medidaPrincipal.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
+                  {medidaPrincipal.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
+                </div>
 
-                {/* Dados técnicos */}
-                {(medidaPrincipal.pressao_psi || medidaPrincipal.indice_velocidade) && (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '8px 0', color: '#EEE', fontSize: '14px' }}>
-                    {medidaPrincipal.pressao_psi && (
-                      <div><strong style={{ color: '#FFD700' }}>PSI:</strong> {medidaPrincipal.pressao_psi}</div>
-                    )}
-                    {medidaPrincipal.pressao_bar && (
-                      <div><strong style={{ color: '#FFD700' }}>BAR:</strong> {medidaPrincipal.pressao_bar}</div>
-                    )}
-                    {medidaPrincipal.indice_velocidade && (
-                      <div><strong style={{ color: '#FFD700' }}>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>
-                    )}
-                  </div>
-                )}
-
-                {medidaPrincipal.observacao && (
-                  <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
-                )}
-
+                {medidaPrincipal.observacao && <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>}
+                
                 {outrasMedidas.length > 0 && (
                   <div className="popup-outras-medidas">
                     <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
@@ -532,12 +479,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                     </div>
                   </div>
                 )}
-
-                {fonteMedida === 'wheel-size' && (
-                  <p style={{ fontSize: '11px', opacity: 0.5, marginTop: '6px' }}>
-                    * Dados técnicos via base internacional
-                  </p>
-                )}
               </>
             ) : (
               <div className="popup-sem-medida">
@@ -545,6 +486,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <p>Consulte um de nossos atendentes!</p>
               </div>
             )}
+            {/* FIM DA INSERÇÃO PROFISSIONAL */}
 
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={novaConsulta}>🔄 NOVA CONSULTA</button>
