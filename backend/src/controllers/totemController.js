@@ -520,6 +520,15 @@ async function buscarPorPlaca(req, res) {
       return res.status(404).json({ erro: 'Veículo não encontrado' });
     }
 
+    // Normaliza versão truncada da Exato antes de qualquer verificação
+    if (veiculo.versao) {
+      const versaoNorm = normalizarVersaoExato(veiculo.versao.trim());
+      if (versaoNorm !== veiculo.versao) {
+        console.log(`[PLACA] Versão normalizada: "${veiculo.versao}" → "${versaoNorm}"`);
+        veiculo.versao = versaoNorm;
+      }
+    }
+
     // Se a versão for numérica simples (ex: "1.0", "1.6"), tenta banco primeiro
     // porque a wheel-size não tem esses trim levels e retorna medida errada
     const versaoEhNumerica = /^\d+\.\d+$/.test((veiculo.versao || '').trim());
