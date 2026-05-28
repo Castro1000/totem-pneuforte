@@ -232,17 +232,28 @@ const MODELO_ESPECIAL_MAP = {
 
 // ─── MAPA DE PRIORIDADE POR VERSÃO ───────────────────────────────────────────
 const PRIORIDADE_VERSAO = {
+  's10': {
+    'HC': '265/60R18',
+    'LTZ': '265/60R18',
+  },
   'renegade': {
     'LONGITUDE': '225/55R18',
-    'SERIES': '225/55R18',
+    'LONG': '225/55R18',
   },
   'compass': {
     'LONGITUDE': '225/55R18',
+    'LONG': '225/55R18',
     'S': '235/50R18',
   },
   'commander': {
     'OVERLAND': '225/55R18',
     'LIMITED': '225/55R18',
+  },
+  'hilux': {
+    'SRX': '265/60R18',
+  },
+  'sw4': {
+    'SRX': '265/60R18',
   },
 };
 
