@@ -230,6 +230,53 @@ const MODELO_ESPECIAL_MAP = {
   },
 };
 
+// ─── MAPA DE PRIORIDADE POR VERSÃO ───────────────────────────────────────────
+const PRIORIDADE_VERSAO = {
+  'renegade': {
+    'LONGITUDE': '225/55R18',
+    'SERIES': '225/55R18',
+  },
+  'compass': {
+    'LONGITUDE': '225/55R18',
+    'S': '235/50R18',
+  },
+  'commander': {
+    'OVERLAND': '225/55R18',
+    'LIMITED': '225/55R18',
+  },
+};
+
+// ─── MAPA DE PRIORIDADE POR VERSÃO ───────────────────────────────────────────
+// Quando a versão da Exato contém certas palavras, força a medida correta no topo
+// Chave: slug do modelo | Valor: { 'PALAVRA_NA_VERSAO': 'medida' }
+const PRIORIDADE_VERSAO = {
+  's10': {
+    'HC': '265/60R18',        // High Country
+    'HIGH': '265/60R18',
+    'LTZ': '265/60R18',       // LTZ também tem aro 18
+  },
+  'renegade': {
+    'LONGITUDE': '225/55R18',
+    'LONG': '225/55R18',
+  },
+  'compass': {
+    'LONGITUDE': '225/55R18',
+    'LONG': '225/55R18',
+    'S': '235/50R18',
+  },
+  'commander': {
+    'OVERLAND': '225/55R18',
+    'LIMITED': '225/55R18',
+  },
+  'hilux': {
+    'SRX': '265/60R18',       // Hilux SRX tem aro 18
+    'GR': '265/65R17',
+  },
+  'sw4': {
+    'SRX': '265/60R18',
+  },
+};
+
 // ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
 function normalizarModelo(modelo) {
   return (modelo || '').toLowerCase().trim()
@@ -341,9 +388,36 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao }) {
 
     // Ordena por frequência
     const mapaOrdenado = contagemOE.size > 0 ? contagemOE : contagemAlt;
-    const medidasOrdenadas = Array.from(mapaOrdenado.entries())
+    let medidasOrdenadas = Array.from(mapaOrdenado.entries())
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 3);
+
+    // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────
+    // Verifica se a versão da Exato tem palavras que indicam uma medida específica
+    if (versao) {
+      const palavrasVersao = (versao || '').toUpperCase().split(/[\s\-\/\.]+/);
+      const prioridades = PRIORIDADE_VERSAO[modeloSlug.toLowerCase()];
+
+      if (prioridades) {
+        for (const [palavra, medidaAlvo] of Object.entries(prioridades)) {
+          if (palavrasVersao.includes(palavra.toUpperCase())) {
+            console.log(`[WHEEL-SIZE] Prioridade por versão "${palavra}": ${medidaAlvo}`);
+
+            // Busca a medida em todo o mapa (OE + Alt)
+            const infoOE = contagemOE.get(medidaAlvo);
+            const infoAlt = contagemAlt.get(medidaAlvo);
+            const info = infoOE || infoAlt;
+
+            if (info) {
+              medidasOrdenadas = medidasOrdenadas.filter(([m]) => m !== medidaAlvo);
+              medidasOrdenadas = [[medidaAlvo, info], ...medidasOrdenadas].slice(0, 3);
+            }
+            break;
+          }
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const pneus = medidasOrdenadas.map(([medida, info], i) => ({
       id: i + 1,
