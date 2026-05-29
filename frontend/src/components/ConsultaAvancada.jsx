@@ -390,7 +390,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       if (!texto) return opcoes;
       return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
     }
-    if (texto.length < 2) return [];
+    // Para marca, modelo e ano: lista já na primeira letra
+    if (texto.length < 1) return [];
     return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
   }, [busca, opcoes, etapa]);
 
