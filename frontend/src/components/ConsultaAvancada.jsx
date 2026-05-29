@@ -485,10 +485,10 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                   </button>
                 )}
                 {etapa !== 'ano' && (
-                  <button className="ca-tecla" style={{ flex: 2 }} onClick={() => digitar(' ')}>ESPAÇO</button>
+                  <button className="ca-tecla" style={{ flex: 2, height: '36px', fontSize: '13px' }} onClick={() => digitar(' ')}>ESPAÇO</button>
                 )}
                 {etapa !== 'ano' && (
-                  <button className="ca-tecla" style={{ flex: 1 }} onClick={() => digitar('.')}>.</button>
+                  <button className="ca-tecla" style={{ flex: 1, height: '36px', fontSize: '13px' }} onClick={() => digitar('.')}>.</button>
                 )}
                 <button className="ca-btn-apagar" style={{ flex: 1 }} onClick={apagar}>APAGAR</button>
                 <button className="ca-btn-limpar" style={{ flex: 1 }} onClick={() => { tocarClique(); setBusca(''); }}>LIMPAR</button>
