@@ -29,12 +29,24 @@ const MAPA_MARCAS = {
   'MERCEDES': 'MERCEDES-BENZ', 'MERCEDES BENZ': 'MERCEDES-BENZ', 'MB': 'MERCEDES-BENZ', 'MITSU': 'MITSUBISHI', 'NIS': 'NISSAN',
   'PEU': 'PEUGEOT', 'REN': 'RENAULT', 'TOYT': 'TOYOTA', 'TOY': 'TOYOTA', 'HON': 'HONDA', 'HYU': 'HYUNDAI', 'CITR': 'CITROËN',
   'CITROEN': 'CITROËN', 'SUB': 'SUBARU', 'SUZ': 'SUZUKI',
+  // ── Novos mapeamentos de abreviações da Exato ──
+  'LR': 'LAND ROVER',          // LR = Land Rover
+  'MMC': 'MITSUBISHI',         // MMC = Mitsubishi Motors Corporation
+  'I': 'FIAT',                 // "I/FIAT ..." prefixo DETRAN importado
+  'N': 'NISSAN',               // prefixo DETRAN
+  'R': 'RENAULT',              // prefixo DETRAN
+  'E': 'VOLKSWAGEN',           // prefixo DETRAN eventual
 };
+
+// Marcas que a Exato às vezes retorna como modelo (invertido)
+const MARCAS_COMO_MODELO = new Set([
+  'ONIX', 'UNO', 'CELTA', 'CORSA',
+  'STRADA', 'TORO', 'ARGO', 'PULSE', 'CRONOS', 'MOBI',
+]);
 
 const PREFIXOS_DETRAN = new Set(['I', 'N', 'R', 'E']);
 
 // ─── MODELOS COMPOSTOS (duas ou mais palavras) ────────────────────────────────
-// Ordenados do mais longo para o mais curto para garantir match correto
 const MODELOS_COMPOSTOS = [
   'LAND CRUISER PRADO',
   'TIGUAN ALLSPACE',
@@ -55,6 +67,7 @@ const MODELOS_COMPOSTOS = [
   'JETTA GLI',
   'JETTA VARIANT',
   'NOVO GOL',
+  'NOVO VOYAGE',
   'NEW BEETLE',
   'GRAND SIENA',
   'LAND CRUISER',
@@ -80,7 +93,6 @@ const MODELOS_COMPOSTOS = [
   'ZR V',
   'T CROSS',
   'RAV 4',
-  'SW4',
   'HB20S',
   'HB20X',
   'PULSE ABARTH',
@@ -92,7 +104,6 @@ const MODELOS_COMPOSTOS = [
   'MUSTANG MACH-E',
   'MUSTANG MACH 1',
   'TRANSIT CUSTOM',
-  'KWID ZEN',
   'SANDERO STEPWAY',
   'KANGOO EXPRESS',
   'KANGOO STEPWAY',
@@ -101,9 +112,26 @@ const MODELOS_COMPOSTOS = [
   'S CROSS',
   'IONIQ 5',
   'VELOSTER N',
-  'L200',
   'OUTLANDER SPORT',
 ];
+
+// Modelos conhecidos — primeira palavra é suficiente para identificar
+const MODELOS_CONHECIDOS = new Set([
+  'RENEGADE', 'COMPASS', 'COMMANDER', 'WRANGLER', 'GLADIATOR',
+  'TORO', 'ARGO', 'CRONOS', 'PULSE', 'FASTBACK', 'STRADA', 'MOBI',
+  'PALIO', 'SIENA', 'UNO', 'PUNTO', 'DOBLO', 'DUCATO', 'BRAVO',
+  'ONIX', 'TRACKER', 'MONTANA', 'CRUZE', 'COBALT', 'SPIN', 'CELTA',
+  'CLASSIC', 'CORSA', 'ZAFIRA', 'BLAZER', 'CAMARO', 'S10',
+  'GOL', 'POLO', 'NIVUS', 'VIRTUS', 'SAVEIRO', 'AMAROK', 'TIGUAN',
+  'TAOS', 'JETTA', 'FOX', 'CROSSFOX', 'SPACEFOX', 'PARATI', 'VOYAGE',
+  'CIVIC', 'CITY', 'FIT', 'ACCORD',
+  'COROLLA', 'HILUX', 'YARIS', 'ETIOS', 'FORTUNER', 'CAMRY',
+  'HB20', 'CRETA', 'TUCSON', 'ELANTRA', 'AZERA',
+  'KICKS', 'FRONTIER', 'VERSA', 'MARCH', 'SENTRA',
+  'SANDERO', 'DUSTER', 'LOGAN', 'CAPTUR', 'KWID', 'KARDIAN',
+  'RAMPAGE', 'RAM',
+  'ASX', 'LANCER', 'OUTLANDER', 'PAJERO', 'L200',
+]);
 
 function normalizarMarca(marca) {
   if (!marca) return marca;
@@ -116,7 +144,6 @@ function separarMarcaModelo(brandModel = '') {
   if (!texto) return { marca: null, modelo: null, versao: null };
 
   let marcaRaw = null, modelo = null, versao = null;
-
   let resto = texto;
 
   if (texto.includes('/')) {
@@ -154,6 +181,32 @@ function separarMarcaModelo(brandModel = '') {
     const tokens = resto.split(' ');
     modelo = tokens[0]?.trim() || null;
     versao = tokens.slice(1).join(' ').trim();
+  }
+
+  // ── Casos onde Exato gruda versão no modelo (ex: "ONIX 14AT LT", "S10 LTZ DD4A") ──
+  // Se o modelo contém espaço e a primeira palavra é um modelo conhecido,
+  // separa o restante como versão
+  if (modelo && modelo.includes(' ')) {
+    const primeiraPalavra = modelo.split(' ')[0];
+    if (MODELOS_CONHECIDOS.has(primeiraPalavra)) {
+      const partes = modelo.split(' ');
+      versao = partes.slice(1).join(' ') + (versao ? ' ' + versao : '');
+      modelo = primeiraPalavra;
+    }
+  }
+
+  // ── Caso especial: Exato retornou modelo como marca (ex: marca=ONIX modelo=PLUS) ──
+  if (MARCAS_COMO_MODELO.has(marcaRaw)) {
+    // Ex: BrandModel = "ONIX/PLUS 10TAT PR1" → marca real é GM, modelo=ONIX PLUS
+    modelo = marcaRaw + (modelo ? ' ' + modelo : '');
+    marcaRaw = 'GM - CHEVROLET'; // fallback genérico
+  }
+
+  // ── Abreviações de marcas não padrão da Exato ──
+  // LR/RR → Land Rover / Range Rover
+  if (marcaRaw === 'LR' && modelo === 'RR') {
+    marcaRaw = 'LAND ROVER';
+    modelo = 'RANGE ROVER';
   }
 
   return {

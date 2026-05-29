@@ -103,6 +103,11 @@ const MODELO_ESPECIAL_MAP = {
     'SPIN': 'spin', 'SPIN ACTIV': 'spin-activ', 'SUBURBAN': 'suburban',
     'TAHOE': 'tahoe', 'TIGRA': 'tigra', 'TRACKER': 'tracker',
     'TRAILBLAZER': 'trailblazer', 'TRAVERSE': 'traverse', 'VECTRA': 'vectra', 'ZAFIRA': 'zafira',
+    'AVEO': 'aveo', 'AVEO FAMILY': 'aveo-family', 'COLORADO': 'colorado',
+    'D-MAX': 'd-max', 'EPICA': 'epica', 'GROOVE': 'groove',
+    'N300': 'n300', 'N400': 'n400', 'OPTRA': 'optra', 'ORLANDO': 'orlando',
+    'SAIL': 'sail', 'SAIL LIFE': 'sail-life',
+    'SPARK EUV': 'spark-euv', 'SPARK GT ACTIV': 'spark-gt-activ', 'VIVANT': 'vivant',
   },
   'VW - VOLKSWAGEN': {
     'AMAROK': 'amarok', 'ATLAS': 'atlas', 'BORA': 'bora', 'CRAFTER': 'crafter',
@@ -148,6 +153,8 @@ const MODELO_ESPECIAL_MAP = {
     'HR-V': 'hr-v', 'HRV': 'hr-v', 'HR V': 'hr-v',
     'ODYSSEY': 'odyssey', 'PASSPORT': 'passport', 'PILOT': 'pilot',
     'WR-V': 'wr-v', 'WRV': 'wr-v', 'ZR-V': 'zr-v', 'ZRV': 'zr-v',
+    'RIDGELINE': 'ridgeline',
+    'PASSPORT': null,  // não existe na API ladm
   },
   'TOYOTA': {
     'CAMRY': 'camry', 'C-HR': 'c-hr', 'CHR': 'c-hr',
@@ -177,17 +184,25 @@ const MODELO_ESPECIAL_MAP = {
     'TUCSON': 'tucson', 'VELOSTER': 'veloster', 'VELOSTER N': 'veloster-n', 'VENUE': 'venue',
   },
   'JEEP': {
-    'AVENGER': 'avenger', 'CHEROKEE': 'cherokee', 'COMMANDER': 'commander',
+    'AVENGER': 'avenger', 'CHEROKEE': null,  // não existe na API ladm
+    'COMMANDER': 'commander',
     'COMPASS': 'compass', 'GLADIATOR': 'gladiator',
     'GRAND': 'grand-cherokee', 'GRAND CHEROKEE': 'grand-cherokee',
     'RENEGADE': 'renegade', 'WRANGLER': 'wrangler',
   },
   'NISSAN': {
     'ALTIMA': 'altima', 'FRONTIER': 'frontier', 'GT-R': 'gt-r', 'GTR': 'gt-r',
-    'KAIT': 'kait', 'KICKS': 'kicks', 'LEAF': 'leaf', 'MARCH': 'march',
-    'MURANO': 'murano', 'PATHFINDER': 'pathfinder', 'SENTRA': 'sentra',
-    'TIIDA': 'tiida', 'VERSA': 'versa',
+    'KAIT': 'kait', 'KICKS': 'kicks', 'KICKS PLAY': 'kicks-play',
+    'LEAF': 'leaf', 'MARCH': 'march', 'MURANO': 'murano',
+    'NAVARA': 'navara', 'NOTE': 'note',
+    'NP300': 'np300', 'NP300 FRONTIER': 'np300-frontier',
+    'NV350': 'nv350', 'NV350 URVAN': 'nv350-urvan',
+    'PATHFINDER': 'pathfinder', 'PATROL': 'patrol',
+    'QASHQAI': 'qashqai', 'SENTRA': 'sentra', 'TIIDA': 'tiida',
+    'TSURU': 'tsuru', 'URVAN': 'urvan', 'V-DRIVE': 'v-drive', 'V16': 'v16',
+    'VERSA': 'versa',
     'X-TRAIL': 'x-trail', 'XTRAIL': 'x-trail', 'X TRAIL': 'x-trail',
+    'X-TRAIL X-TREME': 'x-trail-x-treme',
   },
   'FORD': {
     'BRONCO': 'bronco', 'BRONCO SPORT': 'bronco-sport', 'COURIER': 'courier',
@@ -208,11 +223,21 @@ const MODELO_ESPECIAL_MAP = {
     'MEGANE': 'megane-e-tech', 'MEGANE E-TECH': 'megane-e-tech',
     'OROCH': 'oroch', 'SANDERO': 'sandero', 'SANDERO STEPWAY': 'sandero-stepway',
     'STEPWAY': 'stepway', 'SYMBOL': 'symbol', 'TRAFIC': 'trafic', 'ZOE': 'zoe',
+    'ALASKAN': 'alaskan', 'KANGOO VAN': 'kangoo-van', 'SCALA': 'scala', 'TWIZY': 'twizy',
   },
   'MITSUBISHI': {
     'ASX': 'asx', 'ECLIPSE CROSS': 'eclipse-cross', 'GALANT': 'galant',
     'L200': 'l200', 'L 200': 'l200', 'LANCER': 'lancer', 'OUTLANDER': 'outlander',
     'PAJERO': 'pajero', 'PAJERO FULL': 'pajero-full', 'PAJERO SPORT': 'pajero-sport',
+  },
+
+  // ── RAM ───────────────────────────────────────────────────────────────────
+  'RAM': {
+    'RAMPAGE': 'rampage',
+    '1000': '1000', '1500': '1500', '1500 TRX': '1500-trx',
+    '2500': '2500', '3500': '3500', '700': '700',
+    'DAKOTA': 'dakota', 'V1000': 'v1000',
+    'V700 CITY': 'v700-city', 'V700 RAPID': 'v700-rapid',
   },
   'LAND ROVER': {
     'DEFENDER': 'defender', 'DISCOVERY': 'discovery', 'DISCOVERY SPORT': 'discovery-sport',

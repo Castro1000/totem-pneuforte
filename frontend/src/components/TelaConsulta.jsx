@@ -272,9 +272,11 @@ export default function TelaConsulta({
                   </div>
                 )}
                 {resultado.veiculo?.combustivel && (
-                  <div className="popup-info-box">
+                  <div className="popup-info-box" style={{ minWidth: 0 }}>
                     <small>COMBUSTÍVEL</small>
-                    <strong>{resultado.veiculo?.combustivel}</strong>
+                    <strong style={{ fontSize: '11px', wordBreak: 'break-word', lineHeight: '1.2' }}>
+                      {resultado.veiculo?.combustivel}
+                    </strong>
                   </div>
                 )}
               </div>
