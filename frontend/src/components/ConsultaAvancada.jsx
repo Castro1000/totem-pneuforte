@@ -385,9 +385,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   const opcoesFiltradas = useMemo(() => {
     const texto = busca.trim().toUpperCase();
+    // Na etapa de versão, mostra todas as opções mesmo sem digitar
+    if (etapa === 'versao') {
+      if (!texto) return opcoes;
+      return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
+    }
     if (texto.length < 2) return [];
     return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
-  }, [busca, opcoes]);
+  }, [busca, opcoes, etapa]);
 
   async function escolher(item) {
     tocarClique();
@@ -454,7 +459,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <div className="ca-seletor-msg">Carregando...</div>
               ) : erroApi ? (
                 <div className="ca-seletor-msg">{erroApi}</div>
-              ) : !busca ? (
+              ) : !busca && etapa !== 'versao' ? (
                 <div className="ca-seletor-msg">Digite no teclado para pesquisar</div>
               ) : opcoesFiltradas.length > 0 ? (
                 opcoesFiltradas.map((item) => (
