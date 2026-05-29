@@ -83,8 +83,8 @@ const MODELO_ESPECIAL_MAP = {
     'PALIO': 'palio', 'PALIO ADVENTURE': 'palio-adventure', 'PALIO WEEKEND': 'palio-weekend',
     'PULSE': 'pulse', 'PULSE ABARTH': 'pulse-abarth', 'PUNTO': 'punto',
     'SCUDO': 'scudo', 'SIENA': 'siena', 'SIENA EL': 'siena-el', 'STILO': 'stilo',
-    'STRADA': 'strada', 'STRADA/': 'strada', 'TITANO': 'titano', 'TIPO': 'tipo',
-    'TORO': 'toro', 'UNO': 'uno',
+    'STRADA': 'strada', 'TITANO': 'titano', 'TORO': 'toro', 'UNO': 'uno',
+    '600': '600', '600E': '600e', 'MILLE': 'mille',
   },
   'CHEVROLET': {
     'AGILE': 'agile', 'ASTRA': 'astra', 'BLAZER': 'blazer', 'BLAZER EV': 'blazer-ev',
@@ -101,88 +101,100 @@ const MODELO_ESPECIAL_MAP = {
     'SPIN': 'spin', 'SPIN ACTIV': 'spin-activ', 'SUBURBAN': 'suburban',
     'TAHOE': 'tahoe', 'TIGRA': 'tigra', 'TRACKER': 'tracker',
     'TRAILBLAZER': 'trailblazer', 'TRAVERSE': 'traverse', 'VECTRA': 'vectra', 'ZAFIRA': 'zafira',
+    'AVEO': 'aveo', 'AVEO FAMILY': 'aveo-family', 'COLORADO': 'colorado',
+    'D-MAX': 'd-max', 'GROOVE': 'groove', 'ORLANDO': 'orlando', 'VIVANT': 'vivant',
   },
   'VW - VOLKSWAGEN': {
-    'AMAROK': 'amarok', 'BORA': 'bora', 'CROSSFOX': 'crossfox', 'FOX': 'fox',
-    'FUSCA': 'fusca', 'GOL': 'gol', 'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
-    'GRAND': null, 'JETTA': 'jetta', 'JETTA GLI': 'jetta-gli', 'JETTA VARIANT': 'jetta-variant',
-    'KOMBI': 'kombi', 'LOGUS': 'logus', 'NEW': 'beetle', 'NIVUS': 'nivus',
-    'PARATI': 'parati', 'PASSAT': 'passat', 'POINTER': 'pointer',
+    'AMAROK': 'amarok', 'ATLAS': 'atlas', 'BORA': 'bora',
+    'CROSSFOX': 'crossfox', 'FOX': 'fox', 'FUSCA': 'fusca',
+    'GOL': 'gol', 'NOVO GOL': 'gol', 'NOVO': 'gol',
+    'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
+    'JETTA': 'jetta', 'JETTA GLI': 'jetta-gli', 'JETTA VARIANT': 'jetta-variant',
+    'KOMBI': 'kombi', 'NIVUS': 'nivus', 'PARATI': 'parati', 'PASSAT': null,
     'POLO': 'polo', 'POLO TRACK': 'polo-track', 'SAVEIRO': 'saveiro',
-    'SPACECROSS': 'space-cross', 'SPACE CROSS': 'space-cross', 'SPACEFOX': 'spacefox',
+    'SPACE CROSS': 'space-cross', 'SPACEFOX': 'spacefox', 'SURAN': 'suran',
     'T-CROSS': 't-cross', 'TCROSS': 't-cross', 'T CROSS': 't-cross',
-    'TAOS': 'taos', 'TERA': 'tera', 'TIGUAN': 'tiguan', 'TIGUAN ALLSPACE': 'tiguan-allspace',
-    'TOUAREG': 'touareg', 'UP': 'up', 'UP!': 'up', 'VIRTUS': 'virtus', 'VOYAGE': 'voyage',
+    'TAOS': 'taos', 'TERA': 'tera', 'TERAMONT': 'teramont',
+    'TIGUAN': 'tiguan', 'TIGUAN ALLSPACE': 'tiguan-allspace',
+    'TOUAREG': 'touareg', 'UP': 'up', 'UP!': 'up',
+    'VENTO': 'vento', 'VIRTUS': 'virtus', 'VOYAGE': 'voyage',
   },
   'VOLKSWAGEN': {
-    'AMAROK': 'amarok', 'BORA': 'bora', 'CROSSFOX': 'crossfox', 'FOX': 'fox',
-    'FUSCA': 'fusca', 'GOL': 'gol', 'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
+    'AMAROK': 'amarok', 'ATLAS': 'atlas', 'BORA': 'bora',
+    'CROSSFOX': 'crossfox', 'FOX': 'fox', 'FUSCA': 'fusca',
+    'GOL': 'gol', 'NOVO GOL': 'gol', 'NOVO': 'gol',
+    'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
     'JETTA': 'jetta', 'JETTA GLI': 'jetta-gli', 'JETTA VARIANT': 'jetta-variant',
-    'KOMBI': 'kombi', 'LOGUS': 'logus', 'NEW': 'beetle', 'NIVUS': 'nivus',
-    'PARATI': 'parati', 'PASSAT': 'passat', 'POINTER': 'pointer',
+    'KOMBI': 'kombi', 'NIVUS': 'nivus', 'PARATI': 'parati', 'PASSAT': null,
     'POLO': 'polo', 'POLO TRACK': 'polo-track', 'SAVEIRO': 'saveiro',
-    'SPACECROSS': 'space-cross', 'SPACE CROSS': 'space-cross', 'SPACEFOX': 'spacefox',
+    'SPACE CROSS': 'space-cross', 'SPACEFOX': 'spacefox', 'SURAN': 'suran',
     'T-CROSS': 't-cross', 'TCROSS': 't-cross', 'T CROSS': 't-cross',
-    'TAOS': 'taos', 'TERA': 'tera', 'TIGUAN': 'tiguan', 'TIGUAN ALLSPACE': 'tiguan-allspace',
-    'TOUAREG': 'touareg', 'UP': 'up', 'UP!': 'up', 'VIRTUS': 'virtus', 'VOYAGE': 'voyage',
+    'TAOS': 'taos', 'TERA': 'tera', 'TERAMONT': 'teramont',
+    'TIGUAN': 'tiguan', 'TIGUAN ALLSPACE': 'tiguan-allspace',
+    'TOUAREG': 'touareg', 'UP': 'up', 'UP!': 'up',
+    'VENTO': 'vento', 'VIRTUS': 'virtus', 'VOYAGE': 'voyage',
   },
   'HONDA': {
     'ACCORD': 'accord', 'CITY': 'city', 'CIVIC': 'civic', 'CIVIC TYPE R': 'civic-type-r',
     'CR-V': 'cr-v', 'CRV': 'cr-v', 'FIT': 'fit',
     'HR-V': 'hr-v', 'HRV': 'hr-v', 'HR V': 'hr-v',
-    'ODYSSEY': 'odyssey', 'PASSPORT': 'passport', 'PILOT': 'pilot',
-    'WR-V': 'wr-v', 'WRV': 'wr-v', 'ZR-V': 'zr-v', 'ZRV': 'zr-v',
+    'ODYSSEY': 'odyssey', 'PASSPORT': null, 'PILOT': 'pilot',
+    'RIDGELINE': 'ridgeline', 'WR-V': 'wr-v', 'WRV': 'wr-v', 'ZR-V': 'zr-v', 'ZRV': 'zr-v',
   },
   'TOYOTA': {
     'CAMRY': 'camry', 'C-HR': 'c-hr', 'CHR': 'c-hr',
     'COROLLA': 'corolla', 'COROLLA ALTIS': 'corolla-altis', 'COROLLA CROSS': 'corolla-cross',
     'ETIOS': 'etios', 'ETIOS CROSS': 'etios-cross', 'FORTUNER': 'fortuner',
     'HIACE': 'hiace', 'HILUX': 'hilux', 'HILUX STOUT': 'hilux-stout',
-    'LAND': 'land-cruiser', 'LAND CRUISER': 'land-cruiser', 'LAND CRUISER PRADO': 'land-cruiser-prado',
+    'LAND CRUISER': 'land-cruiser', 'LAND CRUISER PRADO': 'land-cruiser-prado',
     'PRIUS': 'prius', 'RAV4': 'rav4', 'RAV 4': 'rav4', 'RAV-4': 'rav4',
     'SW4': 'sw4', 'YARIS': 'yaris', 'YARIS CROSS': 'yaris-cross',
+    '4RUNNER': '4runner', 'AGYA': 'agya', 'AVANZA': 'avanza',
+    'FJ CRUISER': 'fj-cruiser', 'RAIZE': 'raize', 'RUSH': 'rush', 'TUNDRA': 'tundra',
   },
   'HYUNDAI': {
     'ACCENT': 'accent', 'AZERA': 'azera', 'CRETA': 'creta', 'CRETA GRAND': 'creta-grand',
     'ELANTRA': 'elantra', 'GRAND': 'grand-i10', 'GRAND I10': 'grand-i10',
     'H1': 'h1', 'H-1': 'h1', 'H100': 'h-100', 'H-100': 'h-100',
     'HB20': 'hb20', 'HB20S': 'hb20s', 'HB20X': 'hb20x', 'HR': 'hr',
-    'I30': 'i30', 'I30CW': 'i30', 'IONIQ': 'ioniq', 'IONIQ 5': 'ioniq-5',
+    'I20': 'i20', 'I25': 'i25', 'I45': 'i45',
+    'IONIQ': 'ioniq', 'IONIQ 5': 'ioniq-5',
     'IX35': 'tucson', 'KONA': 'kona', 'PALISADE': 'palisade', 'PORTER': 'porter',
     'SANTA': 'santa-fe', 'SANTA FE': 'santa-fe',
     'SONATA': 'sonata-hybrid', 'SONATA HYBRID': 'sonata-hybrid',
+    'STARIA': 'staria', 'H350': 'h350', 'MIGHTY': 'mighty',
     'TUCSON': 'tucson', 'VELOSTER': 'veloster', 'VELOSTER N': 'veloster-n', 'VENUE': 'venue',
   },
   'JEEP': {
-    'AVENGER': 'avenger', 'CHEROKEE': 'cherokee', 'COMMANDER': 'commander',
-    'COMPASS': 'compass', 'GLADIATOR': 'gladiator',
+    'AVENGER': 'avenger', 'CHEROKEE': null,
+    'COMMANDER': 'commander', 'COMPASS': 'compass', 'GLADIATOR': 'gladiator',
     'GRAND': 'grand-cherokee', 'GRAND CHEROKEE': 'grand-cherokee',
     'RENEGADE': 'renegade', 'WRANGLER': 'wrangler',
   },
   'NISSAN': {
     'ALTIMA': 'altima', 'FRONTIER': 'frontier', 'GT-R': 'gt-r', 'GTR': 'gt-r',
-    'KAIT': 'kait', 'KICKS': 'kicks', 'LEAF': 'leaf', 'MARCH': 'march',
-    'MURANO': 'murano', 'PATHFINDER': 'pathfinder', 'SENTRA': 'sentra',
-    'TIIDA': 'tiida', 'VERSA': 'versa',
-    'X-TRAIL': 'x-trail', 'XTRAIL': 'x-trail', 'X TRAIL': 'x-trail',
+    'KAIT': 'kait', 'KICKS': 'kicks', 'KICKS PLAY': 'kicks-play',
+    'LEAF': 'leaf', 'MARCH': 'march', 'MURANO': 'murano',
+    'NAVARA': 'navara', 'PATHFINDER': 'pathfinder', 'PATROL': 'patrol',
+    'QASHQAI': 'qashqai', 'SENTRA': 'sentra', 'TIIDA': 'tiida',
+    'VERSA': 'versa', 'X-TRAIL': 'x-trail', 'XTRAIL': 'x-trail', 'X TRAIL': 'x-trail',
   },
   'FORD': {
     'BRONCO': 'bronco', 'BRONCO SPORT': 'bronco-sport', 'COURIER': 'courier',
-    'E-TRANSIT': 'e-transit', 'ECOSPORT': 'ecosport', 'EDGE': 'edge',
-    'EXPEDITION': 'expedition', 'EXPLORER': 'explorer',
-    'F-100': 'f-150', 'F-1000': 'ranger', 'F-150': 'f-150', 'F-250': 'f-250',
-    'FIESTA': 'fiesta', 'FOCUS': 'focus', 'FUSION': 'fusion',
-    'KA': 'ka', 'KA+': 'ka-plus', 'KA PLUS': 'ka-plus', 'KA FREESTYLE': 'ka-freestyle',
-    'KUGA': 'kuga', 'MAVERICK': 'maverick', 'MONDEO': 'mondeo', 'MUSTANG': 'mustang',
-    'MUSTANG MACH 1': 'mustang-mach-1', 'MUSTANG MACH-E': 'mustang-mach-e',
-    'RANGER': 'ranger', 'TERRITORY': 'territory', 'TRANSIT': 'transit', 'TRANSIT CUSTOM': 'transit-custom',
+    'ECOSPORT': 'ecosport', 'EDGE': 'edge', 'EXPLORER': 'explorer',
+    'F-150': 'f-150', 'F-250': 'f-250', 'FIESTA': 'fiesta', 'FOCUS': 'focus',
+    'FUSION': 'fusion', 'KA': 'ka', 'KA PLUS': 'ka-plus', 'KA FREESTYLE': 'ka-freestyle',
+    'KUGA': 'kuga', 'MAVERICK': 'maverick', 'MUSTANG': 'mustang',
+    'MUSTANG MACH-E': 'mustang-mach-e', 'RANGER': 'ranger',
+    'TERRITORY': 'territory', 'TRANSIT': 'transit', 'TRANSIT CUSTOM': 'transit-custom',
   },
   'RENAULT': {
-    'BOREAL': 'boreal', 'CAPTUR': 'captur', 'DUSTER': 'duster', 'DUSTER OROCH': 'duster-oroch',
-    'FLUENCE': 'fluence', 'KANGOO': 'kangoo', 'KANGOO EXPRESS': 'kangoo-express',
-    'KANGOO STEPWAY': 'kangoo-stepway', 'KARDIAN': 'kardian', 'KOLEOS': 'koleos',
-    'KWID': 'kwid', 'LOGAN': 'logan', 'MASTER': 'master',
-    'MEGANE': 'megane-e-tech', 'MEGANE E-TECH': 'megane-e-tech',
+    'ALASKAN': 'alaskan', 'BOREAL': 'boreal', 'CAPTUR': 'captur',
+    'DUSTER': 'duster', 'DUSTER OROCH': 'duster-oroch',
+    'KANGOO': 'kangoo', 'KANGOO EXPRESS': 'kangoo-express',
+    'KANGOO STEPWAY': 'kangoo-stepway', 'KANGOO VAN': 'kangoo-van',
+    'KARDIAN': 'kardian', 'KOLEOS': 'koleos', 'KWID': 'kwid',
+    'LOGAN': 'logan', 'MASTER': 'master', 'MEGANE E-TECH': 'megane-e-tech',
     'OROCH': 'oroch', 'SANDERO': 'sandero', 'SANDERO STEPWAY': 'sandero-stepway',
     'STEPWAY': 'stepway', 'SYMBOL': 'symbol', 'TRAFIC': 'trafic', 'ZOE': 'zoe',
   },
@@ -190,6 +202,12 @@ const MODELO_ESPECIAL_MAP = {
     'ASX': 'asx', 'ECLIPSE CROSS': 'eclipse-cross', 'GALANT': 'galant',
     'L200': 'l200', 'L 200': 'l200', 'LANCER': 'lancer', 'OUTLANDER': 'outlander',
     'PAJERO': 'pajero', 'PAJERO FULL': 'pajero-full', 'PAJERO SPORT': 'pajero-sport',
+  },
+  'RAM': {
+    'RAMPAGE': 'rampage', '1000': '1000', '1500': '1500', '1500 TRX': '1500-trx',
+    '2500': '2500', '3500': '3500', '700': '700',
+    'DAKOTA': 'dakota', 'V1000': 'v1000',
+    'V700 CITY': 'v700-city', 'V700 RAPID': 'v700-rapid',
   },
   'LAND ROVER': {
     'DEFENDER': 'defender', 'DISCOVERY': 'discovery', 'DISCOVERY SPORT': 'discovery-sport',
@@ -214,19 +232,29 @@ const MODELO_ESPECIAL_MAP = {
     'SPORTAGE': 'sportage', 'STINGER': 'stinger', 'TELLURIDE': 'telluride',
   },
   'PEUGEOT': {
-    '107': '107', '206': '206', '207': '207', '208': '208',
-    '307': '307', '308': '308', '406': '406', '407': '407', '408': '408', '508': '508',
-    '2008': '2008', '3008': '3008', '5008': '5008',
+    '206': '206', '207': '207', '208': '208', '307': '307', '308': '308',
+    '408': '408', '508': '508', '2008': '2008', '3008': '3008', '5008': '5008',
     'BOXER': 'boxer', 'EXPERT': 'expert', 'PARTNER': 'partner',
   },
   'SUBARU': {
-    'ASCENT': 'ascent', 'BRZ': 'brz', 'CROSSTREK': 'crosstrek', 'FORESTER': 'forester',
+    'BRZ': 'brz', 'CROSSTREK': 'crosstrek', 'FORESTER': 'forester',
     'IMPREZA': 'impreza', 'LEGACY': 'legacy', 'OUTBACK': 'outback', 'WRX': 'wrx', 'XV': 'xv',
   },
   'SUZUKI': {
-    'BALENO': 'baleno', 'CIAZ': 'ciaz', 'GRAND VITARA': 'grand-vitara', 'IGNIS': 'ignis',
-    'JIMNY': 'jimny', 'S-CROSS': 's-cross', 'SCROSS': 's-cross', 'SWIFT': 'swift', 'VITARA': 'vitara',
+    'BALENO': 'baleno', 'GRAND VITARA': 'grand-vitara', 'IGNIS': 'ignis',
+    'JIMNY': 'jimny', 'S-CROSS': 's-cross', 'SWIFT': 'swift', 'VITARA': 'vitara',
   },
+};
+
+// ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────────
+// Mesma lógica do totemController — garante medida correta por trim level
+const PRIORIDADE_VERSAO = {
+  's10':       { 'HC': '265/60R18', 'LTZ': '265/60R18' },
+  'renegade':  { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18' },
+  'compass':   { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18', 'S': '235/50R18' },
+  'commander': { 'OVERLAND': '225/55R18', 'LIMITED': '225/55R18' },
+  'hilux':     { 'SRX': '265/60R18' },
+  'sw4':       { 'SRX': '265/60R18' },
 };
 
 // ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
@@ -266,7 +294,7 @@ router.post('/buscar', async (req, res) => {
     const modeloSlug = resolverModeloSlug(marcaSlug, marca, modelo);
     if (!modeloSlug) return res.status(404).json({ erro: `Modelo "${modelo}" não existe na API wheel-size`, pneus: [] });
 
-    console.log(`[WHEEL-SIZE ROUTE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano}`);
+    console.log(`[WHEEL-SIZE ROUTE] Consultando: make=${marcaSlug} model=${modeloSlug} year=${ano} versao=${versao || 'null'}`);
 
     const response = await axios.get(WHEEL_SIZE_URL, {
       params: { make: marcaSlug, model: modeloSlug, year: ano, region: REGION, user_key: WHEEL_SIZE_KEY },
@@ -276,38 +304,97 @@ router.post('/buscar', async (req, res) => {
     const data = response.data?.data || [];
     if (!data.length) return res.status(404).json({ erro: 'Veículo não encontrado na API', pneus: [] });
 
-    // Captura imagem do carro
     const imagemCarro = data[0]?.generation?.bodies?.[0]?.image || null;
 
-    // Conta frequência + captura dados extras de cada medida
     const contagemOE = new Map();
     const contagemAlt = new Map();
 
-    data.forEach(item => {
-      (item.wheels || []).forEach(wheel => {
-        const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
-        if (!medida) return;
-        const extra = {
-          pressao_bar: wheel.front?.tire_pressure?.bar || null,
-          pressao_psi: wheel.front?.tire_pressure?.psi || null,
-          indice_velocidade: wheel.front?.speed_index || null,
-        };
-        if (wheel.is_stock) {
-          const atual = contagemOE.get(medida) || { count: 0, ...extra };
-          contagemOE.set(medida, { ...atual, count: atual.count + 1 });
-        } else {
-          const atual = contagemAlt.get(medida) || { count: 0, ...extra };
-          contagemAlt.set(medida, { ...atual, count: atual.count + 1 });
+    // Tenta match pela versão/trim level
+    const versaoUpper = (versao || '').toUpperCase();
+    let encontrouVersao = false;
+
+    if (versaoUpper) {
+      for (const item of data) {
+        const trimUpper = (item.trim || '').toUpperCase();
+        const levels = (item.trim_levels || []).map(l => l.toUpperCase());
+        const palavrasVersao = versaoUpper.split(' ').filter(p => p.length > 1);
+        const bate = levels.some(l => palavrasVersao.some(p => l.includes(p) || p.includes(l)))
+          || palavrasVersao.some(p => trimUpper.includes(p));
+
+        if (bate) {
+          encontrouVersao = true;
+          for (const wheel of (item.wheels || [])) {
+            const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
+            if (!medida) continue;
+            const extra = {
+              pressao_bar: wheel.front?.tire_pressure?.bar || null,
+              pressao_psi: wheel.front?.tire_pressure?.psi || null,
+              indice_velocidade: wheel.front?.speed_index || null,
+            };
+            if (wheel.is_stock) {
+              const atual = contagemOE.get(medida) || { count: 0, ...extra };
+              contagemOE.set(medida, { ...atual, count: atual.count + 1 });
+            } else {
+              const atual = contagemAlt.get(medida) || { count: 0, ...extra };
+              contagemAlt.set(medida, { ...atual, count: atual.count + 1 });
+            }
+          }
         }
-      });
-    });
+      }
+    }
+
+    // Fallback: pega todas as versões
+    if (!encontrouVersao || contagemOE.size === 0) {
+      for (const item of data) {
+        for (const wheel of (item.wheels || [])) {
+          const medida = extrairMedida(wheel.front?.tire_full || wheel.front?.tire);
+          if (!medida) continue;
+          const extra = {
+            pressao_bar: wheel.front?.tire_pressure?.bar || null,
+            pressao_psi: wheel.front?.tire_pressure?.psi || null,
+            indice_velocidade: wheel.front?.speed_index || null,
+          };
+          if (wheel.is_stock) {
+            const atual = contagemOE.get(medida) || { count: 0, ...extra };
+            contagemOE.set(medida, { ...atual, count: atual.count + 1 });
+          } else {
+            const atual = contagemAlt.get(medida) || { count: 0, ...extra };
+            contagemAlt.set(medida, { ...atual, count: atual.count + 1 });
+          }
+        }
+      }
+    }
+
+    if (contagemOE.size === 0 && contagemAlt.size === 0) {
+      return res.status(404).json({ erro: 'Nenhuma medida encontrada', pneus: [] });
+    }
 
     const mapaOrdenado = contagemOE.size > 0 ? contagemOE : contagemAlt;
-    if (mapaOrdenado.size === 0) return res.status(404).json({ erro: 'Nenhuma medida encontrada', pneus: [] });
-
-    const medidasOrdenadas = Array.from(mapaOrdenado.entries())
+    let medidasOrdenadas = Array.from(mapaOrdenado.entries())
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 3);
+
+    // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────
+    if (versao) {
+      const palavrasVersao = versaoUpper.split(/[\s\-\/\.]+/);
+      const prioridades = PRIORIDADE_VERSAO[modeloSlug.toLowerCase()];
+      if (prioridades) {
+        for (const [palavra, medidaAlvo] of Object.entries(prioridades)) {
+          if (palavrasVersao.includes(palavra.toUpperCase())) {
+            console.log(`[WHEEL-SIZE ROUTE] Prioridade versão "${palavra}": ${medidaAlvo}`);
+            const infoOE = contagemOE.get(medidaAlvo);
+            const infoAlt = contagemAlt.get(medidaAlvo);
+            const info = infoOE || infoAlt;
+            if (info) {
+              medidasOrdenadas = medidasOrdenadas.filter(([m]) => m !== medidaAlvo);
+              medidasOrdenadas = [[medidaAlvo, info], ...medidasOrdenadas].slice(0, 3);
+            }
+            break;
+          }
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const pneus = medidasOrdenadas.map(([medida, info], i) => ({
       id: i + 1,
@@ -323,7 +410,6 @@ router.post('/buscar', async (req, res) => {
     }));
 
     console.log(`[WHEEL-SIZE ROUTE] ${pneus.length} medidas para ${marcaSlug} ${modeloSlug} ${ano}`);
-
     return res.json({ encontrado: true, fonte: 'wheel-size', veiculo: { marca, modelo, ano, versao }, pneus });
 
   } catch (error) {
