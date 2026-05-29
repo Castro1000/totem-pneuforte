@@ -424,7 +424,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
-  function digitar(valor) { tocarClique(); setBusca((prev) => `${prev}${valor}`.toUpperCase()); }
+  function digitar(valor) { tocarClique(); setBusca((prev) => `${prev}${valor}`); }
   function apagar() { tocarClique(); setBusca((prev) => prev.slice(0, -1)); }
 
   const teclasVisiveis = useMemo(() => {
@@ -483,6 +483,12 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                   <button className="ca-btn-alternar" style={{ flex: 1 }} onClick={() => { tocarClique(); setTipoTeclado(tipoTeclado === 'ABC' ? '123' : 'ABC'); }}>
                     {tipoTeclado === 'ABC' ? '123' : 'ABC'}
                   </button>
+                )}
+                {etapa !== 'ano' && (
+                  <button className="ca-tecla" style={{ flex: 2 }} onClick={() => digitar(' ')}>ESPAÇO</button>
+                )}
+                {etapa !== 'ano' && (
+                  <button className="ca-tecla" style={{ flex: 1 }} onClick={() => digitar('.')}>.</button>
                 )}
                 <button className="ca-btn-apagar" style={{ flex: 1 }} onClick={apagar}>APAGAR</button>
                 <button className="ca-btn-limpar" style={{ flex: 1 }} onClick={() => { tocarClique(); setBusca(''); }}>LIMPAR</button>
