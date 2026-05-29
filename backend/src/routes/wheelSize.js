@@ -244,6 +244,28 @@ const MODELO_ESPECIAL_MAP = {
     'BALENO': 'baleno', 'GRAND VITARA': 'grand-vitara', 'IGNIS': 'ignis',
     'JIMNY': 'jimny', 'S-CROSS': 's-cross', 'SWIFT': 'swift', 'VITARA': 'vitara',
   },
+
+  // ── BYD ──────────────────────────────────────────────────────────────────
+  'BYD': {
+    'ATTO': null,
+    'D1': 'd1',
+    'DOLPHIN': 'dolphin',
+    'DOLPHIN MINI': 'dolphin-mini',
+    'DOLPHIN PLUS': 'dolphin-plus',
+    'ET3': null,
+    'HAN': 'han',
+    'KING': 'king',
+    'SEAL': 'seal',
+    'SHARK': 'shark',
+    'SONG': 'song-plus',
+    'SONG PLUS': 'song-plus',
+    'SONG PRO': 'song-pro',
+    'TAN': 'tan',
+    'TANG': 'tang',
+    'YUAN': 'yuan-plus',
+    'YUAN PLUS': 'yuan-plus',
+    'YUAN PRO': 'yuan-pro',
+  },
 };
 
 // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────────

@@ -113,6 +113,10 @@ const MODELOS_COMPOSTOS = [
   'IONIQ 5',
   'VELOSTER N',
   'OUTLANDER SPORT',
+  // ── BYD ──
+  'DOLPHIN MINI', 'DOLPHIN PLUS',
+  'SONG PLUS', 'SONG PRO',
+  'YUAN PLUS', 'YUAN PRO',
 ];
 
 // Modelos conhecidos — primeira palavra é suficiente para identificar
