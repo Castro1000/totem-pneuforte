@@ -348,8 +348,10 @@ function normalizarModelo(modelo) {
 
 function extrairMedida(tireFull) {
   if (!tireFull) return null;
-  const match = tireFull.match(/^(\d+\/\d+[A-Z]?\d+)/);
-  return match ? match[1] : tireFull.split(' ')[0];
+  // Captura formato normal "205/65R17" e com espaço "205/65 R17"
+  const match = tireFull.match(/^(\d+\/\d+\s*[A-Z]\d+)/);
+  if (match) return match[1].replace(' ', '');
+  return tireFull.split(' ')[0];
 }
 
 function resolverModeloSlug(marcaSlug, marcaNome, modelo) {
