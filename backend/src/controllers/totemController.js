@@ -608,4 +608,6 @@ async function buscarMedidaVeiculo(req, res) {
   }
 }
 
+
+
 module.exports = { buscarPorPlaca, buscarMedidaVeiculo };
