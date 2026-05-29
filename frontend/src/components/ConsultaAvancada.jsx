@@ -58,6 +58,45 @@ function tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe }) {
   };
 }
 
+// ─── EXTRAI TRIM LEVEL DA VERSÃO FIPE ────────────────────────────────────────
+// Converte "Long. T270 1.3 TB 4x2 Flex Aut." → "LONGITUDE"
+// para que a PRIORIDADE_VERSAO do totemController funcione corretamente
+
+const TRIMS_FIPE = [
+  'LONGITUDE', 'LONG',
+  'OVERLAND', 'LIMITED', 'LARAMIE',
+  'SPORT', 'SPORT6',
+  'ALTITUDE', 'NIGHT EAGLE', 'HIGH ALTITUDE',
+  'SRX', 'LTZ', 'HC',
+  'TOURING', 'EXL', 'EX', 'LX',
+  'S', 'SERIES',
+  'TITANIUM', 'PLATINUM', 'WILD TRACK',
+  'TRAILHAWK', 'RUBICON', 'SAHARA', 'WILLYS',
+  'PREMIER', 'PREMIER PLUS', 'AMBASSADOR',
+  'GLADIATOR',
+];
+
+const TRIM_ALIASES = {
+  'LONG': 'LONGITUDE',
+};
+
+function extrairTrimLevel(versaoFipe) {
+  if (!versaoFipe) return null;
+  const texto = String(versaoFipe).toUpperCase().replace(/\./g, ' ').replace(/-/g, ' ');
+  const palavras = texto.split(/\s+/).filter(p => p.length >= 1);
+
+  for (const trim of [...TRIMS_FIPE].sort((a, b) => b.length - a.length)) {
+    const trimPalavras = trim.split(' ');
+    for (let i = 0; i <= palavras.length - trimPalavras.length; i++) {
+      if (palavras.slice(i, i + trimPalavras.length).join(' ') === trim) {
+        return TRIM_ALIASES[trim] || trim;
+      }
+    }
+  }
+  return null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [etapa, setEtapa] = useState('marca');
   const [seletorAberto, setSeletorAberto] = useState(true);
@@ -228,6 +267,11 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
       const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
 
+      // Extrai o trim level da versão FIPE para a wheel-size
+      // Ex: "Long. T270 1.3 TB 4x2 Flex Aut." → "LONGITUDE"
+      const trimLevel = extrairTrimLevel(veiculoTratado.versao);
+      console.log(`[CA] versão FIPE: "${veiculoTratado.versao}" → trimLevel: "${trimLevel}"`);
+
       let data = null;
 
       try {
@@ -238,7 +282,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             marca: veiculoTratado.marca,
             modelo: veiculoTratado.modelo,
             ano: veiculoTratado.ano,
-            versao: veiculoTratado.versao
+            versao: trimLevel || veiculoTratado.versao
           })
         });
         const jsonWS = await responseWS.json();
@@ -446,7 +490,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
           <div className="popup-medida popup-animado">
             <div className="popup-badge popup-badge-amarelo">🔍 MEDIDA IDEAL ENCONTRADA</div>
             
-            {/* INÍCIO DA INSERÇÃO PROFISSIONAL */}
             {medidaPrincipal?.imagem_carro && (
                <div style={{ margin: '15px 0' }}>
                  <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
@@ -461,7 +504,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
               <>
                 <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0' }}>{medidaPrincipal.medida}</div>
                 
-                {/* DADOS TÉCNICOS EXTRAS */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px', color: '#EEE' }}>
                   {medidaPrincipal.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
                   {medidaPrincipal.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
@@ -486,7 +528,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
                 <p>Consulte um de nossos atendentes!</p>
               </div>
             )}
-            {/* FIM DA INSERÇÃO PROFISSIONAL */}
 
             <div className="popup-acoes">
               <button className="popup-btn popup-btn-sim" onClick={novaConsulta}>🔄 NOVA CONSULTA</button>
