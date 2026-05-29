@@ -105,7 +105,8 @@ const MODELO_ESPECIAL_MAP = {
   },
   'VW - VOLKSWAGEN': {
     'AMAROK': 'amarok', 'BORA': 'bora', 'CROSSFOX': 'crossfox', 'FOX': 'fox',
-    'FUSCA': 'fusca', 'GOL': 'gol', 'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
+    'FUSCA': 'fusca', 'GOL': 'gol', 'NOVO GOL': 'gol', 'NOVO': 'gol',
+    'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
     'GRAND': null, 'JETTA': 'jetta', 'JETTA GLI': 'jetta-gli', 'JETTA VARIANT': 'jetta-variant',
     'KOMBI': 'kombi', 'LOGUS': 'logus', 'NEW': 'beetle', 'NIVUS': 'nivus',
     'PARATI': 'parati', 'PASSAT': 'passat', 'POINTER': 'pointer',
@@ -117,7 +118,8 @@ const MODELO_ESPECIAL_MAP = {
   },
   'VOLKSWAGEN': {
     'AMAROK': 'amarok', 'BORA': 'bora', 'CROSSFOX': 'crossfox', 'FOX': 'fox',
-    'FUSCA': 'fusca', 'GOL': 'gol', 'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
+    'FUSCA': 'fusca', 'GOL': 'gol', 'NOVO GOL': 'gol', 'NOVO': 'gol',
+    'GOLF': 'golf-gti', 'GOLF GTI': 'golf-gti',
     'JETTA': 'jetta', 'JETTA GLI': 'jetta-gli', 'JETTA VARIANT': 'jetta-variant',
     'KOMBI': 'kombi', 'LOGUS': 'logus', 'NEW': 'beetle', 'NIVUS': 'nivus',
     'PARATI': 'parati', 'PASSAT': 'passat', 'POINTER': 'pointer',
@@ -607,7 +609,6 @@ async function buscarMedidaVeiculo(req, res) {
     return res.status(500).json({ erro: 'Erro ao buscar medida do veículo' });
   }
 }
-
 
 
 module.exports = { buscarPorPlaca, buscarMedidaVeiculo };
