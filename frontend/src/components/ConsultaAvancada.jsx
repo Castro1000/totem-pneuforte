@@ -18,9 +18,41 @@ function normalizarTexto(texto = '') {
   return String(texto).trim().replace(/\s+/g, ' ').toUpperCase();
 }
 
+// Lista de modelos compostos (duas palavras) para identificar corretamente
+const MODELOS_COMPOSTOS_FIPE = [
+  'DOLPHIN MINI', 'DOLPHIN PLUS',
+  'SONG PLUS', 'SONG PRO',
+  'YUAN PLUS', 'YUAN PRO',
+  'LAND CRUISER PRADO', 'LAND CRUISER',
+  'GRAND CHEROKEE', 'GRAND SIENA', 'GRAND I10',
+  'COROLLA CROSS', 'COROLLA ALTIS',
+  'RANGE ROVER SPORT', 'RANGE ROVER EVOQUE', 'RANGE ROVER VELAR', 'RANGE ROVER',
+  'POLO TRACK', 'NOVO GOL', 'NOVO VOYAGE',
+  'ONIX PLUS', 'ONIX JOY', 'ONIX ACTIV',
+  'TIGUAN ALLSPACE', 'DISCOVERY SPORT',
+  'SANTA FE', 'YARIS CROSS', 'DUSTER OROCH',
+  'ECLIPSE CROSS', 'PAJERO FULL', 'PAJERO SPORT',
+  'GOLF GTI', 'JETTA GLI', 'JETTA VARIANT',
+  'CRETA GRAND', 'SANDERO STEPWAY',
+  'HB20S', 'HB20X',
+];
+
 function tratarModeloFipe(nomeModelo = '') {
   const texto = String(nomeModelo).trim().replace(/\s+/g, ' ');
   if (!texto) return { modeloBase: '', versao: 'VERSÃO NÃO INFORMADA' };
+  const textoUpper = texto.toUpperCase();
+
+  // Verifica modelos compostos primeiro (mais longo primeiro)
+  const compostos = [...MODELOS_COMPOSTOS_FIPE].sort((a, b) => b.length - a.length);
+  for (const mc of compostos) {
+    if (textoUpper.startsWith(mc + ' ') || textoUpper === mc) {
+      const modeloBase = texto.slice(0, mc.length);
+      const versao = texto.slice(mc.length).trim() || 'VERSÃO ÚNICA';
+      return { modeloBase, versao };
+    }
+  }
+
+  // Fallback: primeira palavra
   const partes = texto.split(' ');
   return { modeloBase: partes[0] || texto, versao: partes.slice(1).join(' ') || 'VERSÃO ÚNICA' };
 }
