@@ -2,7 +2,6 @@ const axios = require('axios');
 
 const mockLocal = {
   ABC1D23: { placa: 'ABC1D23', marca: 'FIAT', modelo: 'STRADA', versao: 'FREEDOM 1.3 FLEX', ano: 2022, combustivel: 'FLEX' },
-  // ... (mantenha os outros mocks como estão)
 };
 
 function limparPlaca(placa = '') { return String(placa).replace(/[^A-Z0-9]/gi, '').toUpperCase(); }
@@ -34,20 +33,91 @@ const MAPA_MARCAS = {
 
 const PREFIXOS_DETRAN = new Set(['I', 'N', 'R', 'E']);
 
+// ─── MODELOS COMPOSTOS (duas ou mais palavras) ────────────────────────────────
+// Ordenados do mais longo para o mais curto para garantir match correto
+const MODELOS_COMPOSTOS = [
+  'LAND CRUISER PRADO',
+  'TIGUAN ALLSPACE',
+  'DISCOVERY SPORT',
+  'GRAND CHEROKEE',
+  'COROLLA CROSS',
+  'COROLLA ALTIS',
+  'RANGE ROVER SPORT',
+  'RANGE ROVER EVOQUE',
+  'RANGE ROVER VELAR',
+  'RANGE ROVER',
+  'YARIS CROSS',
+  'DUSTER OROCH',
+  'SPACE CROSS',
+  'SPACE FOX',
+  'POLO TRACK',
+  'GOLF GTI',
+  'JETTA GLI',
+  'JETTA VARIANT',
+  'NOVO GOL',
+  'NEW BEETLE',
+  'GRAND SIENA',
+  'LAND CRUISER',
+  'SANTA FE',
+  'GRAND I10',
+  'CRETA GRAND',
+  'RANGER RAPTOR',
+  'BRONCO SPORT',
+  'ECLIPSE CROSS',
+  'PAJERO FULL',
+  'PAJERO SPORT',
+  'ONIX PLUS',
+  'ONIX JOY',
+  'ONIX ACTIV',
+  'SPIN ACTIV',
+  'BOLT EUV',
+  'BOLT EV',
+  'BLAZER EV',
+  'EQUINOX EV',
+  'HR V',
+  'CR V',
+  'WR V',
+  'ZR V',
+  'T CROSS',
+  'RAV 4',
+  'SW4',
+  'HB20S',
+  'HB20X',
+  'PULSE ABARTH',
+  'PALIO ADVENTURE',
+  'PALIO WEEKEND',
+  'SIENA EL',
+  'KA PLUS',
+  'KA FREESTYLE',
+  'MUSTANG MACH-E',
+  'MUSTANG MACH 1',
+  'TRANSIT CUSTOM',
+  'KWID ZEN',
+  'SANDERO STEPWAY',
+  'KANGOO EXPRESS',
+  'KANGOO STEPWAY',
+  'MEGANE E-TECH',
+  'GRAND VITARA',
+  'S CROSS',
+  'IONIQ 5',
+  'VELOSTER N',
+  'L200',
+  'OUTLANDER SPORT',
+];
+
 function normalizarMarca(marca) {
   if (!marca) return marca;
   const upper = marca.toUpperCase().trim();
   return MAPA_MARCAS[upper] || marca;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// separarMarcaModelo (CORRIGIDA: Extrai Marca, Modelo e Versão)
-// ─────────────────────────────────────────────────────────────────────────────
 function separarMarcaModelo(brandModel = '') {
   const texto = String(brandModel || '').toUpperCase().trim();
   if (!texto) return { marca: null, modelo: null, versao: null };
 
-  let marca = null, modelo = null, versao = null;
+  let marcaRaw = null, modelo = null, versao = null;
+
+  let resto = texto;
 
   if (texto.includes('/')) {
     const barraIdx = texto.indexOf('/');
@@ -56,36 +126,58 @@ function separarMarcaModelo(brandModel = '') {
 
     if (PREFIXOS_DETRAN.has(antes)) {
       const tokens = depois.split(' ');
-      marca = tokens[0]?.trim();
-      modelo = tokens[1]?.trim();
-      versao = tokens.slice(2).join(' '); // Captura o restante como versão
+      marcaRaw = tokens[0]?.trim();
+      resto = tokens.slice(1).join(' ').trim();
     } else {
-      marca = antes;
-      const tokens = depois.split(' ');
-      modelo = tokens[0]?.trim();
-      versao = tokens.slice(1).join(' '); // Captura o restante como versão
+      marcaRaw = antes;
+      resto = depois;
     }
   } else {
     const tokens = texto.split(' ');
-    marca = tokens[0];
-    modelo = tokens[1];
-    versao = tokens.slice(2).join(' '); // Captura o restante como versão
+    marcaRaw = tokens[0];
+    resto = tokens.slice(1).join(' ').trim();
   }
 
-  return { marca, modelo, versao };
+  // Verifica modelos compostos (mais longo primeiro)
+  modelo = null;
+  versao = null;
+  for (const mc of MODELOS_COMPOSTOS) {
+    if (resto === mc || resto.startsWith(mc + ' ')) {
+      modelo = mc;
+      versao = resto.slice(mc.length).trim();
+      break;
+    }
+  }
+
+  // Se não achou modelo composto, pega primeira palavra
+  if (!modelo) {
+    const tokens = resto.split(' ');
+    modelo = tokens[0]?.trim() || null;
+    versao = tokens.slice(1).join(' ').trim();
+  }
+
+  return {
+    marca: marcaRaw || null,
+    modelo: modelo || null,
+    versao: versao || null,
+  };
 }
 
 function montarRespostaPadrao(result, placaLimpa) {
   const brandModel = pick(result, ['BrandModel', 'brandModel', 'MarcaModelo']);
   const { marca, modelo, versao } = separarMarcaModelo(brandModel);
-  const ano = extrairAno(pick(result, ['ModelYear', 'modelYear', 'AnoModelo']), pick(result, ['ManufactureYear', 'manufactureYear', 'AnoFabricacao']));
+  const ano = extrairAno(
+    pick(result, ['ModelYear', 'modelYear', 'AnoModelo']),
+    pick(result, ['ManufactureYear', 'manufactureYear', 'AnoFabricacao'])
+  );
 
   return {
     placa: pick(result, ['LicensePlate', 'licensePlate']) || placaLimpa,
     marca: normalizarMarca(marca) || null,
     modelo: modelo || null,
-    versao: versao || null, // Versão agora é enviada!
-    ano
+    versao: versao || null,
+    ano,
+    combustivel: pick(result, ['Fuel', 'fuel', 'Combustivel']) || null,
   };
 }
 
@@ -113,6 +205,7 @@ async function buscarVeiculoPorPlaca(placa) {
     if (!result || typeof result !== 'object') return mockLocal[placaLimpa] || null;
 
     const veiculo = montarRespostaPadrao(result, placaLimpa);
+    console.log(`[PLACA] Veículo extraído: ${veiculo.marca} ${veiculo.modelo} ${veiculo.ano} versao=${veiculo.versao}`);
     return veiculo;
   } catch (error) {
     return mockLocal[placaLimpa] || null;
