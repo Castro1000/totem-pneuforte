@@ -36,6 +36,18 @@ export default function TelaConsulta({
       self.findIndex((m) => m.medida === item.medida) === index
     ) || [];
 
+  // Detecta se é configuração dianteiro/traseiro
+  const temDianteiroTraseiro =
+    medidaPrincipal?.observacao?.toUpperCase().includes('DIANTEIRO') ||
+    outrasMedidas.some(m => m.observacao?.toUpperCase().includes('TRASEIRO'));
+
+  const medidaTraseiro = outrasMedidas.find(m =>
+    m.observacao?.toUpperCase().includes('TRASEIRO')
+  );
+  const outrasMedidasFiltradas = outrasMedidas.filter(m =>
+    !m.observacao?.toUpperCase().includes('TRASEIRO')
+  );
+
   function handleBuscar() {
     const placaLimpa = placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     buscar(placaLimpa);
@@ -301,7 +313,6 @@ export default function TelaConsulta({
               🔍 MEDIDA IDEAL ENCONTRADA
             </div>
             
-            {/* INSERÇÃO DE DADOS PROFISSIONAIS */}
             {medidaPrincipal?.imagem_carro && (
                <div style={{ margin: '15px 0' }}>
                  <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
@@ -314,25 +325,49 @@ export default function TelaConsulta({
 
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero glow-measure">
-                  {medidaPrincipal.medida}
-                </div>
-
-                {/* DADOS TÉCNICOS ADICIONAIS */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '10px 0', color: '#FFF' }}>
-                  {medidaPrincipal?.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
-                  {medidaPrincipal?.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
-                </div>
-
-                {medidaPrincipal.observacao && (
-                  <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
+                {/* ── CASO ESPECIAL: DIANTEIRO / TRASEIRO ── */}
+                {temDianteiroTraseiro ? (
+                  <div style={{ width: '100%', margin: '10px 0' }}>
+                    <p style={{ color: '#FFD700', fontWeight: 900, fontSize: '13px', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      ⚠️ Este veículo usa medidas diferentes dianteiro/traseiro
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      {/* Dianteiro */}
+                      <div style={{ background: 'linear-gradient(180deg, #1a6edb, #0d4fa8)', borderRadius: '12px', padding: '12px 20px', textAlign: 'center', minWidth: '140px' }}>
+                        <div style={{ color: '#90caf9', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>🔵 DIANTEIRO</div>
+                        <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900 }}>{medidaPrincipal.medida}</div>
+                      </div>
+                      {/* Traseiro */}
+                      {medidaTraseiro && (
+                        <div style={{ background: 'linear-gradient(180deg, #c0392b, #922b21)', borderRadius: '12px', padding: '12px 20px', textAlign: 'center', minWidth: '140px' }}>
+                          <div style={{ color: '#f1948a', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>🔴 TRASEIRO</div>
+                          <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900 }}>{medidaTraseiro.medida}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* ── CASO NORMAL: UMA MEDIDA ── */}
+                    <div className="popup-medida-numero glow-measure">
+                      {medidaPrincipal.medida}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', margin: '10px 0', color: '#FFF' }}>
+                      {medidaPrincipal?.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
+                      {medidaPrincipal?.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
+                    </div>
+                    {medidaPrincipal.observacao && (
+                      <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>
+                    )}
+                  </>
                 )}
-                
-                {outrasMedidas.length > 0 && (
+
+                {/* Outras medidas (excluindo traseiro que já aparece acima) */}
+                {outrasMedidasFiltradas.length > 0 && (
                   <div className="popup-outras-medidas">
                     <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS (consulte um vendedor)</p>
                     <div className="popup-outras-grid">
-                      {outrasMedidas.map((item, i) => (
+                      {outrasMedidasFiltradas.map((item, i) => (
                         <div key={i} className="popup-outra-medida">
                           {item.medida}
                         </div>
