@@ -316,6 +316,10 @@ const PRIORIDADE_VERSAO = {
     'INTENSE': '215/60R17',
     'INT': '215/60R17',
   },
+  'fastback': {
+    'ABARTH': '215/45R18',
+    'LIMITED': '215/45R18',
+  },
   'compass': {
     'LONGITUDE': '225/55R18',
     'LONG': '225/55R18',
