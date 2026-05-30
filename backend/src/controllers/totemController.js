@@ -312,7 +312,9 @@ const PRIORIDADE_VERSAO = {
   'duster': {
     'ICONIC': '215/60R17',
     'ICO': '215/60R17',
+    'ICO16': '215/60R17',
     'INTENSE': '215/60R17',
+    'INT': '215/60R17',
   },
   'compass': {
     'LONGITUDE': '225/55R18',
