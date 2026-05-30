@@ -273,6 +273,7 @@ const MODELO_ESPECIAL_MAP = {
 const PRIORIDADE_VERSAO = {
   's10':       { 'HC': '265/60R18', 'LTZ': '265/60R18' },
   'renegade':  { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18' },
+  'duster':    { 'ICONIC': '215/60R17', 'ICO': '215/60R17', 'INTENSE': '215/60R17' },
   'compass':   { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18', 'S': '235/50R18' },
   'commander': { 'OVERLAND': '225/55R18', 'LIMITED': '225/55R18' },
   'hilux':     { 'SRX': '265/60R18' },
