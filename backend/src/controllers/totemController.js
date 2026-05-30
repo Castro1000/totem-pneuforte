@@ -615,11 +615,17 @@ async function buscarPorPlaca(req, res) {
     // porque a wheel-size não tem esses trim levels e retorna medida errada
     const versaoEhNumerica = /^\d+\.\d+$/.test((veiculo.versao || '').trim());
 
+    // Versões que sabemos que a wheel-size retorna medida errada → banco primeiro
+    const VERSOES_BANCO_PRIMEIRO = ['M SPORT', 'M-SPORT'];
+    const versaoForcaBanco = VERSOES_BANCO_PRIMEIRO.some(v =>
+      (veiculo.versao || '').toUpperCase().includes(v)
+    );
+
     let pneus = null;
     let fonte = 'wheel-size';
 
-    if (versaoEhNumerica) {
-      console.log(`[PLACA] Versão numérica "${veiculo.versao}" — tentando banco primeiro...`);
+    if (versaoEhNumerica || versaoForcaBanco) {
+      console.log(`[PLACA] Versão "${veiculo.versao}" — tentando banco primeiro...`);
       pneus = await buscarPneusCompativeis({ codigo_fipe: veiculo.codigo_fipe, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano });
       fonte = 'banco';
     }

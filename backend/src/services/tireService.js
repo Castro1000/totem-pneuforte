@@ -43,14 +43,14 @@ async function buscarPneusCompativeis({ codigo_fipe, marca, modelo, versao, ano 
     observacao: item.observacao,
     produtos: [
       {
-        marca: 'PIRELLI',
+        marca: 'DUNLOP',
         modelo: `Linha ${item.medida}`,
         descricao: item.tipo === 'ideal'
           ? 'Medida ideal para seu veículo'
           : 'Opção compatível para seu veículo'
       },
       {
-        marca: 'GOODYEAR',
+        marca: 'XBRI',
         modelo: `Linha ${item.medida}`,
         descricao: 'Boa aderência e economia'
       }
