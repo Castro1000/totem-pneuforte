@@ -274,6 +274,7 @@ const PRIORIDADE_VERSAO = {
   's10':       { 'HC': '265/60R18', 'LTZ': '265/60R18' },
   'renegade':  { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18' },
   'duster':    { 'ICONIC': '215/60R17', 'ICO': '215/60R17', 'ICO16': '215/60R17', 'INTENSE': '215/60R17', 'INT': '215/60R17' },
+  'fastback':  { 'ABARTH': '215/45R18', 'LIMITED': '215/45R18' },
   'compass':   { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18', 'S': '235/50R18' },
   'commander': { 'OVERLAND': '225/55R18', 'LIMITED': '225/55R18' },
   'hilux':     { 'SRX': '265/60R18' },
