@@ -73,31 +73,7 @@ export default function TelaConsulta({
       <div className="bg-consulta"></div>
       <div className="bg-consulta-overlay"></div>
 
-      {/* BOTÃO INÍCIO — ícone de casa, canto superior direito, não sobrepõe */}
-      <button
-        className="btn-voltar flutuante"
-        onClick={voltarInicio}
-        title="Voltar ao Início"
-        style={{
-          position: 'fixed',
-          top: 10,
-          right: 10,
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          padding: 0,
-          minWidth: 'unset',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 300,
-          fontSize: 0,
-        }}
-      >
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-        </svg>
-      </button>
+      <button className="btn-voltar flutuante" onClick={voltarInicio} aria-label="Voltar ao Início" />
 
       {!resultado && (
         <div className="consulta-wrapper consulta-wrapper-limpa">
@@ -157,10 +133,10 @@ export default function TelaConsulta({
                   </div>
                 </div>
 
-                <div className="teclado-letras-box" style={{overflow:'hidden', paddingRight: 4}}>
+                <div className="teclado-letras-box">
                   <div className="teclado-titulo">LETRAS</div>
                   {[LETRAS_1, LETRAS_2, LETRAS_3].map((linha, idx) => (
-                    <div key={idx} className="teclado-linha fixa" style={{display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap: 'clamp(3px,1vw,8px)'}}>
+                    <div key={idx} className="teclado-linha fixa">
                       {linha.map((t) => (
                         <button key={t} type="button" className="tecla tecla-letra" onClick={() => adicionarTecla(t)}>{t}</button>
                       ))}

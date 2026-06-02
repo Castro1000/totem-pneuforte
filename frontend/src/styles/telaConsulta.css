@@ -421,45 +421,52 @@
 @media (orientation: portrait) {
   .teclado-layout-acessivel {
     grid-template-columns: 1fr;
-    gap: clamp(5px, 1vh, 8px);
+    gap: clamp(6px, 1vh, 10px);
   }
 
   .teclado-numeros-box,
   .teclado-letras-box {
-    padding: clamp(6px, 1.5vw, 10px);
-    gap: clamp(4px, 0.8vh, 7px);
+    padding: clamp(8px, 1.5vw, 14px);
+    gap: clamp(5px, 1vh, 10px);
   }
 
   .teclado-linha.fixa {
     grid-template-columns: repeat(7, 1fr);
-    gap: clamp(3px, 1vw, 5px);
+    gap: clamp(4px, 1.2vw, 8px);
   }
 
+  /* letras grandes, preenchem o card */
   .tecla-letra {
-    font-size: clamp(12px, 3.5vw, 18px);
-    border-radius: clamp(5px, 1.2vw, 10px);
+    font-size: clamp(16px, 4.5vw, 26px);
+    border-radius: clamp(7px, 1.5vw, 14px);
+    aspect-ratio: 1;
   }
 
+  /* números grandes */
   .tecla-numero-gigante {
-    font-size: clamp(16px, 4.5vw, 28px);
+    font-size: clamp(22px, 6vw, 38px);
+    border-radius: clamp(10px, 2vw, 18px);
   }
 
+  /* título maior */
   .titulo-principal-placa {
-    font-size: clamp(18px, 5vw, 30px);
+    font-size: clamp(22px, 6vw, 38px);
   }
 
+  /* placa um pouco maior */
   .placa-visual-wrapper {
-    max-height: clamp(80px, 16vw, 130px);
+    max-height: clamp(100px, 22vw, 160px);
   }
 
   .placa-char,
   .placa-traco {
-    font-size: clamp(14px, 4.5vw, 36px);
+    font-size: clamp(20px, 5.5vw, 44px);
   }
 
+  /* botão buscar maior */
   .btn-buscar-grande {
-    height: clamp(42px, 6vh, 60px);
-    font-size: clamp(15px, 4vw, 22px);
+    height: clamp(52px, 8vh, 72px);
+    font-size: clamp(18px, 5vw, 28px);
     width: 85%;
   }
 }
