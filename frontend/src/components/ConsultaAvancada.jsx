@@ -440,7 +440,10 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const medidaPrincipal = pneus[0] || null;
   const outrasMedidas = pneus
     .slice(1)
-    .filter((item, index, self) => self.findIndex(p => p.medida === item.medida) === index);
+    .filter((item, index, self) =>
+      item.medida !== medidaPrincipal?.medida &&
+      self.findIndex(p => p.medida === item.medida) === index
+   );
 
   return (
     <div className="app tela-placa-entrada" style={{ overflow: 'hidden' }}>
