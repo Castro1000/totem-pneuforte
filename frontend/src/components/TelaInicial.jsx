@@ -198,7 +198,7 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
         <div style={{
           flex:1, display:'flex',
           flexDirection: isMobile ? 'column' : 'row',
-          overflow: isMobile ? 'auto' : 'hidden',
+          overflow:'hidden',
           gap:6, padding:6, minHeight:0,
         }}>
 
@@ -217,8 +217,9 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
               onError={e=>{e.target.style.display='none'}}
               style={{
                 position:'absolute',
-                left:6, bottom: isMobile ? 16 : 24,
-                height: isMobile ? '75%' : '20%',
+                left: isMobile ? 8 : 6,
+                bottom: 0,
+                height: isMobile ? '90%' : '20%',
                 objectFit:'contain',
                 filter:'drop-shadow(2px 0 8px rgba(0,0,0,0.9))',
                 animation:'mascoteFloat 3s ease-in-out infinite',
@@ -237,7 +238,7 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
           <div style={{
             flex:1, display:'flex', flexDirection:'column',
             gap:6, minHeight:0,
-            overflow: isMobile ? 'visible' : 'hidden',
+            overflow:'hidden',
           }}>
 
             {/* CARROSSEL */}
@@ -271,14 +272,14 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
               </div>
             </div>
 
-            {/* GRADE BOTÕES 2x2 */}
+            {/* GRADE BOTÕES */}
             <div style={{
-              flex: isMobile ? 'none' : 1,
+              flex: 1,
               display:'grid',
-              gridTemplateColumns:'1fr 1fr',
-              gridTemplateRows: isMobile ? 'auto auto' : '1fr 1fr',
-              gap: isMobile ? 6 : 8,
-              minHeight: isMobile ? 'auto' : 0,
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gridTemplateRows: isMobile ? 'repeat(4,1fr)' : '1fr 1fr',
+              gap: isMobile ? 5 : 8,
+              minHeight: isMobile ? 0 : 0,
             }}>
               {BOTOES.map((b, idx) => (
                 <button key={idx} type="button" onClick={b.acao}
@@ -290,7 +291,6 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
                     transition:'transform 0.12s',
                     background: b.bg,
                     boxShadow:'0 3px 16px rgba(0,0,0,0.5)',
-                    minHeight: isMobile ? 100 : 'auto',
                   }}>
                   {/* badge NOVO */}
                   {b.badge && <>
@@ -300,19 +300,19 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
                   {/* glow */}
                   <div style={{position:'absolute',inset:0,background:`radial-gradient(ellipse at 80% 50%,${b.glow} 0%,transparent 70%)`}}/>
                   {/* conteúdo */}
-                  <div style={{position:'relative',zIndex:2,height:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding: isMobile ? '10px 12px' : '0 18px'}}>
+                  <div style={{position:'relative',zIndex:2,height:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding: isMobile ? '0 10px' : '0 18px'}}>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:isMobile?9:10,fontWeight:700,color:b.catCor,letterSpacing:2,textTransform:'uppercase',fontFamily:'sans-serif',marginBottom:3}}>{b.cat}</div>
-                      <div style={{fontSize:isMobile?'clamp(14px,4vw,18px)':'clamp(16px,2vw,26px)',fontWeight:900,color:b.tituloCor,lineHeight:0.95,letterSpacing:-0.3,textShadow:'0 2px 6px rgba(0,0,0,0.8)'}}>
+                      <div style={{fontSize:isMobile?8:10,fontWeight:700,color:b.catCor,letterSpacing:2,textTransform:'uppercase',fontFamily:'sans-serif',marginBottom:2}}>{b.cat}</div>
+                      <div style={{fontSize:isMobile?'clamp(13px,3.5vw,16px)':'clamp(16px,2vw,26px)',fontWeight:900,color:b.tituloCor,lineHeight:0.95,letterSpacing:-0.3,textShadow:'0 2px 6px rgba(0,0,0,0.8)'}}>
                         {b.titulo[0]}<br/><span style={{color:b.destaque}}>{b.titulo[1]}</span>
                       </div>
-                      {b.sub && (
+                      {b.sub && !isMobile && (
                         <div style={{marginTop:6,background:'rgba(0,0,0,0.4)',borderRadius:5,padding:'2px 8px',display:'inline-block',border:'1px solid rgba(255,255,255,0.12)'}}>
                           <span style={{fontSize:8,color:b.subCor,fontFamily:'sans-serif',letterSpacing:1,textTransform:'uppercase'}}>{b.sub}</span>
                         </div>
                       )}
                     </div>
-                    <div style={{flexShrink:0, marginLeft:8}}>{b.icone}</div>
+                    <div style={{flexShrink:0, marginLeft:6, transform: isMobile ? 'scale(0.65)' : 'scale(1)', transformOrigin:'right center'}}>{b.icone}</div>
                   </div>
                 </button>
               ))}
