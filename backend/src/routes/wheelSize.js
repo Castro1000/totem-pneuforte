@@ -360,6 +360,42 @@ router.post('/buscar', async (req, res) => {
       return res.status(400).json({ erro: 'Marca, modelo e ano são obrigatórios' });
     }
 
+    // ★ NOVO: verifica banco local primeiro — se tiver, não gasta req
+    try {
+      const marcaUp  = (marca || '').trim().toUpperCase();
+      const modeloUp = (modelo || '').trim().toUpperCase();
+      const anoNum   = Number(ano);
+
+      const [rows] = await db.execute(
+        `SELECT vm.medida, vm.tipo, vm.prioridade, vm.observacao
+         FROM veiculos v
+         INNER JOIN veiculo_medidas vm ON v.id = vm.veiculo_id
+         WHERE TRIM(UPPER(v.marca))  = ?
+           AND TRIM(UPPER(v.modelo)) = ?
+           AND ? BETWEEN v.ano_inicio AND v.ano_fim
+           AND v.ativo = 1 AND vm.ativo = 1
+           AND vm.medida IS NOT NULL AND vm.medida != ''
+         ORDER BY vm.prioridade ASC
+         LIMIT 5`,
+        [marcaUp, modeloUp, anoNum]
+      );
+
+      if (rows.length > 0) {
+        console.log(`[WHEEL-SIZE ROUTE] Banco local: ${rows.length} medida(s) para ${marcaUp} ${modeloUp} ${anoNum} — sem gastar req`);
+        const pneus = rows.map((r, i) => ({
+          id: i + 1, medida: r.medida, tipo: r.tipo || 'original',
+          prioridade: r.prioridade || i + 1,
+          observacao: r.observacao || 'Dados Cadastrados',
+          fonte: 'banco', pressao_bar: null, pressao_psi: null,
+          indice_velocidade: null, imagem_carro: null,
+        }));
+        return res.json({ encontrado: true, fonte: 'banco', veiculo: { marca, modelo, ano, versao }, pneus });
+      }
+    } catch (errBanco) {
+      console.error('[WHEEL-SIZE ROUTE] Erro ao checar banco:', errBanco.message);
+      // continua para wheel-size normalmente
+    }
+
     const marcaSlug = MARCA_MAP[marca.trim().toUpperCase()];
     if (!marcaSlug) return res.status(404).json({ erro: `Marca "${marca}" não mapeada`, pneus: [] });
 
