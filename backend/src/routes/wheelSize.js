@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const db = require('../config/db'); // ★ NOVO: para gravar cache no banco
 
 const WHEEL_SIZE_KEY = process.env.WHEEL_SIZE_KEY || '3c20bfc74ecd98718e60dfbc5648e757';
 const WHEEL_SIZE_URL = 'https://api.wheel-size.com/v2/search/by_model/';
@@ -244,32 +245,16 @@ const MODELO_ESPECIAL_MAP = {
     'BALENO': 'baleno', 'GRAND VITARA': 'grand-vitara', 'IGNIS': 'ignis',
     'JIMNY': 'jimny', 'S-CROSS': 's-cross', 'SWIFT': 'swift', 'VITARA': 'vitara',
   },
-
-  // ── BYD ──────────────────────────────────────────────────────────────────
   'BYD': {
-    'ATTO': null,
-    'D1': 'd1',
-    'DOLPHIN': 'dolphin',
-    'DOLPHIN MINI': 'dolphin-mini',
-    'DOLPHIN PLUS': 'dolphin-plus',
-    'ET3': null,
-    'HAN': 'han',
-    'KING': 'king',
-    'SEAL': 'seal',
-    'SHARK': 'shark',
-    'SONG': 'song-plus',
-    'SONG PLUS': 'song-plus',
-    'SONG PRO': 'song-pro',
-    'TAN': 'tan',
-    'TANG': 'tang',
-    'YUAN': 'yuan-plus',
-    'YUAN PLUS': 'yuan-plus',
-    'YUAN PRO': 'yuan-pro',
+    'ATTO': null, 'D1': 'd1', 'DOLPHIN': 'dolphin', 'DOLPHIN MINI': 'dolphin-mini',
+    'DOLPHIN PLUS': 'dolphin-plus', 'ET3': null, 'HAN': 'han', 'KING': 'king',
+    'SEAL': 'seal', 'SHARK': 'shark', 'SONG': 'song-plus', 'SONG PLUS': 'song-plus',
+    'SONG PRO': 'song-pro', 'TAN': 'tan', 'TANG': 'tang',
+    'YUAN': 'yuan-plus', 'YUAN PLUS': 'yuan-plus', 'YUAN PRO': 'yuan-pro',
   },
 };
 
 // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────────
-// Mesma lógica do totemController — garante medida correta por trim level
 const PRIORIDADE_VERSAO = {
   's10':       { 'HC': '265/60R18', 'LTZ': '265/60R18' },
   'renegade':  { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18' },
@@ -289,7 +274,6 @@ function normalizarModelo(modelo) {
 
 function extrairMedida(tireFull) {
   if (!tireFull) return null;
-  // Captura formato normal "205/65R17" e com espaço "205/65 R17"
   const match = tireFull.match(/^(\d+\/\d+\s*[A-Z]\d+)/);
   if (match) return match[1].replace(' ', '');
   return tireFull.split(' ')[0];
@@ -304,6 +288,68 @@ function resolverModeloSlug(marcaSlug, marcaNome, modelo) {
     return MODELO_ESPECIAL_MAP[marcaUpper][modeloUpper];
   }
   return normalizarModelo(modelo);
+}
+
+// ─── GRAVAR CACHE NO BANCO ────────────────────────────────────────────────────
+// ★ NOVO: grava resultado da wheel-size para uso futuro sem gastar req
+async function gravarMedidasNoBanco({ marca, modelo, ano, versao, pneus }) {
+  try {
+    if (!pneus || pneus.length === 0) return;
+    if (!marca || !modelo || !ano) return;
+
+    const marcaUp  = marca.trim().toUpperCase();
+    const modeloUp = modelo.trim().toUpperCase();
+    const anoNum   = Number(ano);
+
+    const [existentes] = await db.execute(
+      `SELECT id FROM veiculos
+       WHERE TRIM(UPPER(marca)) = ?
+         AND TRIM(UPPER(modelo)) = ?
+         AND ? BETWEEN ano_inicio AND ano_fim
+         AND ativo = 1
+       LIMIT 1`,
+      [marcaUp, modeloUp, anoNum]
+    );
+
+    let veiculoId;
+    if (existentes.length > 0) {
+      veiculoId = existentes[0].id;
+    } else {
+      const [ins] = await db.execute(
+        `INSERT INTO veiculos (marca, modelo, versao, ano_inicio, ano_fim, ativo, created_at)
+         VALUES (?, ?, ?, ?, ?, 1, NOW())`,
+        [marcaUp, modeloUp, versao ? versao.trim().toUpperCase() : null, anoNum, anoNum]
+      );
+      veiculoId = ins.insertId;
+      console.log(`[CACHE-WS] Novo veículo gravado ID=${veiculoId}: ${marcaUp} ${modeloUp} ${anoNum}`);
+    }
+
+    let novas = 0;
+    for (const pneu of pneus) {
+      if (!pneu.medida) continue;
+      const [existe] = await db.execute(
+        `SELECT id FROM veiculo_medidas
+         WHERE veiculo_id = ? AND TRIM(medida) = TRIM(?)
+         LIMIT 1`,
+        [veiculoId, pneu.medida]
+      );
+      if (existe.length === 0) {
+        await db.execute(
+          `INSERT INTO veiculo_medidas
+             (veiculo_id, medida, tipo, prioridade, observacao, ativo, created_at)
+           VALUES (?, ?, ?, ?, ?, 1, NOW())`,
+          [veiculoId, pneu.medida, pneu.tipo || 'original', pneu.prioridade || 1, pneu.observacao || 'Auto-gravado via wheel-size']
+        );
+        novas++;
+      }
+    }
+
+    if (novas > 0) {
+      console.log(`[CACHE-WS] ${novas} medida(s) nova(s) gravada(s) → veiculo_id=${veiculoId} (${marcaUp} ${modeloUp} ${anoNum})`);
+    }
+  } catch (err) {
+    console.error('[CACHE-WS] Erro ao gravar no banco:', err.message);
+  }
 }
 
 // ─── POST /api/wheel-size/buscar ──────────────────────────────────────────────
@@ -331,11 +377,8 @@ router.post('/buscar', async (req, res) => {
     if (!data.length) return res.status(404).json({ erro: 'Veículo não encontrado na API', pneus: [] });
 
     const imagemCarro = data[0]?.generation?.bodies?.[0]?.image || null;
-
     const contagemOE = new Map();
     const contagemAlt = new Map();
-
-    // Tenta match pela versão/trim level
     const versaoUpper = (versao || '').toUpperCase();
     let encontrouVersao = false;
 
@@ -369,7 +412,6 @@ router.post('/buscar', async (req, res) => {
       }
     }
 
-    // Fallback: pega todas as versões
     if (!encontrouVersao || contagemOE.size === 0) {
       for (const item of data) {
         for (const wheel of (item.wheels || [])) {
@@ -400,7 +442,6 @@ router.post('/buscar', async (req, res) => {
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 3);
 
-    // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────
     if (versao) {
       const palavrasVersao = versaoUpper.split(/[\s\-\/\.]+/);
       const prioridades = PRIORIDADE_VERSAO[modeloSlug.toLowerCase()];
@@ -420,12 +461,9 @@ router.post('/buscar', async (req, res) => {
         }
       }
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     const pneus = medidasOrdenadas.map(([medida, info], i) => ({
-      id: i + 1,
-      medida,
-      tipo: 'original',
+      id: i + 1, medida, tipo: 'original',
       prioridade: i === 0 ? 1 : 2,
       observacao: 'Medida original de fábrica (OE)',
       fonte: 'wheel-size',
@@ -436,6 +474,11 @@ router.post('/buscar', async (req, res) => {
     }));
 
     console.log(`[WHEEL-SIZE ROUTE] ${pneus.length} medidas para ${marcaSlug} ${modeloSlug} ${ano}`);
+
+    // ★ NOVO: grava no banco assincronamente para uso futuro
+    gravarMedidasNoBanco({ marca, modelo, ano, versao, pneus })
+      .catch(err => console.error('[CACHE-WS route]', err.message));
+
     return res.json({ encontrado: true, fonte: 'wheel-size', veiculo: { marca, modelo, ano, versao }, pneus });
 
   } catch (error) {
