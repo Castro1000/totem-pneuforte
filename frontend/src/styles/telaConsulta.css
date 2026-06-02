@@ -31,14 +31,16 @@
 
 /* BOTÃO VOLTAR — círculo com ícone de casa */
 .btn-voltar.flutuante {
-  position: fixed;
+  position: absolute;
   top: 12px;
   right: 12px;
   z-index: 300;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border-radius: 50%;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
   border: none;
   background: #FFD400;
   color: #111;
@@ -46,9 +48,11 @@
   line-height: 0;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .btn-voltar.flutuante::before {
@@ -56,6 +60,7 @@
   display: block;
   width: 22px;
   height: 22px;
+  flex-shrink: 0;
   background-color: #111;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E") center/contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E") center/contain no-repeat;
@@ -92,6 +97,7 @@
   backdrop-filter: blur(5px);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .consulta-card-animada {
