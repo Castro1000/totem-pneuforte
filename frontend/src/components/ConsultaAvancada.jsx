@@ -546,20 +546,44 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
             
             {medidaPrincipal ? (
               <>
-                <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0' }}>{medidaPrincipal.medida}</div>
-                
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px', color: '#EEE' }}>
-                  {medidaPrincipal.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
-                  {medidaPrincipal.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
-                </div>
+                {/* ── DIANTEIRO / TRASEIRO ── */}
+                {(medidaPrincipal.observacao?.toUpperCase().includes('DIANTEIRO') ||
+                  outrasMedidas.some(m => m.observacao?.toUpperCase().includes('TRASEIRO'))) ? (
+                  <div style={{ width: '100%', margin: '10px 0' }}>
+                    <p style={{ color: '#FFD700', fontWeight: 900, fontSize: '13px', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      ⚠️ Este veículo usa medidas diferentes dianteiro/traseiro
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ background: 'linear-gradient(180deg,#1a6edb,#0d4fa8)', borderRadius: '12px', padding: '12px 20px', textAlign: 'center', minWidth: '140px' }}>
+                        <div style={{ color: '#90caf9', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>🔵 DIANTEIRO</div>
+                        <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900 }}>{medidaPrincipal.medida}</div>
+                      </div>
+                      {outrasMedidas.filter(m => m.observacao?.toUpperCase().includes('TRASEIRO')).map((m, i) => (
+                        <div key={i} style={{ background: 'linear-gradient(180deg,#c0392b,#922b21)', borderRadius: '12px', padding: '12px 20px', textAlign: 'center', minWidth: '140px' }}>
+                          <div style={{ color: '#f1948a', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}>🔴 TRASEIRO</div>
+                          <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900 }}>{m.medida}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* ── MEDIDA NORMAL ── */}
+                    <div className="popup-medida-numero glow-measure" style={{ fontSize: '2.5rem', margin: '10px 0' }}>{medidaPrincipal.medida}</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '15px', color: '#EEE' }}>
+                      {medidaPrincipal.pressao_psi && (<div><strong>PSI:</strong> {medidaPrincipal.pressao_psi}</div>)}
+                      {medidaPrincipal.indice_velocidade && (<div><strong>VEL:</strong> {medidaPrincipal.indice_velocidade}</div>)}
+                    </div>
+                    {medidaPrincipal.observacao && <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>}
+                  </>
+                )}
 
-                {medidaPrincipal.observacao && <p className="popup-medida-obs">{medidaPrincipal.observacao}</p>}
-                
-                {outrasMedidas.length > 0 && (
+                {/* Outras medidas — excluindo traseiro que já aparece acima */}
+                {outrasMedidas.filter(m => !m.observacao?.toUpperCase().includes('TRASEIRO')).length > 0 && (
                   <div className="popup-outras-medidas">
                     <p className="popup-outras-titulo">OUTRAS MEDIDAS COMPATÍVEIS</p>
                     <div className="popup-outras-grid">
-                      {outrasMedidas.map((item, i) => (
+                      {outrasMedidas.filter(m => !m.observacao?.toUpperCase().includes('TRASEIRO')).map((item, i) => (
                         <div key={i} className="popup-outra-medida">{item.medida}</div>
                       ))}
                     </div>
