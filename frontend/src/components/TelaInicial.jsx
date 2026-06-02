@@ -60,81 +60,35 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
 
   const ff = "'Barlow Condensed','Arial Narrow',Arial,sans-serif";
 
-  // ── BOTÕES — dados ──────────────────────────────────────────
+  // ── BOTÕES ──────────────────────────────────────────
   const BOTOES = [
     {
       acao: () => iniciarTotem('placa'),
-      bg: 'linear-gradient(135deg,#1a1200 0%,#3a2800 40%,#c69000 100%)',
-      glow: 'rgba(255,212,0,0.25)',
-      cat: '🚗 Identificação', catCor: 'rgba(255,212,0,0.75)',
-      titulo: ['CONSULTA', 'POR PLACA'], tituloCor: '#fff', destaque: '#FFD400',
-      sub: 'TOQUE PARA INICIAR →', subCor: 'rgba(255,255,255,0.55)',
-      icone: (
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,flexShrink:0}}>
-          <div style={{background:'#fff',borderRadius:6,padding:'3px 10px',border:'2.5px solid #FFD400',textAlign:'center'}}>
-            <div style={{fontSize:7,color:'#1565C0',fontWeight:900,fontFamily:'sans-serif',letterSpacing:1}}>LICENÇA</div>
-            <div style={{fontSize:isMobile?11:14,fontWeight:900,color:'#111',fontFamily:'monospace',letterSpacing:2}}>ABC·1234</div>
-          </div>
-          <svg viewBox="0 0 80 48" style={{width:isMobile?56:72,height:isMobile?34:44,filter:'drop-shadow(0 3px 6px rgba(0,0,0,0.6))'}}>
-            <path d="M8 32 L8 22 L20 10 L60 10 L72 22 L72 32 Z" fill="#FFD400" stroke="#111" strokeWidth="2"/>
-            <rect x="6" y="30" width="68" height="10" rx="5" fill="#FFD400" stroke="#111" strokeWidth="2"/>
-            <circle cx="20" cy="40" r="7" fill="#222" stroke="#FFD400" strokeWidth="2.5"/>
-            <circle cx="20" cy="40" r="3" fill="#FFD400"/>
-            <circle cx="60" cy="40" r="7" fill="#222" stroke="#FFD400" strokeWidth="2.5"/>
-            <circle cx="60" cy="40" r="3" fill="#FFD400"/>
-            <path d="M22 22 L28 11 L52 11 L58 22 Z" fill="#111" opacity="0.4"/>
-          </svg>
-        </div>
-      ),
+      bg: 'linear-gradient(135deg,#1a1200 0%,#3a2800 60%,#c69000 100%)',
+      titulo: 'CONSULTA\nPOR PLACA',
+      tituloCor: '#FFD400',
+      desc: 'Busque a medida correta para seu carro através da placa.',
     },
     {
       acao: () => iniciarTotem('modelo'),
-      bg: 'linear-gradient(135deg,#0a0a1a 0%,#1a1040 50%,#2d1b6e 100%)',
-      glow: 'rgba(99,102,241,0.3)',
-      badge: 'NOVO',
-      cat: '🔍 Pesquisa', catCor: 'rgba(139,92,246,0.85)',
-      titulo: ['CONSULTA', 'AVANÇADA'], tituloCor: '#fff', destaque: '#a78bfa',
-      sub: null,
-      icone: (
-        <svg viewBox="0 0 80 80" style={{width:isMobile?52:70,height:isMobile?52:70,flexShrink:0,filter:'drop-shadow(0 3px 10px rgba(99,102,241,0.5))'}}>
-          <circle cx="34" cy="34" r="24" fill="rgba(99,102,241,0.15)" stroke="#a78bfa" strokeWidth="3.5"/>
-          <circle cx="34" cy="34" r="15" fill="rgba(99,102,241,0.08)" stroke="rgba(167,139,250,0.3)" strokeWidth="1.5"/>
-          <line x1="52" y1="52" x2="73" y2="73" stroke="#a78bfa" strokeWidth="5.5" strokeLinecap="round"/>
-          {Array.from({length:8}).map((_,i)=>{const a=(i/8)*Math.PI*2;return <line key={i} x1={34+Math.cos(a)*24} y1={34+Math.sin(a)*24} x2={34+Math.cos(a)*29} y2={34+Math.sin(a)*29} stroke="rgba(167,139,250,0.35)" strokeWidth="2" strokeLinecap="round"/>;  })}
-        </svg>
-      ),
+      bg: 'linear-gradient(135deg,#0a0a1a 0%,#1a1040 60%,#2d1b6e 100%)',
+      titulo: 'CONSULTA\nAVANÇADA',
+      tituloCor: '#a78bfa',
+      desc: 'Busque a medida ideal inserindo Marca, Modelo, Ano e Versão.',
     },
     {
       acao: () => { setEmBreve('Simulador de Orçamento'); setTimeout(() => setEmBreve(null), 3000); },
-      bg: 'linear-gradient(135deg,#001a0a 0%,#003d1a 50%,#005c22 100%)',
-      glow: 'rgba(0,200,80,0.2)',
-      cat: '💰 Preços', catCor: 'rgba(0,230,100,0.75)',
-      titulo: ['SIMULAR', 'ORÇAMENTO'], tituloCor: '#fff', destaque: '#4ade80',
-      sub: 'TOQUE PARA INICIAR →', subCor: 'rgba(74,222,128,0.65)',
-      icone: (
-        <div style={{flexShrink:0,filter:'drop-shadow(0 3px 10px rgba(74,222,128,0.4))'}}>
-          <div style={{fontSize:isMobile?42:56,fontWeight:900,color:'#4ade80',lineHeight:1,textShadow:'0 0 24px rgba(74,222,128,0.5)'}}>R$</div>
-          <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.35)',fontFamily:'sans-serif',letterSpacing:1,textAlign:'center'}}>COMPARE</div>
-        </div>
-      ),
+      bg: 'linear-gradient(135deg,#001a0a 0%,#003d1a 60%,#005c22 100%)',
+      titulo: 'SIMULAR\nORÇAMENTO',
+      tituloCor: '#4ade80',
+      desc: 'Simule um orçamento para análise de preços e compra de pneus.',
     },
     {
       acao: () => { setEmBreve('Forte Club — Programa de Fidelidade'); setTimeout(() => setEmBreve(null), 3000); },
-      bg: 'linear-gradient(135deg,#1a0500 0%,#3d1000 50%,#6e2200 100%)',
-      glow: 'rgba(251,146,60,0.25)',
-      cat: '⭐ Fidelidade', catCor: 'rgba(251,146,60,0.8)',
-      titulo: ['PROGRAMA', 'DE FIDELIDADE'], tituloCor: '#fff', destaque: '#fb923c',
-      sub: null,
-      icone: (
-        <svg viewBox="0 0 70 80" style={{width:isMobile?50:64,height:isMobile?58:72,flexShrink:0,filter:'drop-shadow(0 3px 10px rgba(251,146,60,0.5))'}}>
-          <path d="M20 6 L50 6 L50 42 Q50 57 35 60 Q20 57 20 42 Z" fill="#fb923c" stroke="#f97316" strokeWidth="2"/>
-          <path d="M20 13 L7 13 Q3 13 3 19 Q3 31 20 35" fill="none" stroke="#fbbf24" strokeWidth="3.5" strokeLinecap="round"/>
-          <path d="M50 13 L63 13 Q67 13 67 19 Q67 31 50 35" fill="none" stroke="#fbbf24" strokeWidth="3.5" strokeLinecap="round"/>
-          <rect x="30" y="60" width="10" height="12" rx="2" fill="#fb923c"/>
-          <rect x="20" y="71" width="30" height="6" rx="3" fill="#f97316"/>
-          <text x="35" y="38" textAnchor="middle" fontSize="20" fill="#fff" fontWeight="900">1</text>
-        </svg>
-      ),
+      bg: 'linear-gradient(135deg,#1a0500 0%,#3d1000 60%,#6e2200 100%)',
+      titulo: 'PROGRAMA\nDE FIDELIDADE',
+      tituloCor: '#fb923c',
+      desc: 'Ganhe descontos e brindes acumulando pontos visitando nossas lojas.',
     },
   ];
 
@@ -176,10 +130,7 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
           borderBottom:'2px solid #1a1a1a',
         }}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <img src="/logo.png" alt="" style={{height:isMobile?28:34,objectFit:'contain'}} onError={e=>{e.target.style.display='none'}}/>
-            <span style={{fontSize:isMobile?20:28,fontWeight:900,color:'#fff',letterSpacing:1}}>
-              PNEU<span style={{color:'#FFD400'}}>FORTE</span>
-            </span>
+            <img src="/logo.png" alt="Pneu Forte" style={{height:isMobile?32:38,objectFit:'contain'}} onError={e=>{e.target.style.display='none'}}/>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <div style={{background:'#1e1e1e',borderRadius:7,padding:isMobile?'3px 10px':'4px 14px',display:'flex',alignItems:'center',gap:6,border:'1px solid #333'}}>
@@ -283,7 +234,7 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
             }}>
               {BOTOES.map((b, idx) => (
                 <button key={idx} type="button" onClick={b.acao}
-                  onTouchStart={e=>e.currentTarget.style.transform='scale(0.97)'}
+                  onTouchStart={e=>e.currentTarget.style.transform='scale(0.98)'}
                   onTouchEnd={e=>e.currentTarget.style.transform='scale(1)'}
                   style={{
                     border:'none', borderRadius:12, cursor:'pointer',
@@ -294,25 +245,36 @@ export default function TelaInicial({ animandoEntrada, iniciarTotem, teclaRef })
                   }}>
                   {/* badge NOVO */}
                   {b.badge && <>
-                    <div style={{position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 64px 64px 0',borderColor:'transparent #1565C0 transparent transparent',zIndex:3}}/>
-                    <div style={{position:'absolute',top:10,right:5,color:'#fff',fontSize:9,fontWeight:900,letterSpacing:1,transform:'rotate(45deg)',zIndex:4}}>NOVO</div>
+                    <div style={{position:'absolute',top:0,right:0,width:0,height:0,borderStyle:'solid',borderWidth:'0 56px 56px 0',borderColor:'transparent #1565C0 transparent transparent',zIndex:3}}/>
+                    <div style={{position:'absolute',top:9,right:4,color:'#fff',fontSize:9,fontWeight:900,letterSpacing:1,transform:'rotate(45deg)',zIndex:4}}>NOVO</div>
                   </>}
-                  {/* glow */}
-                  <div style={{position:'absolute',inset:0,background:`radial-gradient(ellipse at 80% 50%,${b.glow} 0%,transparent 70%)`}}/>
+                  {/* glow radial */}
+                  <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 10% 50%, rgba(255,255,255,0.06) 0%, transparent 60%)'}}/>
                   {/* conteúdo */}
-                  <div style={{position:'relative',zIndex:2,height:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding: isMobile ? '0 10px' : '0 18px'}}>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:isMobile?8:10,fontWeight:700,color:b.catCor,letterSpacing:2,textTransform:'uppercase',fontFamily:'sans-serif',marginBottom:2}}>{b.cat}</div>
-                      <div style={{fontSize:isMobile?'clamp(13px,3.5vw,16px)':'clamp(16px,2vw,26px)',fontWeight:900,color:b.tituloCor,lineHeight:0.95,letterSpacing:-0.3,textShadow:'0 2px 6px rgba(0,0,0,0.8)'}}>
-                        {b.titulo[0]}<br/><span style={{color:b.destaque}}>{b.titulo[1]}</span>
-                      </div>
-                      {b.sub && !isMobile && (
-                        <div style={{marginTop:6,background:'rgba(0,0,0,0.4)',borderRadius:5,padding:'2px 8px',display:'inline-block',border:'1px solid rgba(255,255,255,0.12)'}}>
-                          <span style={{fontSize:8,color:b.subCor,fontFamily:'sans-serif',letterSpacing:1,textTransform:'uppercase'}}>{b.sub}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div style={{flexShrink:0, marginLeft:6, transform: isMobile ? 'scale(0.65)' : 'scale(1)', transformOrigin:'right center'}}>{b.icone}</div>
+                  <div style={{
+                    position:'relative', zIndex:2,
+                    height:'100%',
+                    display:'flex', flexDirection:'column',
+                    justifyContent:'center',
+                    padding: isMobile ? '10px 16px' : '14px 22px',
+                    gap: isMobile ? 4 : 6,
+                  }}>
+                    {/* título grande */}
+                    <div style={{
+                      fontSize: isMobile ? 'clamp(16px,5vw,22px)' : 'clamp(20px,2.4vw,30px)',
+                      fontWeight:900, color: b.tituloCor,
+                      lineHeight:1, letterSpacing:0.5,
+                      textShadow:'0 2px 8px rgba(0,0,0,0.7)',
+                      whiteSpace:'pre-line',
+                    }}>{b.titulo}</div>
+                    {/* texto descritivo */}
+                    <div style={{
+                      fontSize: isMobile ? 11 : 12,
+                      color:'rgba(255,255,255,0.55)',
+                      fontFamily:'sans-serif',
+                      lineHeight:1.4,
+                      fontWeight:400,
+                    }}>{b.desc}</div>
                   </div>
                 </button>
               ))}
