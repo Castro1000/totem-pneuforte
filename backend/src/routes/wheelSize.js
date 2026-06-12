@@ -11,7 +11,7 @@ const REGION = 'ladm';
 const MARCA_MAP = {
   'AUDI': 'audi', 'BMW': 'bmw', 'BYD': 'byd',
   'CHEVROLET': 'chevrolet', 'GM - CHEVROLET': 'chevrolet',
-  'CITROËN': 'citroen', 'CITROEN': 'citroen',
+  'CITROËN': 'citroen', 'CITROEN': 'citroen', 'CITROËN ': 'citroen', 'CITROEN ': 'citroen',
   'DODGE': 'dodge', 'FIAT': 'fiat', 'FORD': 'ford',
   'HONDA': 'honda', 'HYUNDAI': 'hyundai', 'JEEP': 'jeep',
   'KIA': 'kia', 'KIA MOTORS': 'kia',
@@ -244,6 +244,39 @@ const MODELO_ESPECIAL_MAP = {
   'SUZUKI': {
     'BALENO': 'baleno', 'GRAND VITARA': 'grand-vitara', 'IGNIS': 'ignis',
     'JIMNY': 'jimny', 'S-CROSS': 's-cross', 'SWIFT': 'swift', 'VITARA': 'vitara',
+  },
+  // ── CITROËN — baseado na API ladm (C3 só 2022+, antigos vão pro banco manual) ──
+  'CITROËN': {
+    'AIRCROSS':           'aircross',
+    'BASALT':             'basalt',
+    'BERLINGO':           'berlingo',
+    'BERLINGO MULTISPACE':'berlingo-multispace',
+    'C-ELYSEE':           'c-elysee',
+    'C ELYSEE':           'c-elysee',
+    'C3':                 'c3',           // só 2022+
+    'C3 AIRCROSS':        'c3-aircross',
+    'C4':                 'c4',           // só 2025+
+    'C4 CACTUS':          'c4-cactus',
+    'C5 AIRCROSS':        'c5-aircross',
+    'JUMPER':             'jumper',
+    'JUMPY':              'jumpy',
+    'SPACETOURER':        'spacetourer',
+  },
+  'CITROEN': {
+    'AIRCROSS':           'aircross',
+    'BASALT':             'basalt',
+    'BERLINGO':           'berlingo',
+    'BERLINGO MULTISPACE':'berlingo-multispace',
+    'C-ELYSEE':           'c-elysee',
+    'C ELYSEE':           'c-elysee',
+    'C3':                 'c3',
+    'C3 AIRCROSS':        'c3-aircross',
+    'C4':                 'c4',
+    'C4 CACTUS':          'c4-cactus',
+    'C5 AIRCROSS':        'c5-aircross',
+    'JUMPER':             'jumper',
+    'JUMPY':              'jumpy',
+    'SPACETOURER':        'spacetourer',
   },
   'BYD': {
     'ATTO': null, 'D1': 'd1', 'DOLPHIN': 'dolphin', 'DOLPHIN MINI': 'dolphin-mini',
