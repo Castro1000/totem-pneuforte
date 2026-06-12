@@ -154,7 +154,7 @@ const MODELO_ESPECIAL_MAP = {
     'ODYSSEY': 'odyssey', 'PASSPORT': 'passport', 'PILOT': 'pilot',
     'WR-V': 'wr-v', 'WRV': 'wr-v', 'ZR-V': 'zr-v', 'ZRV': 'zr-v',
     'RIDGELINE': 'ridgeline',
-    'PASSPORT': null,  // não existe na API ladm
+    'PASSPORT': null,
   },
   'TOYOTA': {
     'CAMRY': 'camry', 'C-HR': 'c-hr', 'CHR': 'c-hr',
@@ -184,7 +184,7 @@ const MODELO_ESPECIAL_MAP = {
     'TUCSON': 'tucson', 'VELOSTER': 'veloster', 'VELOSTER N': 'veloster-n', 'VENUE': 'venue',
   },
   'JEEP': {
-    'AVENGER': 'avenger', 'CHEROKEE': null,  // não existe na API ladm
+    'AVENGER': 'avenger', 'CHEROKEE': null,
     'COMMANDER': 'commander',
     'COMPASS': 'compass', 'GLADIATOR': 'gladiator',
     'GRAND': 'grand-cherokee', 'GRAND CHEROKEE': 'grand-cherokee',
@@ -230,8 +230,6 @@ const MODELO_ESPECIAL_MAP = {
     'L200': 'l200', 'L 200': 'l200', 'LANCER': 'lancer', 'OUTLANDER': 'outlander',
     'PAJERO': 'pajero', 'PAJERO FULL': 'pajero-full', 'PAJERO SPORT': 'pajero-sport',
   },
-
-  // ── RAM ───────────────────────────────────────────────────────────────────
   'RAM': {
     'RAMPAGE': 'rampage',
     '1000': '1000', '1500': '1500', '1500 TRX': '1500-trx',
@@ -275,71 +273,28 @@ const MODELO_ESPECIAL_MAP = {
     'BALENO': 'baleno', 'CIAZ': 'ciaz', 'GRAND VITARA': 'grand-vitara', 'IGNIS': 'ignis',
     'JIMNY': 'jimny', 'S-CROSS': 's-cross', 'SCROSS': 's-cross', 'SWIFT': 'swift', 'VITARA': 'vitara',
   },
-
-  // ── BYD ──────────────────────────────────────────────────────────────────
   'BYD': {
-    'ATTO': null,
-    'D1': 'd1',
-    'DOLPHIN': 'dolphin',
-    'DOLPHIN MINI': 'dolphin-mini',
-    'DOLPHIN PLUS': 'dolphin-plus',
-    'ET3': null,
-    'HAN': 'han',
-    'KING': 'king',
-    'SEAL': 'seal',
-    'SHARK': 'shark',
-    'SONG': 'song-plus',
-    'SONG PLUS': 'song-plus',
-    'SONG PRO': 'song-pro',
-    'TAN': 'tan',
-    'TANG': 'tang',
-    'YUAN': 'yuan-plus',
-    'YUAN PLUS': 'yuan-plus',
-    'YUAN PRO': 'yuan-pro',
+    'ATTO': null, 'D1': 'd1', 'DOLPHIN': 'dolphin', 'DOLPHIN MINI': 'dolphin-mini',
+    'DOLPHIN PLUS': 'dolphin-plus', 'ET3': null, 'HAN': 'han', 'KING': 'king',
+    'SEAL': 'seal', 'SHARK': 'shark', 'SONG': 'song-plus', 'SONG PLUS': 'song-plus',
+    'SONG PRO': 'song-pro', 'TAN': 'tan', 'TANG': 'tang',
+    'YUAN': 'yuan-plus', 'YUAN PLUS': 'yuan-plus', 'YUAN PRO': 'yuan-pro',
   },
 };
 
 // ─── MAPA DE PRIORIDADE POR VERSÃO ───────────────────────────────────────────
 const PRIORIDADE_VERSAO = {
-  's10': {
-    'HC': '265/60R18',
-    'LTZ': '265/60R18',
-  },
-  'renegade': {
-    'LONGITUDE': '225/55R18',
-    'LONG': '225/55R18',
-  },
-  'duster': {
-    'ICONIC': '215/60R17',
-    'ICO': '215/60R17',
-    'ICO16': '215/60R17',
-    'INTENSE': '215/60R17',
-    'INT': '215/60R17',
-  },
-  'fastback': {
-    'ABARTH': '215/45R18',
-    'LIMITED': '215/45R18',
-  },
-  'compass': {
-    'LONGITUDE': '225/55R18',
-    'LONG': '225/55R18',
-    'S': '235/50R18',
-  },
-  'commander': {
-    'OVERLAND': '225/55R18',
-    'LIMITED': '225/55R18',
-  },
-  'hilux': {
-    'SRX': '265/60R18',
-  },
-  'sw4': {
-    'SRX': '265/60R18',
-  },
+  's10': { 'HC': '265/60R18', 'LTZ': '265/60R18' },
+  'renegade': { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18' },
+  'duster': { 'ICONIC': '215/60R17', 'ICO': '215/60R17', 'ICO16': '215/60R17', 'INTENSE': '215/60R17', 'INT': '215/60R17' },
+  'fastback': { 'ABARTH': '215/45R18', 'LIMITED': '215/45R18' },
+  'compass': { 'LONGITUDE': '225/55R18', 'LONG': '225/55R18', 'S': '235/50R18' },
+  'commander': { 'OVERLAND': '225/55R18', 'LIMITED': '225/55R18' },
+  'hilux': { 'SRX': '265/60R18' },
+  'sw4': { 'SRX': '265/60R18' },
 };
 
-
 // ─── NORMALIZAÇÃO DE VERSÃO DA EXATO ─────────────────────────────────────────
-// A Exato às vezes retorna versões truncadas: "10" em vez de "1.0", "16" em vez de "1.6"
 function normalizarVersaoExato(versao) {
   if (!versao) return versao;
   const mapa = {
@@ -359,7 +314,6 @@ function normalizarModelo(modelo) {
 
 function extrairMedida(tireFull) {
   if (!tireFull) return null;
-  // Captura formato normal "205/65R17" e com espaço "205/65 R17"
   const match = tireFull.match(/^(\d+\/\d+\s*[A-Z]\d+)/);
   if (match) return match[1].replace(' ', '');
   return tireFull.split(' ')[0];
@@ -376,6 +330,75 @@ function resolverModeloSlug(marcaSlug, marcaNome, modelo) {
   return normalizarModelo(modelo);
 }
 
+// ─── GRAVAR MEDIDAS DA WHEEL-SIZE NO BANCO (CACHE AUTOMÁTICO) ────────────────
+// ★ NOVO: grava resultado da wheel-size para uso futuro sem gastar req
+async function gravarMedidasNoBanco({ marca, modelo, ano, versao, pneus }) {
+  try {
+    if (!pneus || pneus.length === 0) return;
+    if (!marca || !modelo || !ano) return;
+
+    const marcaUp  = marca.trim().toUpperCase();
+    const modeloUp = modelo.trim().toUpperCase();
+    const anoNum   = Number(ano);
+
+    // Verifica se já existe veículo no banco
+    const [existentes] = await db.execute(
+      `SELECT id FROM veiculos
+       WHERE TRIM(UPPER(marca)) = ?
+         AND TRIM(UPPER(modelo)) = ?
+         AND ? BETWEEN ano_inicio AND ano_fim
+         AND ativo = 1
+       LIMIT 1`,
+      [marcaUp, modeloUp, anoNum]
+    );
+
+    let veiculoId;
+    if (existentes.length > 0) {
+      veiculoId = existentes[0].id;
+    } else {
+      const [ins] = await db.execute(
+        `INSERT INTO veiculos (marca, modelo, versao, ano_inicio, ano_fim, ativo, created_at)
+         VALUES (?, ?, ?, ?, ?, 1, NOW())`,
+        [marcaUp, modeloUp, versao ? versao.trim().toUpperCase() : null, anoNum, anoNum]
+      );
+      veiculoId = ins.insertId;
+      console.log(`[CACHE] Novo veículo gravado ID=${veiculoId}: ${marcaUp} ${modeloUp} ${anoNum}`);
+    }
+
+    let novas = 0;
+    for (const pneu of pneus) {
+      if (!pneu.medida) continue;
+      const [existe] = await db.execute(
+        `SELECT id FROM veiculo_medidas
+         WHERE veiculo_id = ? AND TRIM(medida) = TRIM(?)
+         LIMIT 1`,
+        [veiculoId, pneu.medida]
+      );
+      if (existe.length === 0) {
+        await db.execute(
+          `INSERT INTO veiculo_medidas
+             (veiculo_id, medida, tipo, prioridade, observacao, ativo, created_at)
+           VALUES (?, ?, ?, ?, ?, 1, NOW())`,
+          [
+            veiculoId,
+            pneu.medida,
+            pneu.tipo       || 'original',
+            pneu.prioridade || 1,
+            pneu.observacao || 'Auto-gravado via wheel-size',
+          ]
+        );
+        novas++;
+      }
+    }
+
+    if (novas > 0) {
+      console.log(`[CACHE] ${novas} medida(s) nova(s) gravada(s) → veiculo_id=${veiculoId} (${marcaUp} ${modeloUp} ${anoNum})`);
+    }
+  } catch (err) {
+    console.error('[CACHE] Erro ao gravar no banco:', err.message);
+  }
+}
+
 // ─── BUSCA NA WHEEL-SIZE API ──────────────────────────────────────────────────
 async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
   let versao = _versao;
@@ -387,7 +410,6 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
     const modeloSlug = resolverModeloSlug(marcaSlug, marca, modelo);
     if (!modeloSlug) { console.log(`[WHEEL-SIZE] Modelo ${modelo} não existe na API, pulando...`); return null; }
 
-    // Normaliza versão truncada da Exato (ex: "10" → "1.0", "16" → "1.6")
     const versaoNormalizada = normalizarVersaoExato(versao);
     if (versaoNormalizada !== versao) {
       console.log(`[WHEEL-SIZE] Versão normalizada: "${versao}" → "${versaoNormalizada}"`);
@@ -404,14 +426,11 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
     const data = response.data?.data || [];
     if (!data.length) { console.log(`[WHEEL-SIZE] Nenhum dado para ${marcaSlug} ${modeloSlug} ${ano}`); return null; }
 
-    // Captura imagem do carro da geração
     const imagemCarro = data[0]?.generation?.bodies?.[0]?.image || null;
-
     const versaoUpper = (versao || '').toUpperCase();
-    const contagemOE = new Map();   // medida → { count, pressao_bar, pressao_psi, indice_velocidade }
+    const contagemOE = new Map();
     const contagemAlt = new Map();
 
-    // Tenta match pela versão primeiro
     let encontrouVersao = false;
     if (versaoUpper) {
       for (const item of data) {
@@ -420,7 +439,6 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
         const palavrasVersao = versaoUpper.split(' ').filter(p => p.length > 1);
         const bate = levels.some(l => palavrasVersao.some(p => l.includes(p) || p.includes(l)))
           || palavrasVersao.some(p => trimUpper.includes(p));
-
         if (bate) {
           encontrouVersao = true;
           for (const wheel of (item.wheels || [])) {
@@ -443,7 +461,6 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
       }
     }
 
-    // Fallback: pega todas as versões
     if (!encontrouVersao || contagemOE.size === 0) {
       for (const item of data) {
         for (const wheel of (item.wheels || [])) {
@@ -470,28 +487,21 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
       return null;
     }
 
-    // Ordena por frequência
     const mapaOrdenado = contagemOE.size > 0 ? contagemOE : contagemAlt;
     let medidasOrdenadas = Array.from(mapaOrdenado.entries())
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 3);
 
-    // ─── PRIORIDADE POR VERSÃO ────────────────────────────────────────────────
-    // Verifica se a versão da Exato tem palavras que indicam uma medida específica
     if (versao) {
       const palavrasVersao = (versao || '').toUpperCase().split(/[\s\-\/\.]+/);
       const prioridades = PRIORIDADE_VERSAO[modeloSlug.toLowerCase()];
-
       if (prioridades) {
         for (const [palavra, medidaAlvo] of Object.entries(prioridades)) {
           if (palavrasVersao.includes(palavra.toUpperCase())) {
             console.log(`[WHEEL-SIZE] Prioridade por versão "${palavra}": ${medidaAlvo}`);
-
-            // Busca a medida em todo o mapa (OE + Alt)
             const infoOE = contagemOE.get(medidaAlvo);
             const infoAlt = contagemAlt.get(medidaAlvo);
             const info = infoOE || infoAlt;
-
             if (info) {
               medidasOrdenadas = medidasOrdenadas.filter(([m]) => m !== medidaAlvo);
               medidasOrdenadas = [[medidaAlvo, info], ...medidasOrdenadas].slice(0, 3);
@@ -501,19 +511,16 @@ async function buscarMedidasWheelSize({ marca, modelo, ano, versao: _versao }) {
         }
       }
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     const pneus = medidasOrdenadas.map(([medida, info], i) => ({
-      id: i + 1,
-      medida,
-      tipo: 'original',
+      id: i + 1, medida, tipo: 'original',
       prioridade: i === 0 ? 1 : 2,
       observacao: 'Medida original de fábrica (OE)',
       fonte: 'wheel-size',
       pressao_bar: info.pressao_bar,
       pressao_psi: info.pressao_psi,
       indice_velocidade: info.indice_velocidade,
-      imagem_carro: i === 0 ? imagemCarro : null, // imagem só na medida principal
+      imagem_carro: i === 0 ? imagemCarro : null,
     }));
 
     console.log(`[WHEEL-SIZE] ${pneus.length} medidas encontradas para ${marcaSlug} ${modeloSlug} ${ano}`);
@@ -602,7 +609,6 @@ async function buscarPorPlaca(req, res) {
       return res.status(404).json({ erro: 'Veículo não encontrado' });
     }
 
-    // Normaliza versão truncada da Exato antes de qualquer verificação
     if (veiculo.versao) {
       const versaoNorm = normalizarVersaoExato(veiculo.versao.trim());
       if (versaoNorm !== veiculo.versao) {
@@ -611,32 +617,29 @@ async function buscarPorPlaca(req, res) {
       }
     }
 
-    // Se a versão for numérica simples (ex: "1.0", "1.6"), tenta banco primeiro
-    // porque a wheel-size não tem esses trim levels e retorna medida errada
-    const versaoEhNumerica = /^\d+\.\d+$/.test((veiculo.versao || '').trim());
+    let pneus = null;
+    let fonte = 'wheel-size';
 
-    // Versões que sabemos que a wheel-size retorna medida errada → banco primeiro
+    // Versoes que a wheel-size retorna errado -> pula direto pro banco
     const VERSOES_BANCO_PRIMEIRO = ['M SPORT', 'M-SPORT'];
     const versaoForcaBanco = VERSOES_BANCO_PRIMEIRO.some(v =>
       (veiculo.versao || '').toUpperCase().includes(v)
     );
 
-    let pneus = null;
-    let fonte = 'wheel-size';
-
-    if (versaoEhNumerica || versaoForcaBanco) {
-      console.log(`[PLACA] Versão "${veiculo.versao}" — tentando banco primeiro...`);
-      pneus = await buscarPneusCompativeis({ codigo_fipe: veiculo.codigo_fipe, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano });
-      fonte = 'banco';
-    }
-
-    if (!pneus || pneus.length === 0) {
+    if (!versaoForcaBanco) {
+      // wheel-size sempre primeiro
       pneus = await buscarMedidasWheelSize({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao });
       fonte = 'wheel-size';
+      // grava no banco para uso futuro
+      if (pneus && pneus.length > 0) {
+        gravarMedidasNoBanco({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao, pneus })
+          .catch(err => console.error('[CACHE buscarPorPlaca]', err.message));
+      }
     }
 
+    // fallback: banco local (carros antigos, europeus, fora da cobertura wheel-size)
     if (!pneus || pneus.length === 0) {
-      console.log(`[PLACA] wheel-size não encontrou, tentando banco local para ${veiculo.modelo}...`);
+      console.log(`[PLACA] wheel-size nao encontrou, tentando banco local para ${veiculo.modelo}...`);
       pneus = await buscarPneusCompativeis({ codigo_fipe: veiculo.codigo_fipe, marca: veiculo.marca, modelo: veiculo.modelo, versao: veiculo.versao, ano: veiculo.ano });
       fonte = 'banco';
     }
@@ -672,6 +675,11 @@ async function buscarMedidaVeiculo(req, res) {
     if (!pneus || pneus.length === 0) {
       pneus = await buscarMedidasWheelSize({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao });
       fonte = 'wheel-size';
+      // ★ NOVO: grava no banco para próxima vez não precisar chamar wheel-size
+      if (pneus && pneus.length > 0) {
+        gravarMedidasNoBanco({ marca: veiculo.marca, modelo: veiculo.modelo, ano: veiculo.ano, versao: veiculo.versao, pneus })
+          .catch(err => console.error('[CACHE buscarMedidaVeiculo]', err.message));
+      }
     }
 
     if (!pneus || pneus.length === 0) {
