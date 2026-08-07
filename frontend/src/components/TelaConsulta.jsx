@@ -28,6 +28,9 @@ export default function TelaConsulta({
   const parte1 = placaExibida.slice(0, 3);
   const parte2 = placaExibida.slice(3, 7);
 
+  const confiancaBaixa = resultado?.confianca === 'baixa';
+  const candidatos = resultado?.candidatos || [];
+
   const medidaPrincipal = resultado?.pneus?.[0] || null;
   const outrasMedidas = resultado?.pneus
     ?.slice(1)
@@ -294,7 +297,23 @@ export default function TelaConsulta({
               {resultado.veiculo?.marca} {resultado.veiculo?.modelo} {resultado.veiculo?.ano}
             </div>
 
-            {medidaPrincipal ? (
+            {confiancaBaixa ? (
+              <div style={{ width: '100%', margin: '10px 0' }}>
+                <p style={{ color: '#FFD700', fontWeight: 900, fontSize: '13px', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  ⚠️ Não temos certeza absoluta da medida do seu carro
+                </p>
+                <p style={{ color: '#EEE', fontSize: '13px', textAlign: 'center', marginBottom: '10px' }}>
+                  Pode ser uma destas — um vendedor vai confirmar qual é a certa:
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {candidatos.map((c, i) => (
+                    <div key={i} style={{ background: 'linear-gradient(180deg,#3a3a3a,#1e1e1e)', borderRadius: '12px', padding: '12px 20px', textAlign: 'center', minWidth: '140px', border: '1px solid #FFD700' }}>
+                      <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900 }}>{c}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : medidaPrincipal ? (
               <>
                 {temDianteiroTraseiro ? (
                   <div style={{ width: '100%', margin: '10px 0' }}>

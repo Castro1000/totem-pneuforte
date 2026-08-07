@@ -4,8 +4,16 @@ const fs = require('fs');
 const path = require('path');
 
 const API_FIPE = 'https://parallelum.com.br/fipe/api/v1/carros';
-const FIPE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMGQzMWUyMy0wNmNmLTRhMDYtYjBkNy1iOGQ3YThlMTAyZTYiLCJlbWFpbCI6Iml2YW5laWNhc3RybzJAZ21haWwuY29tIiwic3RyaXBlU3Vic2NyaXB0aW9uSWQiOiJzdWJfMVRVVkFDQ1N2SXMwOHRJRWRxU0RIak1ZIiwiaWF0IjoxNzc4MTcyNzY2fQ.Lg0GRkO24onvNuFucvBCJsLg-KkTZAaOZQLCPB_gvkA';
+const FIPE_TOKEN = process.env.FIPE_TOKEN;
 const CHECKPOINT_FILE = path.join(__dirname, 'checkpoint.json');
+
+// NOTA: script obsoleto — a assinatura paga da FIPE foi cancelada. O totem
+// hoje usa só a Wheel-Size (ver backend/src/services/wheelSizeService.js).
+// Mantido aqui só caso precise reimportar algo manualmente no futuro; exige
+// FIPE_TOKEN configurado no .env pra rodar.
+if (!FIPE_TOKEN) {
+  console.warn('⚠️  FIPE_TOKEN não configurado no .env — este script está obsoleto e provavelmente não vai funcionar sem uma assinatura ativa.');
+}
 
 const MARCAS_PERMITIDAS = [
   'Fiat', 'Jeep', 'VW - VolksWagen', 'GM - Chevrolet',

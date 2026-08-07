@@ -10,6 +10,7 @@ import TelaBoasVindas from './components/TelaBoasVindas';
 import TelaInicial from './components/TelaInicial';
 import TelaConsulta from './components/TelaConsulta';
 import ConsultaAvancada from './components/ConsultaAvancada';
+import DiagnosticoPneu from './components/DiagnosticoPneu';
 
 export default function App() {
   const [boasVindas, setBoasVindas] = useState(true);
@@ -222,6 +223,15 @@ export default function App() {
   if (tipoConsulta === 'modelo') {
     return (
       <ConsultaAvancada
+        voltarInicio={voltarInicio}
+        teclaRef={teclaRef}
+      />
+    );
+  }
+
+  if (tipoConsulta === 'diagnostico') {
+    return (
+      <DiagnosticoPneu
         voltarInicio={voltarInicio}
         teclaRef={teclaRef}
       />

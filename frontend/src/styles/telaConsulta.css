@@ -546,6 +546,12 @@
   color: #ffd400;
 }
 
+.popup-badge-vermelho {
+  background: rgba(255,107,91,0.15);
+  border: 2px solid rgba(255,107,91,0.5);
+  color: #ff6b5b;
+}
+
 .popup-placa-tag {
   font-family: 'Arial Black', 'Impact', sans-serif;
   font-size: clamp(28px, 4vw, 56px);

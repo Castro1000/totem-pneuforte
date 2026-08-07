@@ -10,124 +10,13 @@ const LETRAS = [
 
 const NUMEROS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-const API_FIPE = `${import.meta.env.VITE_API_URL}/api/fipe`;
-const API_BACKEND = `${import.meta.env.VITE_API_URL}/api/totem`;
 const API_WHEEL_SIZE = `${import.meta.env.VITE_API_URL}/api/wheel-size`;
 
-function normalizarTexto(texto = '') {
-  return String(texto).trim().replace(/\s+/g, ' ').toUpperCase();
-}
-
-// Lista de modelos compostos (duas palavras) para identificar corretamente
-const MODELOS_COMPOSTOS_FIPE = [
-  'DOLPHIN MINI', 'DOLPHIN PLUS',
-  'SONG PLUS', 'SONG PRO',
-  'YUAN PLUS', 'YUAN PRO',
-  'LAND CRUISER PRADO', 'LAND CRUISER',
-  'GRAND CHEROKEE', 'GRAND SIENA', 'GRAND I10',
-  'COROLLA CROSS', 'COROLLA ALTIS',
-  'RANGE ROVER SPORT', 'RANGE ROVER EVOQUE', 'RANGE ROVER VELAR', 'RANGE ROVER',
-  'POLO TRACK', 'NOVO GOL', 'NOVO VOYAGE',
-  'ONIX PLUS', 'ONIX JOY', 'ONIX ACTIV',
-  'TIGUAN ALLSPACE', 'DISCOVERY SPORT',
-  'SANTA FE', 'YARIS CROSS', 'DUSTER OROCH',
-  'ECLIPSE CROSS', 'PAJERO FULL', 'PAJERO SPORT',
-  'GOLF GTI', 'JETTA GLI', 'JETTA VARIANT',
-  'CRETA GRAND', 'SANDERO STEPWAY',
-  'HB20S', 'HB20X',
-];
-
-function tratarModeloFipe(nomeModelo = '') {
-  const texto = String(nomeModelo).trim().replace(/\s+/g, ' ');
-  if (!texto) return { modeloBase: '', versao: 'VERSÃO NÃO INFORMADA' };
-  const textoUpper = texto.toUpperCase();
-
-  // Verifica modelos compostos primeiro (mais longo primeiro)
-  const compostos = [...MODELOS_COMPOSTOS_FIPE].sort((a, b) => b.length - a.length);
-  for (const mc of compostos) {
-    if (textoUpper.startsWith(mc + ' ') || textoUpper === mc) {
-      const modeloBase = texto.slice(0, mc.length);
-      const versao = texto.slice(mc.length).trim() || 'VERSÃO ÚNICA';
-      return { modeloBase, versao };
-    }
-  }
-
-  // Fallback: primeira palavra
-  const partes = texto.split(' ');
-  return { modeloBase: partes[0] || texto, versao: partes.slice(1).join(' ') || 'VERSÃO ÚNICA' };
-}
-
-function tratarAnoFipe(nomeAno = '') {
-  const texto = String(nomeAno).trim();
-  if (!texto) return { anoNumero: '', combustivel: '' };
-  const partes = texto.split(' ');
-  return { anoNumero: partes[0] || texto, combustivel: partes.slice(1).join(' ') || '' };
-}
-
-function montarModelosBase(modelosFipe = []) {
-  const mapa = new Map();
-  modelosFipe.forEach((item) => {
-    const tratado = tratarModeloFipe(item.nome);
-    const chave = normalizarTexto(tratado.modeloBase);
-    if (!chave) return;
-    if (!mapa.has(chave)) {
-      mapa.set(chave, { codigo: chave, nome: tratado.modeloBase, modelosOriginais: [] });
-    }
-    mapa.get(chave).modelosOriginais.push({ ...item, modeloBase: tratado.modeloBase, versao: tratado.versao });
-  });
-  return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome));
-}
-
-function tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe }) {
-  const anoTratado = tratarAnoFipe(ano?.nome);
-  return {
-    marca: marca?.nome || resultadoFipe?.Marca || '',
-    modelo: modelo?.nome || '',
-    versao: versao?.nome || '',
-    ano: Number(anoTratado.anoNumero || resultadoFipe?.AnoModelo || 0),
-    combustivel: anoTratado.combustivel || resultadoFipe?.Combustivel || '',
-    codigo_fipe: resultadoFipe?.CodigoFipe || versao?.codigo_fipe || ''
-  };
-}
-
-// ─── EXTRAI TRIM LEVEL DA VERSÃO FIPE ────────────────────────────────────────
-// Converte "Long. T270 1.3 TB 4x2 Flex Aut." → "LONGITUDE"
-// para que a PRIORIDADE_VERSAO do totemController funcione corretamente
-
-const TRIMS_FIPE = [
-  'LONGITUDE', 'LONG',
-  'OVERLAND', 'LIMITED', 'LARAMIE',
-  'SPORT', 'SPORT6',
-  'ALTITUDE', 'NIGHT EAGLE', 'HIGH ALTITUDE',
-  'SRX', 'LTZ', 'HC',
-  'TOURING', 'EXL', 'EX', 'LX',
-  'S', 'SERIES',
-  'TITANIUM', 'PLATINUM', 'WILD TRACK',
-  'TRAILHAWK', 'RUBICON', 'SAHARA', 'WILLYS',
-  'PREMIER', 'PREMIER PLUS', 'AMBASSADOR',
-  'GLADIATOR',
-];
-
-const TRIM_ALIASES = {
-  'LONG': 'LONGITUDE',
-};
-
-function extrairTrimLevel(versaoFipe) {
-  if (!versaoFipe) return null;
-  const texto = String(versaoFipe).toUpperCase().replace(/\./g, ' ').replace(/-/g, ' ');
-  const palavras = texto.split(/\s+/).filter(p => p.length >= 1);
-
-  for (const trim of [...TRIMS_FIPE].sort((a, b) => b.length - a.length)) {
-    const trimPalavras = trim.split(' ');
-    for (let i = 0; i <= palavras.length - trimPalavras.length; i++) {
-      if (palavras.slice(i, i + trimPalavras.length).join(' ') === trim) {
-        return TRIM_ALIASES[trim] || trim;
-      }
-    }
-  }
-  return null;
-}
-// ─────────────────────────────────────────────────────────────────────────────
+// Todo o seletor (marca → modelo → ano → versão) usa o catálogo da própria
+// Wheel-Size, de ponta a ponta. Isso elimina a tradução entre vocabulários
+// de APIs diferentes (que era a origem de medidas erradas): o cliente escolhe
+// literalmente uma versão real cadastrada na Wheel-Size, então a consulta
+// final não precisa "adivinhar" nada.
 
 export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [etapa, setEtapa] = useState('marca');
@@ -136,15 +25,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [tipoTeclado, setTipoTeclado] = useState('ABC');
 
   const [marcas, setMarcas] = useState([]);
-  const [modelosBase, setModelosBase] = useState([]);
+  const [modelos, setModelos] = useState([]);
   const [anos, setAnos] = useState([]);
   const [versoes, setVersoes] = useState([]);
 
   const [marca, setMarca] = useState(null);
   const [modelo, setModelo] = useState(null);
   const [ano, setAno] = useState(null);
-  const [versao, setVersao] = useState(null);
-  const [resultadoFipe, setResultadoFipe] = useState(null);
+  const [versaoTrim, setVersaoTrim] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [erroApi, setErroApi] = useState('');
@@ -155,7 +43,6 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   const [loadingMedida, setLoadingMedida] = useState(false);
   const [erroMedida, setErroMedida] = useState('');
   const [resultadoMedidas, setResultadoMedidas] = useState(null);
-  const [fonteMedida, setFonteMedida] = useState('wheel-size');
 
   const marcasCarregadas = useRef(false);
 
@@ -174,10 +61,10 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     try {
       setLoading(true);
       setErroApi('');
-      const response = await fetch(`${API_FIPE}/marcas`);
+      const response = await fetch(`${API_WHEEL_SIZE}/marcas`);
       const data = await response.json();
       if (!response.ok) throw new Error('Erro ao carregar marcas');
-      setMarcas(data || []);
+      setMarcas((data || []).map((m) => ({ codigo: m.slug, nome: m.name || m.name_en })));
     } catch {
       setErroApi('Não foi possível carregar as marcas. Verifique a internet.');
     } finally {
@@ -192,14 +79,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }, [carregarMarcas]);
 
-  async function carregarModelos(codigoMarca) {
+  async function carregarModelos(marcaSlug) {
     try {
       setLoading(true);
       setErroApi('');
-      const response = await fetch(`${API_FIPE}/marcas/${codigoMarca}/modelos`);
+      const response = await fetch(`${API_WHEEL_SIZE}/marcas/${encodeURIComponent(marcaSlug)}/modelos`);
       const data = await response.json();
       if (!response.ok) throw new Error('Erro ao carregar modelos');
-      setModelosBase(montarModelosBase(data?.modelos || []));
+      setModelos((data || []).map((m) => ({ codigo: m.slug, nome: m.name || m.name_en })));
     } catch {
       setErroApi('Não foi possível carregar os modelos desta marca.');
     } finally {
@@ -207,43 +94,17 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
-  async function carregarAnosPorModeloBase(modeloBaseSelecionado) {
+  async function carregarAnos(marcaSlug, modeloSlug) {
     try {
       setLoading(true);
       setErroApi('');
-      const modelosRelacionados = modeloBaseSelecionado?.modelosOriginais || [];
-      const mapaAnos = new Map();
-
-      const resultados = await Promise.allSettled(
-        modelosRelacionados.map((item) =>
-          fetch(`${API_FIPE}/marcas/${marca.codigo}/modelos/${item.codigo}/anos`)
-            .then((r) => r.ok ? r.json() : [])
-            .then((listaAnos) => ({ item, listaAnos }))
-            .catch(() => ({ item, listaAnos: [] }))
-        )
-      );
-
-      resultados.forEach((res) => {
-        if (res.status !== 'fulfilled') return;
-        const { item, listaAnos } = res.value;
-        (listaAnos || []).forEach((anoItem) => {
-          const anoTratado = tratarAnoFipe(anoItem.nome);
-          const chave = normalizarTexto(anoTratado.anoNumero);
-          if (!chave) return;
-          if (!mapaAnos.has(chave)) {
-            mapaAnos.set(chave, { codigo: chave, nome: anoTratado.anoNumero, anosOriginais: [] });
-          }
-          mapaAnos.get(chave).anosOriginais.push({
-            ...anoItem,
-            codigoModelo: item.codigo,
-            nomeModeloCompleto: item.nome,
-            modeloBase: item.modeloBase,
-            versao: item.versao
-          });
-        });
-      });
-
-      setAnos(Array.from(mapaAnos.values()).sort((a, b) => Number(b.nome) - Number(a.nome)));
+      const response = await fetch(`${API_WHEEL_SIZE}/marcas/${encodeURIComponent(marcaSlug)}/modelos/${encodeURIComponent(modeloSlug)}/anos`);
+      const data = await response.json();
+      if (!response.ok) throw new Error('Erro ao carregar anos');
+      const lista = (data || [])
+        .map((a) => ({ codigo: a.slug, nome: String(a.name ?? a.slug) }))
+        .sort((a, b) => Number(b.nome) - Number(a.nome));
+      setAnos(lista);
     } catch {
       setErroApi('Não foi possível carregar os anos deste modelo.');
     } finally {
@@ -251,18 +112,14 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
-  async function carregarVersoesPorAno(anoSelecionado) {
+  async function carregarVersoes(marcaSlug, modeloSlug, anoSlug) {
     try {
       setLoading(true);
       setErroApi('');
-      const anosOriginais = anoSelecionado?.anosOriginais || [];
-      setVersoes(anosOriginais.map((item, index) => ({
-        codigo: `${item.codigoModelo}-${item.codigo}-${index}`,
-        codigoModelo: item.codigoModelo,
-        codigoAno: item.codigo,
-        nome: item.versao || item.nomeModeloCompleto,
-        modeloCompleto: item.nomeModeloCompleto
-      })));
+      const response = await fetch(`${API_WHEEL_SIZE}/marcas/${encodeURIComponent(marcaSlug)}/modelos/${encodeURIComponent(modeloSlug)}/anos/${encodeURIComponent(anoSlug)}/versoes`);
+      const data = await response.json();
+      if (!response.ok) throw new Error('Erro ao carregar versões');
+      setVersoes((data || []).map((v) => ({ codigo: v.slug, nome: v.rotulo, motor: v.motor })));
     } catch {
       setErroApi('Não foi possível carregar as versões deste veículo.');
     } finally {
@@ -270,77 +127,32 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     }
   }
 
-  async function carregarResultadoFinal(versaoSelecionada) {
-    try {
-      setLoading(true);
-      setErroApi('');
-      const response = await fetch(
-        `${API_FIPE}/marcas/${marca.codigo}/modelos/${versaoSelecionada.codigoModelo}/anos/${versaoSelecionada.codigoAno}`
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error('Erro ao consultar veículo');
-      setResultadoFipe(data);
-      setSeletorAberto(false);
-      setPopupVeiculo(true);
-    } catch {
-      setErroApi('Não foi possível consultar os dados finais do veículo.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function buscarMedidaIdeal() {
+  async function confirmarVeiculo() {
     try {
       tocarClique();
       setLoadingMedida(true);
       setErroMedida('');
       setResultadoMedidas(null);
-      setFonteMedida('wheel-size');
 
-      const veiculoTratado = tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe });
-
-      // Extrai o trim level da versão FIPE para a wheel-size
-      // Ex: "Long. T270 1.3 TB 4x2 Flex Aut." → "LONGITUDE"
-      const trimLevel = extrairTrimLevel(veiculoTratado.versao);
-      console.log(`[CA] versão FIPE: "${veiculoTratado.versao}" → trimLevel: "${trimLevel}"`);
-
-      let data = null;
-
-      try {
-        const responseWS = await fetch(`${API_WHEEL_SIZE}/buscar`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            marca: veiculoTratado.marca,
-            modelo: veiculoTratado.modelo,
-            ano: veiculoTratado.ano,
-            versao: trimLevel || veiculoTratado.versao
-          })
-        });
-        const jsonWS = await responseWS.json();
-        if (!responseWS.ok) throw new Error(jsonWS.erro || 'Não encontrado na wheel-size');
-        data = jsonWS;
-        setFonteMedida('wheel-size');
-      } catch {
-        try {
-          const response = await fetch(`${API_BACKEND}/buscar-medida-veiculo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(veiculoTratado)
-          });
-          const json = await response.json();
-          if (!response.ok) throw new Error(json.erro || 'Não encontrado no banco');
-          data = json;
-          setFonteMedida('banco');
-        } catch (errBanco) {
-          throw new Error(errBanco.message || 'Veículo não encontrado em nenhuma fonte');
-        }
-      }
+      const response = await fetch(`${API_WHEEL_SIZE}/buscar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          marcaSlug: marca.codigo,
+          modeloSlug: modelo.codigo,
+          ano: ano.codigo,
+          trimSlug: versaoTrim.codigo,
+          marca: marca.nome,
+          modelo: modelo.nome,
+          versao: versaoTrim.nome,
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.erro || 'Não foi possível consultar a medida');
 
       setResultadoMedidas(data);
       setPopupVeiculo(false);
       setPopupMedida(true);
-
     } catch (error) {
       setErroMedida(error.message || 'Erro ao buscar medida ideal');
     } finally {
@@ -353,12 +165,12 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     setEtapa('marca');
     setSeletorAberto(true);
     setBusca('');
-    setMarca(null); setModelo(null); setAno(null); setVersao(null);
-    setResultadoFipe(null); setResultadoMedidas(null);
-    setModelosBase([]); setAnos([]); setVersoes([]);
+    setMarca(null); setModelo(null); setAno(null); setVersaoTrim(null);
+    setResultadoMedidas(null);
+    setModelos([]); setAnos([]); setVersoes([]);
     setErroApi(''); setErroMedida('');
     setPopupVeiculo(false); setPopupMedida(false);
-    setLoadingMedida(false); setFonteMedida('wheel-size');
+    setLoadingMedida(false);
   }
 
   const tituloSeletor = {
@@ -377,15 +189,15 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
 
   const opcoes = useMemo(() => {
     if (etapa === 'marca') return marcas;
-    if (etapa === 'modelo') return modelosBase;
+    if (etapa === 'modelo') return modelos;
     if (etapa === 'ano') return anos;
     if (etapa === 'versao') return versoes;
     return [];
-  }, [etapa, marcas, modelosBase, anos, versoes]);
+  }, [etapa, marcas, modelos, anos, versoes]);
 
   const opcoesFiltradas = useMemo(() => {
     const texto = busca.trim().toUpperCase();
-    // Na etapa de versão, mostra todas as opções mesmo sem digitar
+    // Na etapa de versão, mostra todas as opções mesmo sem digitar (geralmente poucas)
     if (etapa === 'versao') {
       if (!texto) return opcoes;
       return opcoes.filter((item) => String(item.nome).toUpperCase().includes(texto));
@@ -398,29 +210,30 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
   async function escolher(item) {
     tocarClique();
     if (etapa === 'marca') {
-      setMarca(item); setModelo(null); setAno(null); setVersao(null);
-      setResultadoFipe(null); setModelosBase([]); setAnos([]); setVersoes([]);
+      setMarca(item); setModelo(null); setAno(null); setVersaoTrim(null);
+      setResultadoMedidas(null); setModelos([]); setAnos([]); setVersoes([]);
       setBusca(''); setEtapa('modelo');
       await carregarModelos(item.codigo);
       return;
     }
     if (etapa === 'modelo') {
-      setModelo(item); setAno(null); setVersao(null);
-      setResultadoFipe(null); setAnos([]); setVersoes([]);
+      setModelo(item); setAno(null); setVersaoTrim(null);
+      setResultadoMedidas(null); setAnos([]); setVersoes([]);
       setBusca(''); setEtapa('ano');
-      await carregarAnosPorModeloBase(item);
+      await carregarAnos(marca.codigo, item.codigo);
       return;
     }
     if (etapa === 'ano') {
-      setAno(item); setVersao(null);
-      setResultadoFipe(null); setVersoes([]);
+      setAno(item); setVersaoTrim(null);
+      setResultadoMedidas(null); setVersoes([]);
       setBusca(''); setEtapa('versao');
-      await carregarVersoesPorAno(item);
+      await carregarVersoes(marca.codigo, modelo.codigo, item.codigo);
       return;
     }
     if (etapa === 'versao') {
-      setVersao(item); setBusca('');
-      await carregarResultadoFinal(item);
+      setVersaoTrim(item); setBusca('');
+      setSeletorAberto(false);
+      setPopupVeiculo(true);
     }
   }
 
@@ -432,8 +245,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
     return tipoTeclado === 'ABC' ? LETRAS : NUMEROS;
   }, [etapa, tipoTeclado]);
 
-  const veiculoTratado = marca && modelo && ano && versao && resultadoFipe
-    ? tratarVeiculoFipe({ marca, modelo, ano, versao, resultadoFipe })
+  const veiculoResumo = marca && modelo && ano && versaoTrim
+    ? { marca: marca.nome, modelo: modelo.nome, ano: ano.nome, versao: versaoTrim.nome }
     : null;
 
   const pneus = resultadoMedidas?.pneus || [];
@@ -444,6 +257,8 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
       item.medida !== medidaPrincipal?.medida &&
       self.findIndex(p => p.medida === item.medida) === index
    );
+  const confiancaBaixa = resultadoMedidas?.confianca === 'baixa';
+  const candidatos = resultadoMedidas?.candidatos || [];
 
   return (
     <div className="app tela-placa-entrada" style={{ overflow: 'hidden' }}>
@@ -501,18 +316,18 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         </div>
       )}
 
-      {popupVeiculo && veiculoTratado && (
+      {popupVeiculo && veiculoResumo && (
         <div className="popup-overlay">
           <div className="popup-veiculo popup-animado">
             <div className="popup-badge popup-badge-verde">✓ VEÍCULO ENCONTRADO</div>
             <div className="popup-veiculo-info">
               <div className="popup-info-linha">
-                <span className="popup-marca">{veiculoTratado.marca}</span>
-                <span className="popup-modelo">{veiculoTratado.modelo}</span>
+                <span className="popup-marca">{veiculoResumo.marca}</span>
+                <span className="popup-modelo">{veiculoResumo.modelo}</span>
               </div>
               <div className="popup-info-boxes">
-                <div className="popup-info-box"><small>ANO</small><strong>{veiculoTratado.ano}</strong></div>
-                <div className="popup-info-box" style={{ flex: 2 }}><small>VERSÃO</small><strong>{veiculoTratado.versao}</strong></div>
+                <div className="popup-info-box"><small>ANO</small><strong>{veiculoResumo.ano}</strong></div>
+                <div className="popup-info-box" style={{ flex: 2 }}><small>VERSÃO</small><strong>{veiculoResumo.versao}</strong></div>
               </div>
             </div>
             <p className="popup-pergunta">Este é o seu veículo?</p>
@@ -523,7 +338,7 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
               </div>
             )}
             <div className="popup-acoes">
-              <button className="popup-btn popup-btn-sim" onClick={buscarMedidaIdeal} disabled={loadingMedida}>
+              <button className="popup-btn popup-btn-sim" onClick={confirmarVeiculo} disabled={loadingMedida}>
                 {loadingMedida ? '🔍 BUSCANDO...' : '✓ SIM, É MEU CARRO'}
               </button>
               <button className="popup-btn popup-btn-nao" onClick={novaConsulta}>✗ NÃO É MEU CARRO</button>
@@ -536,18 +351,34 @@ export default function ConsultaAvancada({ voltarInicio, teclaRef }) {
         <div className="popup-overlay">
           <div className="popup-medida popup-animado">
             <div className="popup-badge popup-badge-amarelo">🔍 MEDIDA IDEAL ENCONTRADA</div>
-            
+
             {medidaPrincipal?.imagem_carro && (
                <div style={{ margin: '15px 0' }}>
                  <img src={medidaPrincipal.imagem_carro} alt="Veículo" style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '15px', border: '2px solid #FFD700' }} />
                </div>
             )}
-            
-            {veiculoTratado && (
-              <div className="popup-veiculo-resumo">{veiculoTratado.marca} {veiculoTratado.modelo} {veiculoTratado.ano}</div>
+
+            {veiculoResumo && (
+              <div className="popup-veiculo-resumo">{veiculoResumo.marca} {veiculoResumo.modelo} {veiculoResumo.ano}</div>
             )}
-            
-            {medidaPrincipal ? (
+
+            {confiancaBaixa ? (
+              <div style={{ width: '100%', margin: '10px 0' }}>
+                <p style={{ color: '#FFD700', fontWeight: 900, fontSize: '13px', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  ⚠️ Não temos certeza absoluta da medida do seu carro
+                </p>
+                <p style={{ color: '#EEE', fontSize: '13px', textAlign: 'center', marginBottom: '10px' }}>
+                  Pode ser uma destas — um vendedor vai confirmar qual é a certa:
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {candidatos.map((c, i) => (
+                    <div key={i} style={{ background: 'linear-gradient(180deg,#3a3a3a,#1e1e1e)', borderRadius: '12px', padding: '12px 20px', textAlign: 'center', minWidth: '140px', border: '1px solid #FFD700' }}>
+                      <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900 }}>{c}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : medidaPrincipal ? (
               <>
                 {/* ── DIANTEIRO / TRASEIRO ── */}
                 {(medidaPrincipal.observacao?.toUpperCase().includes('DIANTEIRO') ||

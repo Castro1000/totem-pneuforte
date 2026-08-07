@@ -1,79 +1,74 @@
 const db = require('../config/db');
 
-async function buscarMedidasPorVeiculo({ codigo_fipe, marca, modelo, versao, ano }) {
-  console.log("--- BUSCA DINÂMICA: FILTRANDO POR MARCA, MODELO, ANO E VERSÃO ---");
-  console.log(`Recebido -> Marca: ${marca} | Modelo: ${modelo} | Versão: ${versao} | Ano: ${ano}`);
-
-  if (!marca || !modelo || !ano) return [];
+// Busca no banco local. Nunca "chuta" entre versões diferentes: se a versão
+// foi informada, exige bater exatamente; se não foi informada (ou não achou
+// nada com ela) e restarem medidas diferentes entre si pro mesmo marca/modelo/ano,
+// devolve confiança baixa com todas as candidatas em vez de escolher uma.
+async function buscarMedidasPorVeiculo({ marca, modelo, versao, ano }) {
+  if (!marca || !modelo || !ano) return { encontrado: false };
 
   try {
-    const baseSQL = `
-      SELECT 
-        v.id AS veiculo_id, 
-        v.marca, v.modelo, v.versao, 
-        vm.id AS veiculo_medida_id, 
-        vm.medida, vm.tipo, vm.prioridade, vm.observacao
+    let sql = `
+      SELECT
+        v.id AS veiculo_id,
+        v.marca,
+        v.modelo,
+        v.versao,
+        vm.id AS veiculo_medida_id,
+        vm.medida,
+        vm.tipo,
+        vm.prioridade,
+        vm.observacao
       FROM veiculos v
       INNER JOIN veiculo_medidas vm ON v.id = vm.veiculo_id
       WHERE TRIM(UPPER(v.marca)) = TRIM(UPPER(?))
         AND TRIM(UPPER(v.modelo)) = TRIM(UPPER(?))
         AND ? BETWEEN v.ano_inicio AND v.ano_fim
-        AND v.ativo = 1 
+        AND v.ativo = 1
         AND vm.ativo = 1
-        AND vm.medida IS NOT NULL 
+        AND vm.medida IS NOT NULL
         AND vm.medida != ''
     `;
+    const params = [marca, modelo, ano];
 
-    const orderSQL = ` ORDER BY 
-      CASE 
-        WHEN v.versao LIKE '%EXCLUSIVE%' THEN 1
-        WHEN v.versao LIKE '%UNIQUE%' THEN 2
-        WHEN v.versao LIKE '%ADVANCE%' THEN 3
-        WHEN v.versao LIKE '%SENSE%' THEN 4
-        ELSE 5
-      END ASC,
-      vm.prioridade ASC`;
-
-    // ── TENTATIVA 1: com versão ──────────────────────────────────────────────
     if (versao && versao.trim() !== '') {
-      const sql1 = baseSQL + ` AND TRIM(UPPER(v.versao)) LIKE TRIM(UPPER(?))` + orderSQL;
-      const [rows1] = await db.execute(sql1, [marca, modelo, ano, `%${versao}%`]);
-      console.log("TOTAL DE REGISTROS ENCONTRADOS (com versão):", rows1.length);
-      if (rows1.length > 0) return formatarResultados(rows1);
+      sql += ` AND TRIM(UPPER(v.versao)) = TRIM(UPPER(?))`;
+      params.push(versao.trim());
     }
 
-    // ── TENTATIVA 2: sem versão (versao=null ou qualquer versão) ─────────────
-    const sql2 = baseSQL + orderSQL;
-    const [rows2] = await db.execute(sql2, [marca, modelo, ano]);
-    console.log("TOTAL DE REGISTROS ENCONTRADOS (sem versão):", rows2.length);
-    if (rows2.length > 0) return formatarResultados(rows2);
+    sql += ` ORDER BY vm.prioridade ASC`;
 
-    return [];
+    const [rows] = await db.execute(sql, params);
+    console.log(`[BANCO LOCAL] ${rows.length} registro(s) para ${marca} ${modelo} ${ano} (versão: ${versao || 'não informada'})`);
 
+    if (rows.length === 0) return { encontrado: false };
+
+    const medidasDistintas = [...new Set(rows.map((r) => r.medida))];
+
+    if (medidasDistintas.length === 1) {
+      return {
+        encontrado: true,
+        confianca: 'alta',
+        medidas: rows.map((row) => ({
+          id: row.veiculo_medida_id,
+          veiculo_id: row.veiculo_id,
+          marca: row.marca,
+          modelo: row.modelo,
+          versao: row.versao,
+          medida: row.medida,
+          tipo: row.tipo,
+          prioridade: row.prioridade,
+          observacao: row.observacao,
+          match_tipo: 'banco_local',
+        })),
+      };
+    }
+
+    return { encontrado: true, confianca: 'baixa', candidatos: medidasDistintas };
   } catch (error) {
-    console.error("ERRO CRÍTICO NA BUSCA:", error);
-    return [];
+    console.error('ERRO CRÍTICO NA BUSCA (banco local):', error);
+    return { encontrado: false };
   }
-}
-
-function formatarResultados(rows) {
-  // Deduplica por medida
-  const mapa = new Map();
-  for (const row of rows) {
-    if (!mapa.has(row.medida)) mapa.set(row.medida, row);
-  }
-  return Array.from(mapa.values()).map(row => ({
-    id: row.veiculo_medida_id,
-    veiculo_id: row.veiculo_id,
-    marca: row.marca,
-    modelo: row.modelo,
-    versao: row.versao,
-    medida: row.medida,
-    tipo: row.tipo,
-    prioridade: row.prioridade,
-    observacao: row.observacao,
-    match_tipo: 'busca_dinamica'
-  }));
 }
 
 module.exports = { buscarMedidasPorVeiculo };

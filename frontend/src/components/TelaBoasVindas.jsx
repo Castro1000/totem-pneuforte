@@ -1,4 +1,11 @@
+import { useEffect } from 'react';
+
 export default function TelaBoasVindas({ onTocar }) {
+  useEffect(() => {
+    const el = document.documentElement;
+    if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
+  }, []);
+
   return (
     <div className="bv-full" onClick={onTocar}>
       <div className="bv-fundo"></div>
